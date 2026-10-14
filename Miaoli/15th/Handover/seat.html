@@ -179,6 +179,8 @@ function run(reset){ if(reset!==false)LIM=30; const q=norm($('#q').value); $('#x
  const sh=idx.slice(0,LIM); L.innerHTML=sh.map(card).join('')+(idx.length>LIM?'<button class="more" id="more">再顯示更多（共 '+idx.length+' 人）</button>':'');}
 $('#q').addEventListener('input',()=>run());
 $('#x').onclick=()=>{$('#q').value='';run();$('#q').focus();};
+/* 活動網頁深連結：seat.html?p=<人員索引> 直接開啟本人座位；?q=<關鍵字> 預填搜尋 */
+window.addEventListener('load',()=>{try{const u=new URLSearchParams(location.search);const p=u.get('p');if(p!==null&&D.ps[+p]){openP(+p);}else if(u.get('q')){$('#q').value=u.get('q');run();}}catch(e){}});
 $('#list').onclick=e=>{const m=e.target.closest('#more');if(m){LIM+=40;run(false);return;}const c=e.target.closest('.card');if(c)openP(+c.dataset.i);};
 let CUR=0,SI=0,FULL=false;
 function openP(i,si){CUR=i;const p=D.ps[i];if(si==null){SI=p.s[NOW][0]!==0?NOW:(p.s[1-NOW][0]!==0?1-NOW:NOW);}else SI=si;FULL=false;draw();$('#sheet').classList.add('on');$('#sheet').scrollTop=0;history.pushState({o:1},'');}
