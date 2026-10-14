@@ -75,12 +75,12 @@ main{padding:14px 14px 90px;display:flex;flex-direction:column;gap:14px;flex:1}
         <div class="scroller" id="unitChips"></div><div class="scroller" id="bizChips"></div>
       </section>
       <div id="found" style="display:flex;flex-direction:column;gap:10px"></div>
-      <div class="note" style="text-align:center;padding:0 8px">「有興趣」對方不會知道，雙方都按才會互相通知；「直接邀請」對方會立刻收到。</div>
+      <div class="note" style="text-align:center;padding:0 8px">「有興趣」對方不會知道，雙方都按才會互相通知；「直接邀請」對方會立刻收到。<br>產業別由 AI 依公司名稱判斷，可能有誤，請見諒。</div>
     </div>
     <!-- 交流 -->
     <div class="tab" id="t-meet">
       <section class="card gold"><div class="serif" style="font-size:19px;font-weight:700;color:var(--dark)">想認識您的社友</div><div class="note">尚無。填許願後，對您有興趣的社友會出現在這裡，您可回覆「我也想交流」或「先不用」。</div></section>
-      <section class="card"><div style="display:flex;align-items:baseline;gap:8px"><div class="serif" style="font-size:19px;font-weight:700;color:var(--dark)">我的碰面清單</div><span class="note">茶敘 15:20・5 桌旁</span></div><div id="matches"></div>
+      <section class="card"><div style="display:flex;align-items:baseline;gap:8px"><div class="serif" style="font-size:19px;font-weight:700;color:var(--dark)">我的碰面清單</div><span class="note">茶敘 15:20・5 桌旁</span></div><div class="note">配對建議與產業別由 AI 依公司名稱判斷，可能有誤，請見諒。</div><div id="matches"></div>
         <div style="display:flex;gap:8px"><button type="button" class="btn btn-line sm" style="flex:1" disabled>活動後寄清單給我</button><button type="button" class="btn btn-ghost sm" onclick="togglePreview()" id="pv">預覽碰面模式</button></div></section>
       <section class="card"><div style="display:flex;align-items:baseline;gap:8px"><div class="serif" style="font-size:19px;font-weight:700;color:var(--dark)">友社交接，我們去回訪</div></div><div class="note">各友社下一場交接日期待承辦團隊補入；按「我想參加」會通知該社。</div><div id="visits"></div></section>
       <section class="card" style="background:var(--dark);color:#F8E7B8"><div class="serif" style="font-size:18px;font-weight:700">交流時段</div><div style="font-size:14px;display:flex;flex-direction:column;gap:6px"><div><span style="color:#E2BD63">13:00–13:30</span>　報到交流・大合照</div><div><span style="color:#E2BD63">15:20–15:40</span>　茶敘交流（建議碰面）</div><div><span style="color:#E2BD63">17:35–18:00</span>　工商聯誼・領伴手禮</div><div><span style="color:#E2BD63">18:00–20:00</span>　濕婆神之夜・友社交接邀請</div></div><div style="font-size:13px;color:#D9C9A5">碰面點：5 桌旁休息區（有「商務交流」立牌）</div></section>
@@ -132,7 +132,7 @@ function init(){
   if(qid&&R.find(p=>p.id===qid))enter(qid); else if(saved&&R.find(p=>p.id===saved))enter(saved); else renderId();
   tick();setInterval(tick,1000);
 }
-function renderId(){document.getElementById('idbox').innerHTML=me?'<div class="av" style="border-color:'+(COLORS[me.grp]||['#fff'])[0]+'">'+esc(me.name.slice(0,1))+'</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:18px;color:#fff">'+esc(me.name)+' <span style="font-size:13px;font-weight:400;color:#E2BD63">'+esc(me.unit)+(me.ind?'・'+esc(me.ind):'')+'</span></div><div style="font-size:13px;color:#D9C9A5">'+(me.lunch?'午場 '+me.lunch+' 桌':'午場座位安排中')+'・'+(me.dinner?'晚宴 '+me.dinner+' 桌':'晚宴座位安排中')+'</div></div><button type="button" class="btn sm" style="background:rgba(255,255,255,.14);color:#F8E7B8" onclick="logout()">不是我</button>'
+function renderId(){document.getElementById('idbox').innerHTML=me?'<div class="av" style="border-color:'+(COLORS[me.grp]||['#fff'])[0]+'">'+esc(me.name.slice(0,1))+'</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:18px;color:#fff">'+esc(me.name)+' <span style="font-size:13px;font-weight:400;color:#E2BD63">'+esc(me.unit)+(me.ind?'・'+esc(me.ind)+'<span title="'+'由 AI 依公司名稱判斷，可能有誤，請見諒。'+'">＊</span>':'')+'</span></div><div style="font-size:13px;color:#D9C9A5">'+(me.ind?'＊產業別'+'由 AI 依公司名稱判斷，可能有誤，請見諒。'+'<br>':'')+(me.lunch?'午場 '+me.lunch+' 桌':'午場座位安排中')+'・'+(me.dinner?'晚宴 '+me.dinner+' 桌':'晚宴座位安排中')+'</div></div><button type="button" class="btn sm" style="background:rgba(255,255,255,.14);color:#F8E7B8" onclick="logout()">不是我</button>'
  :'<div class="av">？</div><div style="flex:1"><div style="font-weight:700;color:#fff">歡迎蒞臨</div><div style="font-size:13px;color:#D9C9A5">請先在下方輸入您的姓名</div></div>';}
 function enter(id){me=R.find(p=>p.id===id);renderId();document.getElementById('login').style.display='none';document.getElementById('tabs').style.display='flex';document.getElementById('tabbar').style.display='flex';renderMe();renderFind();renderMeet();}
 function logout(){me=null;try{localStorage.removeItem('imc15_me');}catch(e){}renderId();document.getElementById('login').style.display='flex';document.getElementById('l-q').value='';renderLogin();document.getElementById('tabs').style.display='none';document.getElementById('tabbar').style.display='none';}
