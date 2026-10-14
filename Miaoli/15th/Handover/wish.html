@@ -32,9 +32,18 @@
 <div class="wrap2">
   <form class="card" id="form" style="gap:16px">
     <div class="serif" style="font-size:24px;font-weight:700;color:var(--dark)">我的許願</div>
-    <div class="grid g2" style="gap:14px">
-      <div class="fld"><label class="f" for="w-unit">社別／單位</label><select id="w-unit" class="in" required><option value="">— 請選擇 —</option></select></div>
-      <div class="fld"><label class="f" for="w-name">姓名</label><select id="w-name" class="in" required disabled><option value="">— 先選社別 —</option></select></div>
+    <div id="who" class="card" style="background:var(--cream);box-shadow:none;padding:14px 16px;gap:8px">
+      <div id="whoCard" style="display:none;align-items:center;gap:12px">
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--gold3);color:var(--dark);display:flex;align-items:center;justify-content:center;font-family:'Noto Serif TC',serif;font-size:20px;font-weight:700" id="whoAv"></div>
+        <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:18px" id="whoName"></div><div class="note" id="whoSub"></div></div>
+        <button type="button" class="btn btn-ghost sm" onclick="clearWho()">不是我</button>
+      </div>
+      <div id="whoPick" style="display:none;flex-direction:column;gap:8px">
+        <label class="f" for="w-q">您是哪一位？輸入姓名任一個字</label>
+        <input id="w-q" class="in" autocomplete="off" placeholder="例：林、秀英">
+        <div id="w-qlist" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+      <input type="hidden" id="w-unit"><input type="hidden" id="w-name">
     </div>
     <div class="fld"><label class="f" for="w-biz">我的事業／產業</label><input id="w-biz" class="in" required placeholder="例：食材批發、餐飲、營建、保險、法律…"></div>
     <div class="fld"><label class="f" for="w-have"><span style="color:var(--green)">●</span> 我有什麼資源可以分享</label><textarea id="w-have" class="in" placeholder="例：中部餐飲食材供應鏈、場地、人脈、專業諮詢…"></textarea></div>
@@ -70,14 +79,18 @@ let LIST=[
  {unit:'聯合會',name:'［社友姓名］',biz:'數位行銷',have:'社群經營、廣告投放代操',want:'想認識有在地品牌的小農與製造業社友',match:'可認識金稼農業社等伴手禮提供社友'}
 ];
 const ORD=['聯合會','苗栗社','基隆社','台北社','新北社','桃園社','新竹社','台中社','彰化社','南投社','雲林社','嘉義社','南瀛社','台南社','高雄社','屏東社','宜蘭社','顧問及來賓','EX-亞洲劇團'];
-fetch('roster.json').then(r=>r.json()).then(d=>{ROSTER=d;
-  const units=[...new Set(d.map(p=>p.unit))].sort((a,b)=>(ORD.indexOf(a)<0?99:ORD.indexOf(a))-(ORD.indexOf(b)<0?99:ORD.indexOf(b)));
-  document.getElementById('w-unit').innerHTML='<option value="">— 請選擇 —</option>'+units.map(u=>'<option>'+esc(u)+'</option>').join('');
-}).catch(()=>{});
-document.getElementById('w-unit').addEventListener('change',e=>{const u=e.target.value;const sel=document.getElementById('w-name');
-  const ps=ROSTER.filter(p=>p.unit===u);sel.disabled=ps.length===0;sel.innerHTML='<option value="">— 請選擇 —</option>'+ps.map(p=>'<option>'+esc(p.name)+'</option>').join('')+'<option value="__other">不在名單中（手動輸入）</option>';});
-document.getElementById('w-name').addEventListener('change',e=>{if(e.target.value==='__other'){const n=prompt('請輸入姓名');if(n){const o=document.createElement('option');o.textContent=n;o.selected=true;e.target.insertBefore(o,e.target.lastElementChild);}else e.target.value='';}
-  const p=ROSTER.find(x=>x.unit===document.getElementById('w-unit').value&&x.name===e.target.value); if(p&&p.ind&&document.getElementById('w-biz').value==='')document.getElementById('w-biz').value=p.ind;});
+fetch('roster.json').then(r=>r.json()).then(d=>{ROSTER=d;initWho();}).catch(()=>{document.getElementById('whoPick').style.display='flex';});
+let ME=null;
+function setWho(p){ME=p;document.getElementById('w-unit').value=p.unit;document.getElementById('w-name').value=p.name;
+  document.getElementById('whoAv').textContent=p.name.slice(0,1);document.getElementById('whoName').textContent=p.name;document.getElementById('whoSub').textContent=p.unit+(p.role?'・'+p.role:'')+(p.company?'・'+p.company:'');
+  const biz=document.getElementById('w-biz');if(p.ind&&biz.value==='')biz.value=p.ind;
+  document.getElementById('whoCard').style.display='flex';document.getElementById('whoPick').style.display='none';try{localStorage.setItem('imc15_me',String(p.id));}catch(e){}}
+function clearWho(){ME=null;document.getElementById('w-unit').value='';document.getElementById('w-name').value='';document.getElementById('whoCard').style.display='none';document.getElementById('whoPick').style.display='flex';try{localStorage.removeItem('imc15_me');}catch(e){}document.getElementById('w-q').focus();}
+document.getElementById('w-q').addEventListener('input',e=>{const q=e.target.value.trim();const box=document.getElementById('w-qlist');if(q===''){box.innerHTML='';return;}
+  const hits=ROSTER.filter(p=>p.name.includes(q)).slice(0,20);
+  box.innerHTML=hits.length?hits.map(p=>'<button type="button" class="btn" style="justify-content:flex-start;gap:12px;background:#fff;border:2px solid var(--line2);color:var(--dark);min-height:50px;padding:0 14px" onclick="setWho(ROSTER.find(x=>x.id==='+p.id+'))"><span style="font-weight:700;white-space:nowrap">'+esc(p.name)+'</span><span class="note" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(p.unit)+(p.role?'・'+esc(p.role):'')+'</span></button>').join(''):'<div class="note" style="color:#8A3B1F">找不到，試試只打一個字</div>';});
+function initWho(){const qid=Number(new URLSearchParams(location.search).get('id')||0);let saved=0;try{saved=Number(localStorage.getItem('imc15_me')||0);}catch(e){}
+  const p=ROSTER.find(x=>x.id===qid)||ROSTER.find(x=>x.id===saved);if(p)setWho(p);else{document.getElementById('whoPick').style.display='flex';}}
 const meet=document.getElementById('w-meet');
 meet.addEventListener('input',()=>{const q=meet.value.trim();const box=document.getElementById('results'),no=document.getElementById('noRes');
   if(q===''){box.style.display='none';no.style.display='none';return;}
@@ -91,7 +104,7 @@ function renderWall(){const bizs=['全部',...new Set(LIST.map(w=>w.biz))];
   document.getElementById('filters').innerHTML=bizs.map(b=>'<button type="button" class="pill sm'+(b===filter?' on':'')+'" onclick="filter=\''+esc(b)+'\';renderWall()">'+esc(b)+'</button>').join('');
   document.getElementById('count').textContent=LIST.length;
   document.getElementById('wall').innerHTML=LIST.filter(w=>filter==='全部'||w.biz===filter).map(w=>'<article class="card wish"><div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px"><span class="serif" style="font-size:20px;font-weight:700;color:var(--dark)">'+esc(w.name)+'</span><span class="note">'+esc(w.unit)+'</span><span class="tag tag-gold">'+esc(w.biz)+'</span></div><div style="display:flex;gap:10px"><span class="tag tag-green" style="flex:none">我有</span><span>'+esc(w.have)+'</span></div><div style="display:flex;gap:10px"><span class="tag tag-rose" style="flex:none">想找</span><span>'+esc(w.want)+'</span></div>'+(w.match?'<div style="background:var(--cream);border-radius:10px;padding:10px 14px;font-size:15px;color:var(--dark2)">交流建議：'+esc(w.match)+'</div>':'')+'<div><button type="button" class="btn btn-line sm" onclick="this.textContent=\'已送出交流邀請 ✓\';this.disabled=true">我想和你交流</button></div></article>').join('');}
-document.getElementById('form').addEventListener('submit',e=>{e.preventDefault();const g=id=>document.getElementById(id).value.trim();
+document.getElementById('form').addEventListener('submit',e=>{e.preventDefault();const g=id=>document.getElementById(id).value.trim();if(g('w-name')===''){document.getElementById('w-q').focus();document.getElementById('whoPick').style.display='flex';return;}
   LIST.unshift({unit:g('w-unit'),name:g('w-name'),biz:g('w-biz'),have:g('w-have')||'—',want:g('w-want')||'—',match:picked.length?'想認識：'+picked.map(id=>{const r=ROSTER.find(x=>x.id===id);return r.name+'（'+r.unit+'）';}).join('、'):''});
   filter='全部';renderWall();document.getElementById('saved').style.display='inline';['w-have','w-want'].forEach(id=>document.getElementById(id).value='');picked=[];renderPicked();window.scrollTo({top:0,behavior:'smooth'});});
 renderWall();
