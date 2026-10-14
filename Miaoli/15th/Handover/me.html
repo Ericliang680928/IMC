@@ -117,7 +117,7 @@ function init(){
   lq.addEventListener('input',renderLogin);
   function renderLogin(){const q=lq.value.trim();
     const hits=(q===''&&lUnit==='')?[]:R.filter(p=>(lUnit===''||p.unit===lUnit)&&(q===''||p.name.includes(q))).slice(0,30);
-    llist.innerHTML=hits.map(p=>'<button type="button" class="btn" style="justify-content:flex-start;gap:12px;background:#fff;border:2px solid var(--line2);color:var(--dark);min-height:52px;padding:0 14px;text-align:left" onclick="pickMe('+p.id+')"><span style="font-weight:700;font-size:18px">'+esc(p.name)+'</span><span class="note">'+esc(p.unit)+(p.title?'・'+esc(p.title):'')+'</span><span style="margin-left:auto;color:var(--gold)">›</span></button>').join('')
+    llist.innerHTML=hits.map(p=>'<button type="button" class="btn" style="justify-content:flex-start;gap:12px;background:#fff;border:2px solid var(--line2);color:var(--dark);min-height:52px;padding:0 14px;text-align:left" onclick="pickMe('+p.id+')"><span style="font-weight:700;font-size:18px;white-space:nowrap;flex:none">'+esc(p.name)+'</span><span class="note" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">'+esc(p.unit)+(p.title?'・'+esc(p.title):'')+'</span><span style="margin-left:auto;color:var(--gold);flex:none">›</span></button>').join('')
       +((q!==''||lUnit!=='')&&hits.length===0?'<div class="note" style="padding:8px 4px;color:#8A3B1F">找不到，試試只打一個字，或改用社別篩選</div>':'');
     document.getElementById('l-hint').style.display=(q===''&&lUnit==='')?'block':'none';}
   window.renderLogin=renderLogin;
@@ -131,7 +131,7 @@ function init(){
   tick();setInterval(tick,1000);
 }
 function renderId(){document.getElementById('idbox').innerHTML=me?'<div class="av" style="border-color:'+(COLORS[me.grp]||['#fff'])[0]+'">'+esc(me.name.slice(0,1))+'</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:18px;color:#fff">'+esc(me.name)+' <span style="font-size:13px;font-weight:400;color:#E2BD63">'+esc(me.unit)+(me.ind?'・'+esc(me.ind):'')+'</span></div><div style="font-size:13px;color:#D9C9A5">'+(me.lunch?'午場 '+me.lunch+' 桌':'午場座位安排中')+'・'+(me.dinner?'晚宴 '+me.dinner+' 桌':'晚宴座位安排中')+'</div></div><button type="button" class="btn sm" style="background:rgba(255,255,255,.14);color:#F8E7B8" onclick="logout()">不是我</button>'
- :'<div class="av">？</div><div style="flex:1"><div style="font-weight:700;color:#fff">歡迎蒞臨</div><div style="font-size:13px;color:#D9C9A5">請先在下方選擇您的社別與姓名</div></div>';}
+ :'<div class="av">？</div><div style="flex:1"><div style="font-weight:700;color:#fff">歡迎蒞臨</div><div style="font-size:13px;color:#D9C9A5">請先在下方輸入您的姓名</div></div>';}
 function enter(id){me=R.find(p=>p.id===id);renderId();document.getElementById('login').style.display='none';document.getElementById('tabs').style.display='flex';document.getElementById('tabbar').style.display='flex';renderMe();renderFind();renderMeet();}
 function logout(){me=null;try{localStorage.removeItem('imc15_me');}catch(e){}renderId();document.getElementById('login').style.display='flex';document.getElementById('l-q').value='';renderLogin();document.getElementById('tabs').style.display='none';document.getElementById('tabbar').style.display='none';}
 function go(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.id==='t-'+t));document.querySelectorAll('#tabbar button').forEach((b,i)=>b.classList.toggle('on',['me','find','meet','shop'][i]===t));window.scrollTo({top:0});}
