@@ -44,7 +44,7 @@ main{padding:14px 14px 90px;display:flex;flex-direction:column;gap:14px;flex:1}
       <div class="serif" style="font-size:20px;font-weight:700;color:var(--dark)">先告訴我們您是誰</div>
       <div class="note">輸入姓名任一個字就會出現，點一下進入；選一次就記住。</div>
       <input class="in" id="l-q" placeholder="輸入姓名，例：林、秀英" autocomplete="off" inputmode="text" style="font-size:20px;min-height:54px">
-      <div class="scroller" id="l-units"></div>
+      <div id="l-units" style="display:flex;flex-wrap:wrap;gap:6px"></div>
       <div id="l-list" style="display:flex;flex-direction:column;gap:6px"></div>
       <div class="note" id="l-hint">找不到自己？請洽報到處，或請承辦團隊協助。</div>
     </section>
@@ -72,7 +72,7 @@ main{padding:14px 14px 90px;display:flex;flex-direction:column;gap:14px;flex:1}
       <section class="card">
         <div style="display:flex;align-items:baseline;gap:8px"><div class="serif" style="font-size:19px;font-weight:700;color:var(--dark)">今天誰在場</div><span class="note">名片牆・<span id="nFound">0</span> 位</span></div>
         <input class="in" id="q" placeholder="姓名、社別、公司、產業或桌號" autocomplete="off">
-        <div class="scroller" id="unitChips"></div><div class="scroller" id="bizChips"></div>
+        <div id="unitChips" style="display:flex;flex-wrap:wrap;gap:6px"></div><div class="scroller" id="bizChips"></div>
       </section>
       <div id="found" style="display:flex;flex-direction:column;gap:10px"></div>
       <div class="note" style="text-align:center;padding:0 8px">「有興趣」對方不會知道，雙方都按才會互相通知；「直接邀請」對方會立刻收到。<br>產業別由 AI 依公司名稱判斷，可能有誤，請見諒。</div>
