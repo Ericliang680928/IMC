@@ -71,7 +71,7 @@ main{padding:14px 14px 90px;display:flex;flex-direction:column;gap:14px;flex:1}
     <div class="tab" id="t-find">
       <section class="card">
         <div style="display:flex;align-items:baseline;gap:8px"><div class="serif" style="font-size:19px;font-weight:700;color:var(--dark)">今天誰在場</div><span class="note">名片牆・<span id="nFound">0</span> 位</span></div>
-        <input class="in" id="q" placeholder="姓名、社別、產業或桌號" autocomplete="off">
+        <input class="in" id="q" placeholder="姓名、社別、公司、產業或桌號" autocomplete="off">
         <div class="scroller" id="unitChips"></div><div class="scroller" id="bizChips"></div>
       </section>
       <div id="found" style="display:flex;flex-direction:column;gap:10px"></div>
@@ -92,6 +92,8 @@ main{padding:14px 14px 90px;display:flex;flex-direction:column;gap:14px;flex:1}
     </div>
     </div>
   </main>
+  <div id="sheetBg" style="position:fixed;inset:0;background:rgba(43,29,10,.55);display:none;z-index:90" onclick="closeDetail()"></div>
+  <div id="sheet" style="position:fixed;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;background:#fff;border-radius:22px 22px 0 0;padding:18px 20px 28px;box-shadow:0 -8px 30px rgba(43,29,10,.25);display:none;z-index:95;max-height:88vh;overflow:auto"></div>
   <nav class="tabbar" id="tabbar" style="display:none">
     <button type="button" class="on" onclick="go('me')"><span></span>我的</button><button type="button" onclick="go('find')"><span></span>找人</button><button type="button" onclick="go('meet')"><span></span>交流</button><button type="button" onclick="go('shop')"><span></span>商品</button>
   </nav>
@@ -151,11 +153,22 @@ function sendWish(){const b=document.getElementById('wishBtn');b.textContent='�
 function setUnitF(u){unitF=unitF===u?'':u;renderFind();}function setBizF(b){bizF=bizF===b?'':b;renderFind();}
 function renderFind(){if(me===null)return;const q=document.getElementById('q').value.trim();
   document.querySelectorAll('#unitChips .quick').forEach(x=>x.classList.toggle('on',x.dataset.u===unitF));document.querySelectorAll('#bizChips .quick').forEach(x=>x.classList.toggle('on',x.dataset.b===bizF));
-  const all=R.filter(r=>r.id!==me.id&&(unitF===''||r.unit===unitF)&&(bizF===''||r.grp===bizF)&&(q===''||(r.name+r.unit+(r.ind||'')+(r.grp||'')+(r.title||'')+r.lunch+r.dinner).includes(q)));
+  const all=R.filter(r=>r.id!==me.id&&(unitF===''||r.unit===unitF)&&(bizF===''||r.grp===bizF)&&(q===''||(r.name+r.unit+(r.ind||'')+(r.grp||'')+(r.role||'')+(r.company||'')+(r.job||'')+r.lunch+r.dinner).includes(q)));
   document.getElementById('nFound').textContent=all.length;
   const list=(q===''&&unitF===''&&bizF==='')?all.slice(0,40):all.slice(0,120);
-  document.getElementById('found').innerHTML=list.length?list.map(r=>'<section class="card" style="gap:10px;padding:14px 16px"><div class="person"><div class="av2" style="border-color:'+(COLORS[r.grp]||['#C9A24A'])[0]+'">'+esc(r.name.slice(0,1))+'</div><div style="flex:1;min-width:0"><div style="font-weight:700;color:var(--dark)">'+esc(r.name)+' <span class="note">'+esc(r.unit)+(r.title?'・'+esc(r.title):'')+'</span></div><div style="font-size:13px;color:var(--muted2)">'+esc(r.ind||'')+(r.lunch?'・午 '+r.lunch+' 桌':'')+(r.dinner?'／晚 '+r.dinner+' 桌':'')+'</div></div>'+(like[r.id]?'<span class="tag tag-rose">有興趣</span>':'')+'</div><div style="display:flex;gap:8px"><button type="button" class="btn sm" style="flex:1;'+(like[r.id]?'background:#FBF0F4;color:var(--rose)':'background:#fff;border:2px solid var(--line2);color:var(--muted2)')+'" onclick="tLike('+r.id+')">'+(like[r.id]?'有興趣 ✓':'有興趣')+'</button><button type="button" class="btn sm" style="flex:1;'+(inv[r.id]?'background:var(--greenbg);color:var(--green)':'background:#fff;border:2px solid var(--gold);color:var(--gold2)')+'" onclick="tInv('+r.id+')">'+(inv[r.id]?'已邀請 ✓':'直接邀請')+'</button></div></section>').join('')+(all.length>list.length?'<div class="note" style="text-align:center">還有 '+(all.length-list.length)+' 位，請用搜尋或篩選縮小範圍</div>':'')
+  document.getElementById('found').innerHTML=list.length?list.map(r=>'<section class="card" style="gap:10px;padding:14px 16px"><div class="person" style="cursor:pointer" onclick="openDetail('+r.id+')"><div class="av2" style="border-color:'+(COLORS[r.grp]||['#C9A24A'])[0]+'">'+esc(r.name.slice(0,1))+'</div><div style="flex:1;min-width:0"><div style="font-weight:700;color:var(--dark)">'+esc(r.name)+' <span class="note">'+esc(r.unit)+(r.title?'・'+esc(r.title):'')+'</span></div><div style="font-size:13px;color:var(--muted2)">'+esc(r.ind||'')+(r.lunch?'・午 '+r.lunch+' 桌':'')+(r.dinner?'／晚 '+r.dinner+' 桌':'')+'</div></div>'+(like[r.id]?'<span class="tag tag-rose">有興趣</span>':'')+'<span style="color:var(--gold);font-size:20px">›</span></div><div style="display:flex;gap:8px"><button type="button" class="btn sm" style="flex:1;'+(like[r.id]?'background:#FBF0F4;color:var(--rose)':'background:#fff;border:2px solid var(--line2);color:var(--muted2)')+'" onclick="tLike('+r.id+')">'+(like[r.id]?'有興趣 ✓':'有興趣')+'</button><button type="button" class="btn sm" style="flex:1;'+(inv[r.id]?'background:var(--greenbg);color:var(--green)':'background:#fff;border:2px solid var(--gold);color:var(--gold2)')+'" onclick="tInv('+r.id+')">'+(inv[r.id]?'已邀請 ✓':'直接邀請')+'</button></div></section>').join('')+(all.length>list.length?'<div class="note" style="text-align:center">還有 '+(all.length-list.length)+' 位，請用搜尋或篩選縮小範圍</div>':'')
   :'<div class="note" style="text-align:center;padding:12px">找不到，試試只打姓氏或社別</div>';}
+
+function openDetail(id){const r=R.find(x=>x.id===id);if(r===undefined)return;const c=(COLORS[r.grp]||['#C9A24A'])[0];
+  const row=(k,v)=>v?'<div style="display:flex;gap:12px;border-top:1px solid #F0E8D8;padding:10px 0"><div style="flex:none;width:92px;font-size:13px;color:var(--muted);padding-top:2px">'+k+'</div><div style="flex:1;color:var(--dark)">'+v+'</div></div>':'';
+  document.getElementById('sheet').innerHTML='<div style="width:40px;height:4px;border-radius:2px;background:var(--line2);margin:0 auto 14px"></div>'
+   +'<div class="person" style="margin-bottom:8px"><div class="av2" style="width:52px;height:52px;font-size:22px;border-color:'+c+'">'+esc(r.name.slice(0,1))+'</div><div style="flex:1"><div class="serif" style="font-size:24px;font-weight:700;color:var(--dark)">'+esc(r.name)+'</div><div class="note">'+esc(r.unit)+(r.role?'・'+esc(r.role):'')+'</div></div><button type="button" class="btn sm" style="background:var(--cream);color:var(--muted2)" onclick="closeDetail()">關閉</button></div>'
+   +row('社別',esc(r.unit))+row('社團職務',esc(r.role))+row('公司名稱',esc(r.company))+row('公司職稱',esc(r.job))
+   +row('產業別',(r.ind?esc(r.ind):'—')+'<div style="font-size:12px;color:var(--muted);margin-top:2px">由 AI 依公司名稱判斷，可能有誤，請見諒。</div>')
+   +row('座位',(r.lunch?'午場 '+r.lunch+' 桌':'午場安排中')+'　'+(r.dinner?'晚宴 '+r.dinner+' 桌':'晚宴安排中'))
+   +'<div style="display:flex;gap:8px;margin-top:14px"><button type="button" class="btn sm" style="flex:1;'+(like[id]?'background:#FBF0F4;color:var(--rose)':'background:#fff;border:2px solid var(--line2);color:var(--muted2)')+'" onclick="tLike('+id+');openDetail('+id+')">'+(like[id]?'有興趣 ✓':'有興趣')+'</button><button type="button" class="btn sm" style="flex:1;'+(inv[id]?'background:var(--greenbg);color:var(--green)':'background:#fff;border:2px solid var(--gold);color:var(--gold2)')+'" onclick="tInv('+id+');openDetail('+id+')">'+(inv[id]?'已邀請 ✓':'直接邀請')+'</button><a class="btn sm btn-line" href="seat.html?p='+(id-1)+'">看座位</a></div>';
+  document.getElementById('sheet').style.display='block';document.getElementById('sheetBg').style.display='block';}
+function closeDetail(){document.getElementById('sheet').style.display='none';document.getElementById('sheetBg').style.display='none';}
 function tLike(id){like[id]=like[id]?false:true;store();renderFind();renderMeet();}
 function tInv(id){inv[id]=true;renderFind();renderMeet();}
 function renderMeet(){if(me===null)return;const ids=Object.keys(like).filter(k=>like[k]).map(Number);
