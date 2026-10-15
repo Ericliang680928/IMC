@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="style.css?v=2">
 <script src="db.js?v=1"></script>
 <style>
-.shop{display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start}
+.shop{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:28px;align-items:start}
 .cartbox{position:sticky;top:80px}
 .prod{background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 2px 14px rgba(43,29,10,.06);display:flex;flex-direction:column}
 .prod .img{height:160px;display:flex;align-items:center;justify-content:center;color:var(--dark2);background:#E8D9B8;font-size:40px;font-weight:900;opacity:.9}
@@ -20,11 +20,15 @@
 .gal button{flex:none;width:56px;height:70px;padding:0;border:2px solid var(--line2);border-radius:8px;overflow:hidden;background:#fff;cursor:pointer;opacity:.7}
 .gal button.on{border-color:var(--gold);opacity:1}
 .gal img{width:100%;height:100%;object-fit:cover;display:block}
+.opts{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.opt{display:flex;align-items:center;gap:10px;background:var(--cream);border-radius:12px;padding:8px 10px 8px 14px}
+.opt .ol{flex:1;font-size:15px;font-weight:600;color:var(--dark)}
+.opt .op{font-size:19px;font-weight:700;color:var(--rose);white-space:nowrap}
 .promo{background:#FFF6E5;border:1px solid #F0D9A8;color:#7A5A1E;border-radius:12px;padding:9px 12px;font-size:15px;font-weight:600;line-height:1.5}
 .free{color:var(--green);font-weight:700}
 .venue{display:flex;gap:10px;align-items:flex-start;background:#FFF6E5;border:1px solid #F0D9A8;border-radius:12px;padding:12px 14px;font-size:15px;color:#7A5A1E;font-weight:600;cursor:pointer;line-height:1.5}
 .venue input{width:22px;height:22px;flex:none;margin-top:2px;accent-color:var(--gold)}
-@media (max-width:980px){.shop{grid-template-columns:1fr}.cartbox{position:static}}
+@media (max-width:980px){.shop{grid-template-columns:minmax(0,1fr)}.cartbox{position:static}}
 </style>
 </head>
 <body>
@@ -82,9 +86,15 @@ const STATIC=[
  {id:'mf-guoren',cat:'餐桌點心',name:'滿福果仁辣醬',seller:'米樂家食材',price:350,unit:'罐',
   desc:'純素、香麻小辣，淨重 250 公克。內含松子、腰果、杏仁、花生、白芝麻、葵瓜子，拌麵、拌飯、拌豆腐、涼青菜、火鍋沾醬都合適。過敏原：含堅果類、花生、芝麻、大豆、含麩質穀物，詳見瓶身標示。',
   imgs:['assets/shop/mf1.jpg','assets/shop/mf2.jpg','assets/shop/mf3.jpg','assets/shop/mf4.jpg','assets/shop/mf5.jpg'],
-  promo:{buy:2,free:1,label:'活動價：凡在苗栗IMC交接會場下訂，買 2 罐送 1 罐'}}
+  promo:{buy:2,free:1,label:'活動價：凡在苗栗IMC交接會場下訂，買 2 罐送 1 罐'}},
+ {id:'jj-heirun',cat:'餐桌點心',name:'水藏・黑潤原露',seller:'金稼農創科技股份有限公司・黃乾斌社友',unit:'瓶',price:70,ar:'3/4',
+  desc:'苗栗小農自己種植的黑木耳，加上紅棗、枸杞、老薑，以冬瓜糖慢火熬煮。在地新鮮熬煮，無添加防腐劑，全素，養生無負擔。成分：水、黑木耳、冬瓜糖（全素）、紅棗、枸杞、老薑。需冷藏 5°C 以下，冷藏保存 14 天。',
+  imgs:['assets/shop/jj1.jpg','assets/shop/jj2.jpg'],
+  opts:[{k:'300',label:'300ml 單瓶',price:70,unit:'瓶'},{k:'300box',label:'300ml 一箱 15 瓶',price:900,unit:'箱'},{k:'900',label:'900ml 單瓶',price:210,unit:'瓶'},{k:'900pair',label:'900ml 2 瓶裝',price:360,unit:'組'}]}
 ].map(x=>Object.assign({color:'#E8D9B8'},x));
-let PRODUCTS=[];const CATS=['全部','伴手禮','餐桌點心'];
+let PRODUCTS=[];
+function findItem(id){for(const p of PRODUCTS){if(p.opts){for(const o of p.opts){if(p.id+'-'+o.k===id)return {id:id,name:p.name+'（'+o.label+'）',seller:p.seller,price:o.price,unit:o.unit,promo:null};}}else if(p.id===id)return p;}return null;}
+const CATS=['全部','伴手禮','餐桌點心'];
 async function loadProducts(){let rows=[];try{rows=await dbGet('h15_products?on_shelf=eq.true&cat=neq.贊助廣告&select=*&order=id');}catch(e){rows=[];}
   const dbp=rows.map(r=>{const imgs=r.img?String(r.img).split('|').map(s=>s.trim()).filter(Boolean):[];return {id:String(r.id),cat:r.cat,name:r.name||'',seller:r.seller,price:r.price||0,unit:r.unit||'',desc:r.descr||'',imgs:imgs,color:'#E8D9B8'};});
   PRODUCTS=STATIC.concat(dbp);
@@ -99,14 +109,14 @@ function renderProds(){
   document.getElementById('prods').innerHTML=PRODUCTS.filter(p=>cat==='全部'||p.cat===cat).map(p=>{const im=p.imgs||[];const tall=im.length>1;
     const pic=im.length?'<img id="mi-'+esc(p.id)+'" src="'+esc(im[0])+'" alt="'+esc(p.name)+'">':esc(p.name.replace(/^［/,'').slice(0,1));
     const gal=im.length>1?'<div class="gal" id="g-'+esc(p.id)+'">'+im.map((u,k)=>'<button type="button" class="'+(k===0?'on':'')+'" onclick="setImg(\''+esc(p.id)+'\','+k+')" aria-label="看第 '+(k+1)+' 張圖"><img src="'+esc(u)+'" alt="" loading="lazy"></button>').join('')+'</div>':'';
-    return '<article class="prod"><div class="img'+(tall?' tall':'')+'" style="background:'+p.color+'">'+pic+'</div>'+gal+'<div style="padding:18px 20px 20px;display:flex;flex-direction:column;gap:8px;flex:1"><div style="display:flex;justify-content:space-between;font-size:13px"><span class="lbl" style="font-size:13px">'+esc(p.cat)+'</span><span class="note">提供：'+esc(p.seller)+'</span></div><div class="serif" style="font-size:22px;font-weight:700;color:var(--dark)">'+esc(p.name)+'</div><div style="font-size:15px;color:var(--muted2);flex:1">'+esc(p.desc)+'</div>'+(p.promo?'<div class="promo">'+esc(p.promo.label)+'</div>':'')+'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px"><div style="font-size:24px;font-weight:700;color:var(--rose)">NT$ '+p.price+'<span class="note" style="font-weight:400;margin-left:4px">／'+esc(p.unit)+'</span></div><button type="button" class="btn btn-gold sm" onclick="change(\''+esc(p.id)+'\',1)">加入購物車</button></div></div></article>';}).join('');
+    return '<article class="prod"><div class="img'+(tall?' tall':'')+'" style="background:'+p.color+(p.ar?';aspect-ratio:'+p.ar:'')+'">'+pic+'</div>'+gal+'<div style="padding:18px 20px 20px;display:flex;flex-direction:column;gap:8px;flex:1"><div style="display:flex;justify-content:space-between;font-size:13px"><span class="lbl" style="font-size:13px;white-space:nowrap;flex-shrink:0">'+esc(p.cat)+'</span><span class="note" style="text-align:right;margin-left:12px">提供：'+esc(p.seller)+'</span></div><div class="serif" style="font-size:22px;font-weight:700;color:var(--dark)">'+esc(p.name)+'</div><div style="font-size:15px;color:var(--muted2);flex:1">'+esc(p.desc)+'</div>'+(p.promo?'<div class="promo">'+esc(p.promo.label)+'</div>':'')+''+(p.opts?'<div class="opts">'+p.opts.map(o=>'<div class="opt"><span class="ol">'+esc(o.label)+'</span><span class="op">NT$ '+o.price+'</span><button type="button" class="btn btn-gold sm" onclick="change(\''+esc(p.id+'-'+o.k)+'\',1)">加入</button></div>').join('')+'</div>':'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px"><div style="font-size:24px;font-weight:700;color:var(--rose)">NT$ '+p.price+'<span class="note" style="font-weight:400;margin-left:4px">／'+esc(p.unit)+'</span></div><button type="button" class="btn btn-gold sm" onclick="change(\''+esc(p.id)+'\',1)">加入購物車</button></div>')+'</div></article>';}).join('');
 }
 function change(id,d){const q=(cart[id]||0)+d; if(q>0)cart[id]=q; else delete cart[id]; document.getElementById('done').style.display='none'; renderCart();}
 function freeOf(p,q){return (venue&&p.promo)?Math.floor(q/p.promo.buy)*p.promo.free:0;}
 function renderCart(){
-  const ids=Object.keys(cart).filter(id=>PRODUCTS.find(x=>x.id===id)); let total=0,count=0,hasPromo=false;
-  let h=ids.map(id=>{const p=PRODUCTS.find(x=>x.id===id);total+=p.price*cart[id];count+=cart[id];if(p.promo)hasPromo=true;const f=freeOf(p,cart[id]);
-    return '<div class="row"><div style="flex:1;min-width:0"><div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(p.name)+'</div><div class="note">NT$ '+p.price+' × '+cart[id]+(f?' <span class="free">＋ 贈 '+f+' '+esc(p.unit)+'</span>':'')+'</div></div><button type="button" class="qty" aria-label="減少" onclick="change(\''+esc(id)+'\',-1)">−</button><span style="min-width:24px;text-align:center;font-weight:700">'+cart[id]+'</span><button type="button" class="qty" aria-label="增加" onclick="change(\''+esc(id)+'\',1)">+</button></div>';}).join('');
+  const ids=Object.keys(cart).filter(id=>findItem(id)); let total=0,count=0,hasPromo=false;
+  let h=ids.map(id=>{const p=findItem(id);total+=p.price*cart[id];count+=cart[id];if(p.promo)hasPromo=true;const f=freeOf(p,cart[id]);
+    return '<div class="row"><div style="flex:1;min-width:0"><div style="font-weight:700;line-height:1.35;overflow-wrap:anywhere">'+esc(p.name)+'</div><div class="note">NT$ '+p.price+' × '+cart[id]+(f?' <span class="free">＋ 贈 '+f+' '+esc(p.unit)+'</span>':'')+'</div></div><button type="button" class="qty" aria-label="減少" onclick="change(\''+esc(id)+'\',-1)">−</button><span style="min-width:24px;text-align:center;font-weight:700">'+cart[id]+'</span><button type="button" class="qty" aria-label="增加" onclick="change(\''+esc(id)+'\',1)">+</button></div>';}).join('');
   if(!ids.length)h='<div style="background:var(--cream);border-radius:12px;padding:20px;text-align:center;color:var(--muted)">還沒有商品，先逛逛左邊的社友好物吧。</div>';
   if(hasPromo)h+='<label class="venue"><input type="checkbox" id="venue"'+(venue?' checked':'')+' onchange="venue=this.checked;renderCart()"><span>我現在人在苗栗IMC交接會場下訂（勾選享活動價：買 2 罐送 1 罐）</span></label>';
   document.getElementById('cartList').innerHTML=h;
@@ -115,7 +125,7 @@ function renderCart(){
 }
 document.getElementById('form').addEventListener('submit',async e=>{e.preventDefault();const g=id=>document.getElementById(id).value.trim();
   const btn=e.target.querySelector('button[type=submit]');btn.disabled=true;btn.textContent='送出中…';
-  const items=Object.keys(cart).map(id=>{const p=PRODUCTS.find(x=>x.id===id);const f=freeOf(p,cart[id]);const it={product_id:id,name:p.name,seller:p.seller,price:p.price,unit:p.unit,qty:cart[id]};if(f){it.free=f;it.promo=p.promo.label;}return it;});
+  const items=Object.keys(cart).filter(id=>findItem(id)).map(id=>{const p=findItem(id);const f=freeOf(p,cart[id]);const it={product_id:id,name:p.name,seller:p.seller,price:p.price,unit:p.unit,qty:cart[id]};if(f){it.free=f;it.promo=p.promo.label;}return it;});
   const total=items.reduce((a,i)=>a+i.price*i.qty,0);const no='IMC15-'+String(Date.now()).slice(-6);
   try{await dbInsert('h15_orders',{order_no:no,unit:g('f-unit'),name:g('f-name'),tel:g('f-tel'),addr:g('f-addr'),items:items,total:total},'return=minimal');
     document.getElementById('orderNo').textContent=no;cart={};venue=false;renderCart();document.getElementById('done').style.display='block';e.target.reset();}
