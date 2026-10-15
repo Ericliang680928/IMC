@@ -20,6 +20,8 @@
 .gal button{flex:none;width:56px;height:70px;padding:0;border:2px solid var(--line2);border-radius:8px;overflow:hidden;background:#fff;cursor:pointer;opacity:.7}
 .gal button.on{border-color:var(--gold);opacity:1}
 .gal img{width:100%;height:100%;object-fit:cover;display:block}
+.site{display:inline-block;margin-top:2px;font-size:15px;font-weight:700;color:var(--rose);text-decoration:none}
+.site:hover{text-decoration:underline}
 .opts{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 .opt{display:flex;align-items:center;gap:10px;background:var(--cream);border-radius:12px;padding:8px 10px 8px 14px}
 .opt .ol{flex:1;font-size:15px;font-weight:600;color:var(--dark)}
@@ -90,6 +92,7 @@ const STATIC=[
  {id:'jj-heirun',cat:'餐桌點心',name:'水藏・黑潤原露',seller:'金稼農創科技股份有限公司・黃乾斌社友',unit:'瓶',price:70,ar:'3/4',
   desc:'苗栗小農自己種植的黑木耳，加上紅棗、枸杞、老薑，以冬瓜糖慢火熬煮。在地新鮮熬煮，無添加防腐劑，全素，養生無負擔。成分：水、黑木耳、冬瓜糖（全素）、紅棗、枸杞、老薑。需冷藏 5°C 以下，冷藏保存 14 天。',
   imgs:['assets/shop/jj1.jpg','assets/shop/jj2.jpg'],
+  site:{url:'https://reurl.cc/Vne3jZ',label:'看金稼農業官網'},
   opts:[{k:'300',label:'300ml 單瓶',price:70,unit:'瓶'},{k:'300box',label:'300ml 一箱 15 瓶',price:900,unit:'箱'},{k:'900',label:'900ml 單瓶',price:210,unit:'瓶'},{k:'900pair',label:'900ml 2 瓶裝',price:360,unit:'組'}]}
 ].map(x=>Object.assign({color:'#E8D9B8'},x));
 let PRODUCTS=[];
@@ -109,7 +112,7 @@ function renderProds(){
   document.getElementById('prods').innerHTML=PRODUCTS.filter(p=>cat==='全部'||p.cat===cat).map(p=>{const im=p.imgs||[];const tall=im.length>1;
     const pic=im.length?'<img id="mi-'+esc(p.id)+'" src="'+esc(im[0])+'" alt="'+esc(p.name)+'">':esc(p.name.replace(/^［/,'').slice(0,1));
     const gal=im.length>1?'<div class="gal" id="g-'+esc(p.id)+'">'+im.map((u,k)=>'<button type="button" class="'+(k===0?'on':'')+'" onclick="setImg(\''+esc(p.id)+'\','+k+')" aria-label="看第 '+(k+1)+' 張圖"><img src="'+esc(u)+'" alt="" loading="lazy"></button>').join('')+'</div>':'';
-    return '<article class="prod"><div class="img'+(tall?' tall':'')+'" style="background:'+p.color+(p.ar?';aspect-ratio:'+p.ar:'')+'">'+pic+'</div>'+gal+'<div style="padding:18px 20px 20px;display:flex;flex-direction:column;gap:8px;flex:1"><div style="display:flex;justify-content:space-between;font-size:13px"><span class="lbl" style="font-size:13px;white-space:nowrap;flex-shrink:0">'+esc(p.cat)+'</span><span class="note" style="text-align:right;margin-left:12px">提供：'+esc(p.seller)+'</span></div><div class="serif" style="font-size:22px;font-weight:700;color:var(--dark)">'+esc(p.name)+'</div><div style="font-size:15px;color:var(--muted2);flex:1">'+esc(p.desc)+'</div>'+(p.promo?'<div class="promo">'+esc(p.promo.label)+'</div>':'')+''+(p.opts?'<div class="opts">'+p.opts.map(o=>'<div class="opt"><span class="ol">'+esc(o.label)+'</span><span class="op">NT$ '+o.price+'</span><button type="button" class="btn btn-gold sm" onclick="change(\''+esc(p.id+'-'+o.k)+'\',1)">加入</button></div>').join('')+'</div>':'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px"><div style="font-size:24px;font-weight:700;color:var(--rose)">NT$ '+p.price+'<span class="note" style="font-weight:400;margin-left:4px">／'+esc(p.unit)+'</span></div><button type="button" class="btn btn-gold sm" onclick="change(\''+esc(p.id)+'\',1)">加入購物車</button></div>')+'</div></article>';}).join('');
+    return '<article class="prod"><div class="img'+(tall?' tall':'')+'" style="background:'+p.color+(p.ar?';aspect-ratio:'+p.ar:'')+'">'+pic+'</div>'+gal+'<div style="padding:18px 20px 20px;display:flex;flex-direction:column;gap:8px;flex:1"><div style="display:flex;justify-content:space-between;font-size:13px"><span class="lbl" style="font-size:13px;white-space:nowrap;flex-shrink:0">'+esc(p.cat)+'</span><span class="note" style="text-align:right;margin-left:12px">提供：'+esc(p.seller)+'</span></div><div class="serif" style="font-size:22px;font-weight:700;color:var(--dark)">'+esc(p.name)+'</div><div style="font-size:15px;color:var(--muted2);flex:1">'+esc(p.desc)+'</div>'+(p.promo?'<div class="promo">'+esc(p.promo.label)+'</div>':'')+(p.site?'<a class="site" href="'+esc(p.site.url)+'" target="_blank" rel="noopener">'+esc(p.site.label)+' →</a>':'')+''+(p.opts?'<div class="opts">'+p.opts.map(o=>'<div class="opt"><span class="ol">'+esc(o.label)+'</span><span class="op">NT$ '+o.price+'</span><button type="button" class="btn btn-gold sm" onclick="change(\''+esc(p.id+'-'+o.k)+'\',1)">加入</button></div>').join('')+'</div>':'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px"><div style="font-size:24px;font-weight:700;color:var(--rose)">NT$ '+p.price+'<span class="note" style="font-weight:400;margin-left:4px">／'+esc(p.unit)+'</span></div><button type="button" class="btn btn-gold sm" onclick="change(\''+esc(p.id)+'\',1)">加入購物車</button></div>')+'</div></article>';}).join('');
 }
 function change(id,d){const q=(cart[id]||0)+d; if(q>0)cart[id]=q; else delete cart[id]; document.getElementById('done').style.display='none'; renderCart();}
 function freeOf(p,q){return (venue&&p.promo)?Math.floor(q/p.promo.buy)*p.promo.free:0;}
