@@ -53,6 +53,17 @@
 .free{color:var(--green);font-weight:700}
 .venue{display:flex;gap:10px;align-items:flex-start;background:#FFF6E5;border:1px solid #F0D9A8;border-radius:12px;padding:12px 14px;font-size:15px;color:#7A5A1E;font-weight:600;cursor:pointer;line-height:1.5}
 .venue input{width:22px;height:22px;flex:none;margin-top:2px;accent-color:var(--gold)}
+.fab{position:fixed;right:16px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:60;width:62px;height:62px;border-radius:50%;border:0;background:var(--gold);color:#fff;box-shadow:0 6px 18px rgba(43,29,10,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.fab:hover{background:#9A6E1F}.fab svg{width:30px;height:30px}
+.fab .n{position:absolute;top:-4px;right:-4px;min-width:24px;height:24px;padding:0 6px;border-radius:999px;background:var(--rose);color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-sizing:border-box}
+.fab.hide{display:none}.fab.bump{animation:bump .45s}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+.toast{position:fixed;right:16px;bottom:calc(92px + env(safe-area-inset-bottom));z-index:61;max-width:min(340px,calc(100vw - 32px));background:var(--dark);color:#fff;border-radius:14px;padding:12px 14px 12px 16px;box-shadow:0 8px 24px rgba(43,29,10,.35);display:flex;align-items:center;gap:12px;opacity:0;visibility:hidden;transform:translateY(10px);pointer-events:none;transition:opacity .2s,transform .2s,visibility 0s .2s}
+.toast.on{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition-delay:0s}
+.toast b{display:block;font-size:17px}.toast span{display:block;font-size:13px;opacity:.8;overflow-wrap:anywhere}
+.toast button{flex:none;border:0;border-radius:999px;background:var(--gold3);color:var(--dark);font-weight:700;font-size:14px;padding:8px 14px;cursor:pointer}
+.cartbox.flash{outline:3px solid var(--gold3);outline-offset:3px;transition:outline-color .3s}
+@media (prefers-reduced-motion:reduce){.fab.bump{animation:none}.toast{transition:none}}
 @media (max-width:980px){.shop{grid-template-columns:minmax(0,1fr)}.cartbox{position:static}}
 @media (max-width:600px){.prod{grid-template-columns:96px minmax(0,1fr);grid-template-areas:"img head" "buy buy" "det det";gap:8px 12px;padding:12px}.pimg{width:96px;font-size:28px}.phead .ttl{font-size:17px}.phead .meta .lbl{display:none}.phead .meta .note{text-align:left!important;font-size:12px}.phead .sum{-webkit-line-clamp:2}.opts{grid-template-columns:minmax(0,1fr)}}
 </style>
@@ -102,6 +113,8 @@
 </main>
 <footer>社團法人苗栗縣國際工商經營研究社・社友商品館　訂購資料僅供本次出貨使用<div style="margin-top:10px;font-size:13px;opacity:.85">本網頁由米樂家國際貿易有限公司製作，版權所有 © 2026 米樂家國際貿易有限公司</div></footer>
 
+<button type="button" class="fab" id="fab" onclick="goCart()" aria-label="購物車，0 件商品"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3.5h3l2.4 11.2a1.6 1.6 0 0 0 1.6 1.3h8.1a1.6 1.6 0 0 0 1.6-1.2L21 8H6.2"/></svg><span class="n" id="fabN">0</span></button>
+<div class="toast" id="toast" role="status" aria-live="polite"><div style="flex:1;min-width:0"><b>✓ 已加入購物車</b><span id="toastName"></span></div><button type="button" onclick="goCart()">查看購物車</button></div>
 <script>
 const DEMO=[
  {id:'a1',cat:'伴手禮',name:'［社友商品名稱］',seller:'［社友姓名］',price:480,unit:'盒',desc:'一句話商品介紹，例：小農手作，限量供應',color:'#E8D9B8'},
@@ -167,14 +180,21 @@ function renderProds(){
     const cnt=im.length>1?'<span class="cnt">'+im.length+' 張</span>':'';
     const gal=im.length>1?'<div class="gal" id="g-'+id+'">'+im.map((u,k)=>'<button type="button" class="'+(k===0?'on':'')+'" onclick="setImg(\''+id+'\','+k+')" aria-label="看第 '+(k+1)+' 張圖"><img src="'+esc(u)+'" alt="" loading="lazy"></button>').join('')+'</div>':'';
     const big=im.length?'<div class="big"><img id="mi-'+id+'" src="'+esc(im[0])+'" alt="'+esc(p.name)+'" loading="lazy"></div>':'';
-    const buy=p.opts?'<div class="opts">'+p.opts.map(o=>'<div class="opt"><span class="ol">'+esc(o.label)+'</span>'+(o.price==null?'<span class="op q">價格洽詢</span>':'<span class="op">NT$ '+o.price+'</span>')+'<button type="button" class="btn btn-gold sm" onclick="change(\''+esc(p.id+'-'+o.k)+'\',1)">'+(o.price==null?'預購登記':'加入')+'</button></div>').join('')+'</div>'
-      :'<div class="one">'+(isQ(p)?'<div class="pr" style="font-size:19px">價格洽詢</div>':'<div class="pr">NT$ '+p.price+'<span class="note" style="font-weight:400;margin-left:4px">／'+esc(p.unit)+'</span></div>')+'<button type="button" class="btn btn-gold sm" onclick="change(\''+id+'\',1)">'+(isQ(p)?'預購登記':'加入購物車')+'</button></div>';
+    const buy=p.opts?'<div class="opts">'+p.opts.map(o=>'<div class="opt"><span class="ol">'+esc(o.label)+'</span>'+(o.price==null?'<span class="op q">價格洽詢</span>':'<span class="op">NT$ '+o.price+'</span>')+'<button type="button" class="btn btn-gold sm" onclick="addTo(\''+esc(p.id+'-'+o.k)+'\')">'+(o.price==null?'預購登記':'加入')+'</button></div>').join('')+'</div>'
+      :'<div class="one">'+(isQ(p)?'<div class="pr" style="font-size:19px">價格洽詢</div>':'<div class="pr">NT$ '+p.price+'<span class="note" style="font-weight:400;margin-left:4px">／'+esc(p.unit)+'</span></div>')+'<button type="button" class="btn btn-gold sm" onclick="addTo(\''+id+'\')">'+(isQ(p)?'預購登記':'加入購物車')+'</button></div>';
     return '<article class="prod" id="p-'+id+'"><button type="button" class="pimg" style="background:'+p.color+'" onclick="tog(\''+id+'\')" aria-label="看 '+esc(p.name)+' 詳情">'+pic+cnt+'</button>'
       +'<div class="phead"><div class="meta"><span class="lbl" style="font-size:13px;white-space:nowrap;flex-shrink:0">'+esc(p.cat)+'</span><span class="note" style="text-align:right">提供：'+esc(p.seller)+'</span></div><div class="ttl serif">'+esc(p.name)+'</div><div class="sum">'+esc(p.desc)+'</div>'+(p.promo?'<div class="promo">'+esc(p.promo.label)+'</div>':'')
       +'<div class="links"><button type="button" class="more" aria-expanded="false" onclick="tog(\''+id+'\')">看詳情 ▾</button>'+(p.site?'<a class="site" href="'+esc(p.site.url)+'" target="_blank" rel="noopener">'+esc(p.site.label)+' →</a>':'')+'</div></div>'
       +'<div class="pbuy">'+buy+(p.ship?'<div class="note">'+esc(p.ship)+'</div>':'')+'</div>'
       +'<div class="pdet">'+big+gal+'<div class="full">'+esc(p.desc)+'</div></div></article>';}).join('');
 }
+let toastT=null;
+function toast(name){const t=document.getElementById('toast');document.getElementById('toastName').textContent=name||'';t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2600);
+  const f=document.getElementById('fab');f.classList.remove('bump');void f.offsetWidth;f.classList.add('bump');}
+function addTo(id){change(id,1);const it=findItem(id);toast(it?it.name:'');}
+function goCart(){const c=document.getElementById('cart');document.getElementById('toast').classList.remove('on');c.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'start'});c.classList.add('flash');setTimeout(()=>c.classList.remove('flash'),1400);}
+let cartSeen=false;function fabVis(){document.getElementById('fab').classList.toggle('hide',cartSeen&&innerWidth<=980);}
+if('IntersectionObserver' in window){new IntersectionObserver(es=>{cartSeen=es[0].isIntersecting;fabVis();},{threshold:.25}).observe(document.getElementById('cart'));addEventListener('resize',fabVis);}
 function change(id,d){const q=(cart[id]||0)+d; if(q>0)cart[id]=q; else delete cart[id]; document.getElementById('done').style.display='none'; renderCart();}
 function freeOf(p,q){return (venue&&p.promo)?Math.floor(q/p.promo.buy)*p.promo.free:0;}
 function renderCart(){
@@ -185,7 +205,7 @@ function renderCart(){
   if(hasQuote)h+='<div class="note" style="background:var(--cream);border-radius:10px;padding:10px 12px;line-height:1.6">※ 標示「價格洽詢」的品項不含在合計內，賣家會另行聯繫，告知金額與宅配運費。</div>';
   if(hasPromo)h+='<label class="venue"><input type="checkbox" id="venue"'+(venue?' checked':'')+' onchange="venue=this.checked;renderCart()"><span>我現在人在苗栗IMC交接會場下訂（勾選享活動價：買 2 罐送 1 罐）</span></label>';
   document.getElementById('cartList').innerHTML=h;
-  document.getElementById('total').textContent=total; document.getElementById('cnt').textContent=count;
+  document.getElementById('total').textContent=total; document.getElementById('cnt').textContent=count;document.getElementById('fabN').textContent=count;document.getElementById('fab').setAttribute('aria-label','購物車，'+count+' 件商品');
   document.getElementById('form').style.display=ids.length?'flex':'none';
 }
 document.getElementById('form').addEventListener('submit',async e=>{e.preventDefault();const g=id=>document.getElementById(id).value.trim();
