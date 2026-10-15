@@ -20,6 +20,12 @@
 .gal button{flex:none;width:56px;height:70px;padding:0;border:2px solid var(--line2);border-radius:8px;overflow:hidden;background:#fff;cursor:pointer;opacity:.7}
 .gal button.on{border-color:var(--gold);opacity:1}
 .gal img{width:100%;height:100%;object-fit:cover;display:block}
+.seatbox{display:none;background:var(--greenbg);border:1px solid #BFE0C8;border-radius:12px;padding:12px 14px;color:var(--green);font-size:15px;line-height:1.6}
+.seatbox .sr{display:flex;justify-content:space-between;gap:10px;align-items:baseline;border-top:1px dashed #BFE0C8;padding-top:6px;margin-top:6px}
+.seatbox .sr span:first-child{font-weight:600}
+.seatbox .sr b{font-size:20px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.chip{border:2px solid #BFE0C8;background:#fff;color:var(--green);border-radius:999px;padding:6px 14px;font-size:15px;font-weight:700;cursor:pointer}
 .site{display:inline-block;margin-top:2px;font-size:15px;font-weight:700;color:var(--rose);text-decoration:none}
 .site:hover{text-decoration:underline}
 .opts{display:flex;flex-direction:column;gap:8px;margin-top:6px}
@@ -43,7 +49,8 @@
 <header class="hero"><div class="wrap" style="display:flex;flex-direction:column;gap:10px;padding:0">
   <div class="kicker">伴手禮・餐桌點心</div><h1>社友商品館</h1>
   <p style="max-width:720px">本次典禮的伴手禮與桌上點心皆由社友提供。喜歡的話可以直接下單，支持社友、也把苗栗的好味道帶回家。</p>
-  <div style="margin-top:8px;background:rgba(255,255,255,.1);border:1px solid rgba(226,189,99,.5);border-radius:12px;padding:12px 18px;font-size:16px;color:#F8E7B8">備註：因需彙整各社友商品，出貨時間目前未定，會儘早送達，不急再下單。</div>
+  <div style="margin-top:8px;background:rgba(255,255,255,.1);border:1px solid rgba(226,189,99,.5);border-radius:12px;padding:12px 18px;font-size:16px;color:#F8E7B8">商品館以「有贊助本活動的社友」為主，感謝各位社友的贊助與支持。</div>
+  <div style="background:rgba(255,255,255,.1);border:1px solid rgba(226,189,99,.5);border-radius:12px;padding:12px 18px;font-size:16px;color:#F8E7B8">備註：因需彙整各社友商品，出貨時間目前未定，會儘早送達，不急再下單。</div>
 </div></header>
 
 <main class="wrap" style="padding:32px 20px 64px">
@@ -60,8 +67,9 @@
     <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="color:var(--muted2)">合計</span><span style="font-size:28px;font-weight:700;color:var(--rose)">NT$ <span id="total">0</span></span></div>
     <form id="form" style="display:none;border-top:2px solid var(--line);padding-top:16px;flex-direction:column;gap:12px">
       <div style="font-weight:700;color:var(--gold2)">收件資料</div>
+      <div class="fld"><label class="f" for="f-name">姓名</label><input id="f-name" class="in" required autocomplete="name" placeholder="參加人員輸入姓名，自動帶出社別與桌號"></div>
+      <div id="seatInfo" class="seatbox" aria-live="polite"></div>
       <div class="fld"><label class="f" for="f-unit">社別／單位</label><input id="f-unit" class="in" required placeholder="例：苗栗IMC"></div>
-      <div class="fld"><label class="f" for="f-name">姓名</label><input id="f-name" class="in" required></div>
       <div class="fld"><label class="f" for="f-tel">電話</label><input id="f-tel" class="in" type="tel" required placeholder="09xx-xxx-xxx"></div>
       <div class="fld"><label class="f" for="f-addr">地址</label><input id="f-addr" class="in" required placeholder="收件地址"></div>
       <div class="note">出貨時間未定、會儘早送達；付款方式由各社友與您聯繫確認。</div>
@@ -115,6 +123,21 @@ async function loadProducts(){let rows=[];try{rows=await dbGet('h15_products?on_
   PRODUCTS=STATIC.concat(dbp);
   if(PRODUCTS.length===0){PRODUCTS=DEMO;document.getElementById('demoNote').style.display='block';}
   renderCats();renderProds();renderCart();}
+let SEAT=[],unitAuto=false,seatSel=null;
+const nm=s=>String(s||'').normalize('NFKC').replace(/\s+/g,'');
+const seatTxt=c=>c[0]===1?c[1]+(c[2]?'（'+c[2]+'）':''):(c[0]===2?'座位安排中':'不參加');
+function seatLookup(){
+  const v=nm(document.getElementById('f-name').value),box=document.getElementById('seatInfo'),un=document.getElementById('f-unit');
+  seatSel=null;const hit=v?SEAT.filter(p=>nm(p.n)===v):[];
+  if(!hit.length){box.style.display='none';box.innerHTML='';if(unitAuto){un.value='';unitAuto=false;}return;}
+  const pick=hit.length===1?hit[0]:(hit.find(p=>nm(p.u)===nm(un.value))||null);
+  if(!pick){if(unitAuto){un.value='';unitAuto=false;}box.innerHTML='<div>有 '+hit.length+' 位同名，請點選您的社別：</div><div class="chips">'+hit.map(p=>'<button type="button" class="chip" onclick="seatPick('+SEAT.indexOf(p)+')">'+esc(p.u)+'</button>').join('')+'</div>';box.style.display='block';return;}
+  seatSel=pick;if(!un.value||unitAuto){un.value=pick.u;unitAuto=true;}
+  box.innerHTML='<div style="font-weight:700">找到您了：'+esc(pick.n)+'・'+esc(pick.u)+'</div><div class="sr"><span>午場</span><b>'+esc(seatTxt(pick.a))+'</b></div><div class="sr"><span>晚宴</span><b>'+esc(seatTxt(pick.b))+'</b></div><div class="note" style="margin-top:6px">座位以現場桌卡為準</div>';box.style.display='block';}
+function seatPick(i){const p=SEAT[i],un=document.getElementById('f-unit');un.value=p.u;unitAuto=true;seatLookup();}
+fetch('seatmap.json').then(r=>r.ok?r.json():[]).then(d=>{SEAT=Array.isArray(d)?d:[];seatLookup();}).catch(()=>{});
+document.getElementById('f-name').addEventListener('input',seatLookup);
+document.getElementById('f-unit').addEventListener('input',()=>{unitAuto=false;if(SEAT.length)seatLookup();});
 let cat='全部', cart={}, venue=false;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function renderCats(){document.getElementById('cats').innerHTML=CATS.map(c=>'<button type="button" class="pill'+(c===cat?' on':'')+'" onclick="setCat(\''+c+'\')">'+c+'</button>').join('');}
@@ -143,8 +166,9 @@ document.getElementById('form').addEventListener('submit',async e=>{e.preventDef
   const btn=e.target.querySelector('button[type=submit]');btn.disabled=true;btn.textContent='送出中…';
   const items=Object.keys(cart).filter(id=>findItem(id)).map(id=>{const p=findItem(id);const f=freeOf(p,cart[id]);const it={product_id:id,name:p.name,seller:p.seller,price:isQ(p)?0:p.price,unit:p.unit,qty:cart[id]};if(isQ(p))it.quote=true;if(f){it.free=f;it.promo=p.promo.label;}return it;});
   const total=items.reduce((a,i)=>a+i.price*i.qty,0);const no='IMC15-'+String(Date.now()).slice(-6);
-  try{await dbInsert('h15_orders',{order_no:no,unit:g('f-unit'),name:g('f-name'),tel:g('f-tel'),addr:g('f-addr'),items:items,total:total},'return=minimal');
-    document.getElementById('orderNo').textContent=no;cart={};venue=false;renderCart();document.getElementById('done').style.display='block';e.target.reset();}
+  const unitRec=g('f-unit')+(seatSel?'｜午場 '+seatTxt(seatSel.a)+'・晚宴 '+seatTxt(seatSel.b):'');
+  try{await dbInsert('h15_orders',{order_no:no,unit:unitRec,name:g('f-name'),tel:g('f-tel'),addr:g('f-addr'),items:items,total:total},'return=minimal');
+    document.getElementById('orderNo').textContent=no;cart={};venue=false;renderCart();document.getElementById('done').style.display='block';e.target.reset();seatSel=null;unitAuto=false;document.getElementById('seatInfo').style.display='none';}
   catch(err){alert('送出失敗，請再試一次。');}
   btn.disabled=false;btn.textContent='送出訂單';});
 function reset(){document.getElementById('done').style.display='none';}

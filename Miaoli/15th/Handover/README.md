@@ -4,6 +4,7 @@
 
 - index.html 活動主頁（即時流程）
 - seat.html 座位查詢（活動排座匯出）
+- seatmap.json 商品館「填姓名自動帶出社別／桌號」用的名單；seat.html 每次重新匯出後，執行 `python3 tools/make_seatmap.py` 重新產生
 - me.html 我的活動頁（手機）
 - wish.html 商務交流許願牆
 - shop.html 社友商品館
