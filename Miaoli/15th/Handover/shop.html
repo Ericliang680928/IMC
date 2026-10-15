@@ -44,6 +44,14 @@
 .chip{border:2px solid #BFE0C8;background:#fff;color:var(--green);border-radius:999px;padding:6px 14px;font-size:15px;font-weight:700;cursor:pointer}
 .site{display:inline-block;margin-top:2px;font-size:15px;font-weight:700;color:var(--rose);text-decoration:none}
 .site:hover{text-decoration:underline}
+.coldtag{display:inline-block;background:#E4F0FB;color:#14507F;border:1px solid #AFCDE8;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.coldnote{background:#EAF3FC;border:1px solid #BCD6EE;color:#14507F;border-radius:10px;padding:7px 10px;font-size:13.5px;line-height:1.5}
+.splitnote{background:#EAF3FC;border:1px solid #BCD6EE;color:#14507F;border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.6;font-weight:600}
+.grp{border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.grp.cur{border-color:var(--gold);box-shadow:0 0 0 2px rgba(197,163,102,.35)}
+.grp.cold{background:#F4F9FE}
+.grp .gh{display:flex;justify-content:space-between;gap:8px;align-items:baseline;font-size:15px}
+.grp .curtag{font-size:12.5px;color:var(--gold2);font-weight:700}
 .opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(224px,1fr));gap:6px}
 .opt{display:flex;align-items:center;gap:8px;background:var(--cream);border-radius:10px;padding:5px 6px 5px 12px;min-width:0}
 .opt .ol{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--dark);overflow-wrap:anywhere}
@@ -68,6 +76,7 @@
 @media (max-width:600px){.prod{grid-template-columns:96px minmax(0,1fr);grid-template-areas:"img head" "buy buy" "det det";gap:8px 12px;padding:12px}.pimg{width:96px;font-size:28px}.phead .ttl{font-size:17px}.phead .meta .lbl{display:none}.phead .meta .note{text-align:left!important;font-size:12px}.phead .sum{-webkit-line-clamp:2}.opts{grid-template-columns:minmax(0,1fr)}}
 </style>
 <script src="nav.js?v=1" defer></script>
+<script src="shuttle.js?v=1" defer></script>
 </head>
 <body>
 <nav class="nav"><div class="nin">
@@ -96,7 +105,13 @@
   <aside id="cart" class="card cartbox" style="scroll-margin-top:80px">
     <div class="serif" style="font-size:24px;font-weight:700;color:var(--dark)">購物車</div>
     <div id="cartList"></div>
-    <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="color:var(--muted2)">合計</span><span style="font-size:28px;font-weight:700;color:var(--rose)">NT$ <span id="total">0</span></span></div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="color:var(--muted2)" id="totLbl">合計</span><span style="font-size:28px;font-weight:700;color:var(--rose)">NT$ <span id="total">0</span></span></div>
+    <div id="done" style="display:none;background:var(--greenbg);border:1px solid #BFE0C8;border-radius:14px;padding:18px;color:var(--green)">
+      <div style="font-weight:700;font-size:20px">訂單已送出，謝謝支持社友！</div>
+      <div style="font-size:15px">訂單編號 <span id="orderNo"></span>・我們彙整後會儘早安排出貨，並以您留的電話聯繫。</div>
+      <div id="doneMore" style="display:none;margin-top:8px;background:#EAF3FC;border:1px solid #BCD6EE;color:#14507F;border-radius:10px;padding:10px 12px;font-size:15px;line-height:1.6;font-weight:600"></div>
+      <button type="button" class="btn btn-line" style="margin-top:10px" onclick="reset()">再逛一次</button>
+    </div>
     <form id="form" style="display:none;border-top:2px solid var(--line);padding-top:16px;flex-direction:column;gap:12px">
       <div style="font-weight:700;color:var(--gold2)">收件資料</div>
       <div class="fld"><label class="f" for="f-name">姓名</label><input id="f-name" class="in" required autocomplete="name" placeholder="參加人員輸入姓名，自動帶出社別與桌號"></div>
@@ -105,13 +120,9 @@
       <div class="fld"><label class="f" for="f-tel">電話</label><input id="f-tel" class="in" type="tel" required placeholder="09xx-xxx-xxx"></div>
       <div class="fld"><label class="f" for="f-addr">地址</label><input id="f-addr" class="in" required placeholder="收件地址"></div>
       <div class="note">出貨時間未定、會儘早送達；付款方式由各社友與您聯繫確認。</div>
-      <button type="submit" class="btn btn-gold">送出訂單</button>
+      <div class="note" id="grpNote" style="display:none"></div>
+      <button type="submit" class="btn btn-gold" id="subBtn">送出訂單</button>
     </form>
-    <div id="done" style="display:none;background:var(--greenbg);border:1px solid #BFE0C8;border-radius:14px;padding:18px;color:var(--green)">
-      <div style="font-weight:700;font-size:20px">訂單已送出，謝謝支持社友！</div>
-      <div style="font-size:15px">訂單編號 <span id="orderNo"></span>・我們彙整後會儘早安排出貨，並以您留的電話聯繫。</div>
-      <button type="button" class="btn btn-line" style="margin-top:10px" onclick="reset()">再逛一次</button>
-    </div>
   </aside>
 </div>
 </main>
@@ -128,7 +139,7 @@ const DEMO=[
 ];
 /* 正式商品（寫在頁面內，圖檔在 assets/shop/）；promo＝活動價：每買 buy 送 free */
 const STATIC=[
- {id:'jj-heirun',cat:'餐桌點心',name:'水藏・黑潤原露',seller:'金稼農創科技股份有限公司・黃乾斌社友',unit:'瓶',price:70,ar:'3/4',
+ {id:'jj-heirun',cat:'餐桌點心',name:'水藏・黑潤原露',seller:'金稼農創科技股份有限公司・黃乾斌社友',unit:'瓶',price:70,ar:'3/4',temp:'冷藏',
   desc:'苗栗小農自己種植的黑木耳，加上紅棗、枸杞、老薑，以冬瓜糖慢火熬煮。在地新鮮熬煮，無添加防腐劑，全素，養生無負擔。成分：水、黑木耳、冬瓜糖（全素）、紅棗、枸杞、老薑。需冷藏 5°C 以下，冷藏保存 14 天。',
   imgs:['assets/shop/jj1.jpg','assets/shop/jj2.jpg'],
   site:{url:'https://reurl.cc/Vne3jZ',label:'看金稼農業官網'},
@@ -150,10 +161,10 @@ const STATIC=[
 ].map(x=>Object.assign({color:'#E8D9B8'},x));
 let PRODUCTS=[];
 const isQ=p=>p.price==null;
-function findItem(id){for(const p of PRODUCTS){if(p.opts){for(const o of p.opts){if(p.id+'-'+o.k===id)return {id:id,name:p.name+'（'+o.label+'）',seller:p.seller,price:o.price,unit:o.unit,promo:null};}}else if(p.id===id)return p;}return null;}
+function findItem(id){for(const p of PRODUCTS){if(p.opts){for(const o of p.opts){if(p.id+'-'+o.k===id)return {id:id,name:p.name+'（'+o.label+'）',seller:p.seller,price:o.price,unit:o.unit,promo:null,temp:p.temp||''};}}else if(p.id===id)return p;}return null;}
 const CATS=['全部','伴手禮','餐桌點心'];
 async function loadProducts(){let rows=[];try{rows=await dbGet('h15_products?on_shelf=eq.true&cat=neq.贊助廣告&select=*&order=id');}catch(e){rows=[];}
-  const dbp=rows.map(r=>{const imgs=r.img?String(r.img).split('|').map(s=>s.trim()).filter(Boolean):[];return {id:String(r.id),cat:r.cat,name:r.name||'',seller:r.seller,price:r.price||0,unit:r.unit||'',desc:r.descr||'',imgs:imgs,color:'#E8D9B8'};});
+  const dbp=rows.map(r=>{const imgs=r.img?String(r.img).split('|').map(s=>s.trim()).filter(Boolean):[];const tg=(r.name||'')+' '+(r.descr||''),temp=/[【\[［]冷凍[】\]］]/.test(tg)||/冷凍/.test(r.name||'')?'冷凍':(/[【\[［]冷藏[】\]］]/.test(tg)||/冷藏/.test(r.name||'')?'冷藏':'');return {id:String(r.id),cat:r.cat,name:r.name||'',seller:r.seller,price:r.price||0,unit:r.unit||'',desc:r.descr||'',imgs:imgs,color:'#E8D9B8',temp:temp};});
   PRODUCTS=STATIC.concat(dbp);
   if(PRODUCTS.length===0){PRODUCTS=DEMO;document.getElementById('demoNote').style.display='block';}
   renderCats();renderProds();renderCart();}
@@ -167,7 +178,7 @@ function seatLookup(){
   const pick=hit.length===1?hit[0]:(hit.find(p=>nm(p.u)===nm(un.value))||null);
   if(!pick){if(unitAuto){un.value='';unitAuto=false;}box.innerHTML='<div>有 '+hit.length+' 位同名，請點選您的社別：</div><div class="chips">'+hit.map(p=>'<button type="button" class="chip" onclick="seatPick('+SEAT.indexOf(p)+')">'+esc(p.u)+'</button>').join('')+'</div>';box.style.display='block';return;}
   seatSel=pick;if(!un.value||unitAuto){un.value=pick.u;unitAuto=true;}
-  box.innerHTML='<div style="font-weight:700">找到您了：'+esc(pick.n)+'・'+esc(pick.u)+'</div>'+(seatTxt(pick.a,1)===seatTxt(pick.b,1)?'<div class="sr"><span>桌號</span><b>'+esc(seatTxt(pick.a,1))+'</b></div>':'<div class="sr"><span>午場</span><b>'+esc(seatTxt(pick.a,1))+'</b></div><div class="sr"><span>晚宴</span><b>'+esc(seatTxt(pick.b,1))+'</b></div>')+'<div class="note" style="margin-top:6px">座位以現場桌卡為準</div>';box.style.display='block';}
+  box.innerHTML='<div style="font-weight:700">找到您了：'+esc(pick.n)+'・'+esc(pick.u)+'</div>'+(seatTxt(pick.a,1)===seatTxt(pick.b,1)?'<div class="sr"><span>桌號</span><b>'+esc(seatTxt(pick.a,1))+'</b></div>':'<div class="sr"><span>午場</span><b>'+esc(seatTxt(pick.a,1))+'</b></div><div class="sr"><span>晚宴</span><b>'+esc(seatTxt(pick.b,1))+'</b></div>')+'<div class="note" style="margin-top:6px">座位以現場桌卡為準</div>'+((window.SHUTTLE&&SHUTTLE.find(pick.n,pick.u))?'<div class="note" style="margin-top:6px;color:#8A4B00;font-weight:700">🚌 您有登記高鐵接駁：去程 12:10 高鐵苗栗站發車、回程 20:10 會場發車（詳見活動主頁）</div>':'');box.style.display='block';}
 function seatPick(i){const p=SEAT[i],un=document.getElementById('f-unit');un.value=p.u;unitAuto=true;seatLookup();}
 fetch('seatmap.json').then(r=>r.ok?r.json():[]).then(d=>{SEAT=Array.isArray(d)?d:[];seatLookup();}).catch(()=>{});
 document.getElementById('f-name').addEventListener('input',seatLookup);
@@ -180,14 +191,14 @@ function setImg(id,k){const p=PRODUCTS.find(x=>x.id===id);if(!p)return;const m=d
 function tog(id){const a=document.getElementById('p-'+id);if(!a)return;const o=a.classList.toggle('open');const b=a.querySelector('.more');if(b){b.textContent=o?'收合 ▴':'看詳情 ▾';b.setAttribute('aria-expanded',o);}}
 function renderProds(){
   document.getElementById('prods').innerHTML=PRODUCTS.filter(p=>cat==='全部'||p.cat===cat).map(p=>{const im=p.imgs||[],id=esc(p.id);
-    const pic=im.length?'<img src="'+esc(im[0])+'" alt="'+esc(p.name)+'" loading="lazy">':esc(p.name.replace(/^［/,'').slice(0,1));
+    const pic=im.length?'<img src="'+esc(im[0])+'" alt="'+esc(p.name)+'" loading="lazy">':esc(p.name.replace(/^[［【\[][^］】\]]*[］】\]]/,'').replace(/^［/,'').slice(0,1));
     const cnt=im.length>1?'<span class="cnt">'+im.length+' 張</span>':'';
     const gal=im.length>1?'<div class="gal" id="g-'+id+'">'+im.map((u,k)=>'<button type="button" class="'+(k===0?'on':'')+'" onclick="setImg(\''+id+'\','+k+')" aria-label="看第 '+(k+1)+' 張圖"><img src="'+esc(u)+'" alt="" loading="lazy"></button>').join('')+'</div>':'';
     const big=im.length?'<div class="big"><img id="mi-'+id+'" src="'+esc(im[0])+'" alt="'+esc(p.name)+'" loading="lazy"></div>':'';
     const buy=p.opts?'<div class="opts">'+p.opts.map(o=>'<div class="opt"><span class="ol">'+esc(o.label)+'</span>'+(o.price==null?'<span class="op q">價格洽詢</span>':'<span class="op">NT$ '+o.price+'</span>')+'<button type="button" class="btn btn-gold sm" onclick="addTo(\''+esc(p.id+'-'+o.k)+'\')">'+(o.price==null?'預購登記':'加入')+'</button></div>').join('')+'</div>'
       :'<div class="one">'+(isQ(p)?'<div class="pr" style="font-size:19px">價格洽詢</div>':'<div class="pr">NT$ '+p.price+'<span class="note" style="font-weight:400;margin-left:4px">／'+esc(p.unit)+'</span></div>')+'<button type="button" class="btn btn-gold sm" onclick="addTo(\''+id+'\')">'+(isQ(p)?'預購登記':'加入購物車')+'</button></div>';
     return '<article class="prod" id="p-'+id+'"><button type="button" class="pimg" style="background:'+p.color+'" onclick="tog(\''+id+'\')" aria-label="看 '+esc(p.name)+' 詳情">'+pic+cnt+'</button>'
-      +'<div class="phead"><div class="meta"><span class="lbl" style="font-size:13px;white-space:nowrap;flex-shrink:0">'+esc(p.cat)+'</span><span class="note" style="text-align:right">提供：'+esc(p.seller)+'</span></div><div class="ttl serif">'+esc(p.name)+'</div><div class="sum">'+esc(p.desc)+'</div>'+(p.promo?'<div class="promo">'+esc(p.promo.label)+'</div>':'')
+      +'<div class="phead"><div class="meta"><span class="lbl" style="font-size:13px;white-space:nowrap;flex-shrink:0">'+esc(p.cat)+'</span><span class="note" style="text-align:right">提供：'+esc(p.seller)+'</span></div><div class="ttl serif">'+esc(p.name)+'</div><div class="sum">'+esc(p.desc)+'</div>'+(p.temp?'<div class="coldnote">❄ '+esc(p.temp)+'商品：低溫配送，無法與常溫商品同一張訂單，請分開下單（購物車會自動分成兩張）。</div>':'')+(p.promo?'<div class="promo">'+esc(p.promo.label)+'</div>':'')
       +'<div class="links"><button type="button" class="more" aria-expanded="false" onclick="tog(\''+id+'\')">看詳情 ▾</button>'+(p.site?'<a class="site" href="'+esc(p.site.url)+'" target="_blank" rel="noopener">'+esc(p.site.label)+' →</a>':'')+'</div></div>'
       +'<div class="pbuy">'+buy+(p.ship?'<div class="note">'+esc(p.ship)+'</div>':'')+'</div>'
       +'<div class="pdet">'+big+gal+'<div class="full">'+esc(p.desc)+'</div></div></article>';}).join('');
@@ -201,26 +212,52 @@ let cartSeen=false;function fabVis(){document.getElementById('fab').classList.to
 if('IntersectionObserver' in window){new IntersectionObserver(es=>{cartSeen=es[0].isIntersecting;fabVis();},{threshold:.25}).observe(document.getElementById('cart'));addEventListener('resize',fabVis);}
 function change(id,d){const q=(cart[id]||0)+d; if(q>0)cart[id]=q; else delete cart[id]; document.getElementById('done').style.display='none'; renderCart();}
 function freeOf(p,q){return (venue&&p.promo)?Math.floor(q/p.promo.buy)*p.promo.free:0;}
+const grpOf=p=>p.temp?'cold':'amb';
+const GN={amb:'常溫商品',cold:'冷藏／冷凍商品（低溫配送）'};
+let curGrp='amb',prevBoth=false;
+function pickGrp(g){curGrp=g;renderCart();}
 function renderCart(){
-  const ids=Object.keys(cart).filter(id=>findItem(id)); let total=0,count=0,hasPromo=false,hasQuote=false;
-  let h=ids.map(id=>{const p=findItem(id);if(isQ(p))hasQuote=true;else total+=p.price*cart[id];count+=cart[id];if(p.promo)hasPromo=true;const f=freeOf(p,cart[id]);
-    return '<div class="row"><div style="flex:1;min-width:0"><div style="font-weight:700;line-height:1.35;overflow-wrap:anywhere">'+esc(p.name)+'</div><div class="note">'+(isQ(p)?'價格洽詢':'NT$ '+p.price)+' × '+cart[id]+(f?' <span class="free">＋ 贈 '+f+' '+esc(p.unit)+'</span>':'')+'</div></div><button type="button" class="qty" aria-label="減少" onclick="change(\''+esc(id)+'\',-1)">−</button><span style="min-width:24px;text-align:center;font-weight:700">'+cart[id]+'</span><button type="button" class="qty" aria-label="增加" onclick="change(\''+esc(id)+'\',1)">+</button></div>';}).join('');
+  const ids=Object.keys(cart).filter(id=>findItem(id));
+  const G={amb:[],cold:[]},sub={amb:0,cold:0};let count=0,hasPromo=false,hasQuote=false;
+  ids.forEach(id=>{const p=findItem(id),g=grpOf(p);G[g].push(id);if(isQ(p))hasQuote=true;else sub[g]+=p.price*cart[id];count+=cart[id];if(p.promo)hasPromo=true;});
+  const both=G.amb.length>0&&G.cold.length>0;
+  if(both&&!prevBoth)curGrp='amb';prevBoth=both;
+  if(!G[curGrp].length)curGrp=G.amb.length?'amb':'cold';
+  const row=id=>{const p=findItem(id),f=freeOf(p,cart[id]);
+    return '<div class="row"><div style="flex:1;min-width:0"><div style="font-weight:700;line-height:1.35;overflow-wrap:anywhere">'+esc(p.name)+'</div><div class="note">'+(isQ(p)?'價格洽詢':'NT$ '+p.price)+' × '+cart[id]+(f?' <span class="free">＋ 贈 '+f+' '+esc(p.unit)+'</span>':'')+'</div></div><button type="button" class="qty" aria-label="減少" onclick="change(\''+esc(id)+'\',-1)">−</button><span style="min-width:24px;text-align:center;font-weight:700">'+cart[id]+'</span><button type="button" class="qty" aria-label="增加" onclick="change(\''+esc(id)+'\',1)">+</button></div>';};
+  let h='';
+  if(both){
+    h='<div class="splitnote">❄ 冷藏／冷凍商品需低溫配送，無法與常溫商品放在同一張訂單，已為您分成 2 張訂單，請依序各送出一次。</div>'
+     +['amb','cold'].map((g,i)=>'<div class="grp '+g+(curGrp===g?' cur':'')+'"><div class="gh"><b>'+(g==='cold'?'❄ ':'')+'訂單 '+(i?'②':'①')+'・'+GN[g]+'</b><span style="font-weight:700">'+(sub[g]?'NT$ '+sub[g]:'')+'</span></div>'+G[g].map(row).join('')
+       +(curGrp===g?'<div class="curtag">▼ 目前填寫的是這張訂單</div>':'<button type="button" class="btn btn-line sm" onclick="pickGrp(\''+g+'\')">改為先結帳這張</button>')+'</div>').join('');
+  }else{
+    h=ids.map(row).join('');
+    if(G.cold.length)h+='<div class="coldnote">❄ 此單為冷藏／冷凍商品，採低溫配送。</div>';
+  }
   if(!ids.length)h='<div style="background:var(--cream);border-radius:12px;padding:20px;text-align:center;color:var(--muted)">還沒有商品，先逛逛左邊的社友好物吧。</div>';
   if(hasQuote)h+='<div class="note" style="background:var(--cream);border-radius:10px;padding:10px 12px;line-height:1.6">※ 標示「價格洽詢」的品項不含在合計內，賣家會另行聯繫，告知金額與宅配運費。</div>';
   if(hasPromo)h+='<label class="venue"><input type="checkbox" id="venue"'+(venue?' checked':'')+' onchange="venue=this.checked;renderCart()"><span>我現在人在苗栗IMC交接會場下訂（勾選享活動價：買 2 罐送 1 罐）</span></label>';
   document.getElementById('cartList').innerHTML=h;
-  document.getElementById('total').textContent=total; document.getElementById('cnt').textContent=count;document.getElementById('fabN').textContent=count;document.getElementById('fab').setAttribute('aria-label','購物車，'+count+' 件商品');
+  document.getElementById('total').textContent=sub[curGrp]; document.getElementById('cnt').textContent=count;document.getElementById('fabN').textContent=count;document.getElementById('fab').setAttribute('aria-label','購物車，'+count+' 件商品');
+  document.getElementById('totLbl').textContent=both?'本張訂單合計（'+(curGrp==='cold'?'冷藏／冷凍':'常溫')+'）':'合計';
+  const gn=document.getElementById('grpNote'),sb=document.getElementById('subBtn');
+  if(both){gn.style.display='block';gn.textContent='這次送出的是「訂單 '+(curGrp==='amb'?'①':'②')+'・'+GN[curGrp]+'」；送出後再繼續送另一張，收件資料會幫您保留。';sb.textContent='送出訂單 '+(curGrp==='amb'?'①（常溫）':'②（冷藏／冷凍）');}
+  else{gn.style.display='none';sb.textContent='送出訂單';}
   document.getElementById('form').style.display=ids.length?'flex':'none';
 }
 document.getElementById('form').addEventListener('submit',async e=>{e.preventDefault();const g=id=>document.getElementById(id).value.trim();
   const btn=e.target.querySelector('button[type=submit]');btn.disabled=true;btn.textContent='送出中…';
-  const items=Object.keys(cart).filter(id=>findItem(id)).map(id=>{const p=findItem(id);const f=freeOf(p,cart[id]);const it={product_id:id,name:p.name,seller:p.seller,price:isQ(p)?0:p.price,unit:p.unit,qty:cart[id]};if(isQ(p))it.quote=true;if(f){it.free=f;it.promo=p.promo.label;}return it;});
-  const total=items.reduce((a,i)=>a+i.price*i.qty,0);const no='IMC15-'+String(Date.now()).slice(-6);
+  const gids=Object.keys(cart).filter(id=>findItem(id)&&grpOf(findItem(id))===curGrp),cold=curGrp==='cold';
+  const items=gids.map(id=>{const p=findItem(id);const f=freeOf(p,cart[id]);const it={product_id:id,name:p.name,seller:p.seller,price:isQ(p)?0:p.price,unit:p.unit,qty:cart[id]};if(isQ(p))it.quote=true;if(p.temp)it.cold=p.temp;if(f){it.free=f;it.promo=p.promo.label;}return it;});
+  const total=items.reduce((a,i)=>a+i.price*i.qty,0);const no='IMC15-'+String(Date.now()).slice(-6)+(cold?'-C':'');
   const sa=seatSel?seatTxt(seatSel.a,1):'',sb=seatSel?seatTxt(seatSel.b,1):'';const unitRec=g('f-unit')+(seatSel?'｜'+(sa===sb?sa:'午場 '+sa+'・晚宴 '+sb):'');
   try{await dbInsert('h15_orders',{order_no:no,unit:unitRec,name:g('f-name'),tel:g('f-tel'),addr:g('f-addr'),items:items,total:total},'return=minimal');
-    document.getElementById('orderNo').textContent=no;cart={};venue=false;renderCart();document.getElementById('done').style.display='block';e.target.reset();seatSel=null;unitAuto=false;document.getElementById('seatInfo').style.display='none';}
+    document.getElementById('orderNo').textContent=no+(cold?'（冷藏／冷凍低溫配送單）':'');gids.forEach(id=>delete cart[id]);
+    const left=Object.keys(cart).filter(id=>findItem(id)),more=document.getElementById('doneMore');
+    if(left.length){curGrp=grpOf(findItem(left[0]));more.style.display='block';more.textContent='還有一張「'+GN[curGrp]+'」訂單尚未送出——收件資料已幫您保留，請再按一次下方的「送出訂單」。';renderCart();document.getElementById('done').style.display='block';document.getElementById('done').scrollIntoView({behavior:'smooth',block:'nearest'});}
+    else{more.style.display='none';venue=false;curGrp='amb';renderCart();document.getElementById('done').style.display='block';e.target.reset();seatSel=null;unitAuto=false;document.getElementById('seatInfo').style.display='none';}}
   catch(err){alert('送出失敗，請再試一次。');}
-  btn.disabled=false;btn.textContent='送出訂單';});
+  btn.disabled=false;renderCart();});
 function reset(){document.getElementById('done').style.display='none';}
 renderCats();renderCart();loadProducts();
 </script>

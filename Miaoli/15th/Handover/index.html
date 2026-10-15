@@ -32,6 +32,7 @@
 @media (max-width:860px){.wide{grid-template-columns:1fr}.hero-grid{grid-template-columns:1fr}.hero-big h1{font-size:34px}.spk{grid-template-columns:1fr}.tli .body{grid-template-columns:1fr}}
 </style>
 <script src="nav.js?v=1" defer></script>
+<script src="shuttle.js?v=1" defer></script>
 </head>
 <body>
 <nav class="nav"><div class="nin">
@@ -139,11 +140,11 @@
     <div id="shuttleLive" role="status" aria-live="polite" style="display:none;border-radius:12px;padding:12px 16px;font-weight:700"></div>
     <div class="grid g2" style="gap:14px">
       <div id="shuttleGo" style="background:#FAF4E6;border-radius:12px;padding:14px 16px"><div style="font-weight:700">去程　12:10 高鐵苗栗站 → 會場</div>
-        <div>818 次（台南／左營 → 苗栗）11:54 抵達・24 人</div><div>821 次（南港／桃園 → 苗栗）11:57 抵達・1 人</div><a class="site" href="assets/shuttle-out.ics" download="友社接駁-去程.ics">＋ 加入手機行事曆（含提醒）</a></div>
+        <div>818 次（台南／左營 → 苗栗）11:54 抵達・24 人</div><div>821 次（南港／桃園 → 苗栗）11:57 抵達・1 人</div><a class="site" href="assets/shuttle-out.ics" download="友社接駁-去程.ics">＋ 加入手機行事曆（含提醒）</a><br><a class="site" href="#" onclick="SHUTTLE.open('go');return false">查看去程接送名單（社別／姓名）›</a></div>
       <div id="shuttleBack" style="background:#FAF4E6;border-radius:12px;padding:14px 16px"><div style="font-weight:700">回程　20:10 會場 → 高鐵苗栗站</div>
-        <div>857 次（苗栗 → 台南／左營）20:58 開車・25 人</div><div>854 次（苗栗 → 桃園／南港）20:56 開車・1 人</div><a class="site" href="assets/shuttle-back.ics" download="友社接駁-回程.ics">＋ 加入手機行事曆（含提醒）</a></div>
+        <div>857 次（苗栗 → 台南／左營）20:58 開車・25 人</div><div>854 次（苗栗 → 桃園／南港）20:56 開車・1 人</div><a class="site" href="assets/shuttle-back.ics" download="友社接駁-回程.ics">＋ 加入手機行事曆（含提醒）</a><br><a class="site" href="#" onclick="SHUTTLE.open('back');return false">查看回程接送名單（社別／姓名）›</a></div>
     </div>
-    <div class="note">適用桃園、台南、南瀛、高雄、屏東社已登記接駁的貴賓；乘車名單與聯絡人由承辦團隊另行通知各友社。發車前 20 分鐘，本頁會出現提醒；也可按上方「加入手機行事曆」，手機會在發車前 30、10 分鐘響鈴提醒。</div>
+    <div class="note">適用桃園、台南、南瀛、高雄、屏東社已登記接駁的貴賓；聯絡人由承辦團隊另行通知各友社；接送名單可按上方連結查看，名單上的貴賓到「座位查詢」查自己的座位時，也會看到接駁提醒。發車前 20 分鐘，本頁會出現提醒；也可按上方「加入手機行事曆」，手機會在發車前 30、10 分鐘響鈴提醒。</div>
   </div>
   </div>
 </div></section>
@@ -160,7 +161,7 @@ const DEMO = new URLSearchParams(location.search).get('t') || null;
 function now(){ return DEMO ? new Date(DEMO) : new Date(); }
 const D='2026-10-17T';
 const SCHED=[
- ['12:10',null,'友社貴賓高鐵接駁（去程）',['高鐵苗栗站 → 千八會館（友惠遊覽車）','搭 818 次（11:54 抵）／821 次（11:57 抵）到苗栗的友社貴賓'],1],
+ ['12:10',null,'友社貴賓高鐵接駁（去程）',['高鐵苗栗站 → 千八會館（友惠遊覽車）','搭 818 次（11:54 抵）／821 次（11:57 抵）到苗栗的友社貴賓'],1,'go'],
  ['13:00','13:30','報到、交流、大合照',[]],
  ['13:30','14:30','交接典禮',['開場表演—星月寶萊舞團','進場儀式—總召、歷屆前社長、伉儷進場、第14屆社長進場、第15屆社長進場','主席鳴鐘宣布開會（劉詩詣社長）','唱社歌（第一節及第二節）','宣讀 IMC 宗旨、使命、願景、核心價值（第一副社長姜文玉）','開會祝福（輔導社長江淑萍）','介紹貴賓及友社社友代表','主席致詞（劉詩詣社長）','頒發新任社長（林浿安社長）當選證書','貴賓及友社代表致詞：長官及貴賓、聯合會理事長陳世雷、友社代表高雄社林秀英社長']],
  ['14:30','15:00','第十四屆敘獎',['第十四屆影片回顧《社長的一天》','卸任感言（劉詩詣社長）']],
@@ -171,7 +172,7 @@ const SCHED=[
  ['17:35','18:00','轉場／領取伴手禮／工商聯誼',[]],
  ['18:00','20:00','「濕婆神之夜」—舞動、歡聚、今晚不設限',['餐敘、晚會、慶生、友社交接邀請']],
  ['20:00','20:30','珍重再見',[]],
- ['20:10',null,'友社貴賓高鐵接駁（回程）',['千八會館 → 高鐵苗栗站（友惠遊覽車）','搭 854 次（20:56 開）／857 次（20:58 開）返程的友社貴賓'],1]
+ ['20:10',null,'友社貴賓高鐵接駁（回程）',['千八會館 → 高鐵苗栗站（友惠遊覽車）','搭 854 次（20:56 開）／857 次（20:58 開）返程的友社貴賓'],1,'back']
 ];
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const pad=n=>String(n).padStart(2,'0');
@@ -184,7 +185,8 @@ function render(){
     return '<div class="tli'+(isNow?' now':'')+(isPast?' past':'')+'"><span class="d'+(isNow?' pulse':'')+'"></span><div class="body"><div><div class="t">'+s[0]+(s[1]?' – '+s[1]:' 發車')+'</div>'
       +(s[4]?'<span class="badge tag-gold">友社貴賓</span>':'')+(soon?'<span class="badge" style="background:var(--rose);color:#fff">⏰ 即將發車</span>':'')
       +(isNow?'<span class="badge" style="background:var(--rose);color:#fff">進行中 NOW</span>':'')+(isNext?'<span class="badge tag-gold">接下來 NEXT</span>':'')
-      +'</div><div><div class="ttl serif">'+esc(s[2])+'</div>'+s[3].map(t=>'<div class="sub"><span>◆</span><span>'+esc(t)+'</span></div>').join('')+'</div></div></div>';
+      +'</div><div><div class="ttl serif">'+esc(s[2])+'</div>'+s[3].map(t=>'<div class="sub"><span>◆</span><span>'+esc(t)+'</span></div>').join('')
+      +(s[5]?'<div class="sub"><span>◆</span><a class="site" href="#" onclick="SHUTTLE.open(\''+s[5]+'\');return false">查看接送名單（社別／姓名）›</a></div>':'')+'</div></div></div>';
   }).join('');
   document.getElementById('tl').innerHTML=html;
   let title,detail,color='var(--gold3)',pulse=false;
