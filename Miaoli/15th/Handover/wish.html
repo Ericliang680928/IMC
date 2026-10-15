@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>商務交流許願牆｜苗栗IMC 第15屆</title>
-<script src="i18n.js?v=11"></script>
+<script src="i18n.js?v=12"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="style.css?v=3">
 <script src="db.js?v=1"></script>
@@ -69,6 +69,7 @@
   </form>
   <section id="wishwall" style="display:flex;flex-direction:column;gap:16px;scroll-margin-top:72px">
     <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px"><div class="serif" style="font-size:24px;font-weight:700;color:var(--dark)">社友許願牆</div><div class="note">共 <span id="count">0</span> 則</div></div>
+    <div class="note">按「我想和你交流」，對方的「我的活動頁」就會看到您的邀請；雙方回覆後，茶敘時間 15:20 於 5 桌旁碰面。</div>
     <div id="filters" style="display:flex;flex-wrap:wrap;gap:8px"></div>
     <div id="wall" style="display:flex;flex-direction:column;gap:14px"><div class="note">還沒有人許願，成為第一位吧。</div></div>
     <div class="note">交流建議與產業別由 AI 依公司名稱判斷，可能有誤，請見諒。</div>
@@ -82,14 +83,28 @@ let ROSTER=[], picked=[], filter='全部';
 let LIST=[];
 const ORD=['聯合會','苗栗社','基隆社','台北社','新北社','桃園社','新竹社','台中社','彰化社','南投社','雲林社','嘉義社','南瀛社','台南社','高雄社','屏東社','宜蘭社','顧問及來賓','EX-亞洲劇團'];
 fetch('roster.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(d=>{ROSTER=d;ROSTER.forEach(p=>{if(p.lunch<0)p.lunch=0;if(p.dinner<0)p.dinner=0;});initWho();loadWall();}).catch(()=>{document.getElementById('whoPick').style.display='flex';});
-async function loadWall(){try{const rows=await dbGet('h15_wishes_public?select=*&order=created_at.desc&limit=200');LIST=rows.map(r=>({unit:r.unit,name:r.name,biz:r.biz||'—',have:r.have||(r.tags_have||[]).join('、')||'—',want:r.want||(r.tags_want||[]).join('、')||'—',match:''}));renderWall();}catch(e){}}
+/* 「我想和你交流」→ 寫入 h15_interests（kind=invite）；對方的「我的活動頁 → 想認識您的社友」會讀到 */
+let SENT=new Set();
+async function loadSent(){SENT=new Set();if(!ME)return;try{const r=await dbGet('h15_interests?from_id=eq.'+ME.id+'&kind=eq.invite&select=to_id');SENT=new Set(r.map(x=>x.to_id));}catch(e){}}
+function inviteBtn(w){
+  if(!w.pid)return '';
+  if(ME&&w.pid===ME.id)return '<span class="note">這是您自己的許願</span>';
+  const sent=SENT.has(w.pid);
+  return '<button type="button" class="btn btn-line sm" data-to="'+w.pid+'" onclick="sendInvite(this)"'+(sent?' disabled':'')+'>'+(sent?'已送出交流邀請 ✓':'我想和你交流')+'</button>';}
+async function sendInvite(btn){
+  const to=Number(btn.getAttribute('data-to'));
+  if(!ME){btn.textContent='請先選擇「我是誰」↑';document.getElementById('whoPick').style.display='flex';document.getElementById('who').scrollIntoView({behavior:'smooth',block:'center'});try{document.getElementById('w-q').focus({preventScroll:true});}catch(e){}return;}
+  btn.disabled=true;btn.textContent='送出中…';
+  try{await dbInsert('h15_interests?on_conflict=from_id,to_id,kind',{from_id:ME.id,to_id:to,kind:'invite'},'return=minimal,resolution=ignore-duplicates');SENT.add(to);btn.textContent='已送出交流邀請 ✓';}
+  catch(e){btn.disabled=false;btn.textContent='送出失敗，請再試一次';}}
+async function loadWall(){try{const rows=await dbGet('h15_wishes_public?select=*&order=created_at.desc&limit=200');await loadSent();LIST=rows.map(r=>({pid:r.person_id||((ROSTER.find(p=>p.name===r.name&&p.unit===r.unit)||{}).id),unit:r.unit,name:r.name,biz:r.biz||'—',have:r.have||(r.tags_have||[]).join('、')||'—',want:r.want||(r.tags_want||[]).join('、')||'—',match:''}));renderWall();}catch(e){}}
 let ME=null;
 async function loadMine(p){try{const r=await dbGet('h15_wishes?person_id=eq.'+p.id+'&select=biz,have,want,meet_ids,line_id');if(r.length){const x=r[0];if(x.biz)document.getElementById('w-biz').value=x.biz;document.getElementById('w-have').value=x.have||'';document.getElementById('w-want').value=x.want||'';document.getElementById('w-line').value=x.line_id||'';picked=(x.meet_ids||[]).filter(id=>ROSTER.find(y=>y.id===id));renderPicked();}}catch(e){}}
-function setWho(p){ME=p;loadMine(p);document.getElementById('w-unit').value=p.unit;document.getElementById('w-name').value=p.name;
+function setWho(p){ME=p;loadMine(p);loadSent().then(renderWall);document.getElementById('w-unit').value=p.unit;document.getElementById('w-name').value=p.name;
   document.getElementById('whoAv').textContent=p.name.slice(0,1);document.getElementById('whoName').textContent=p.name;document.getElementById('whoSub').textContent=p.unit+(p.role?'・'+p.role:'')+(p.company?'・'+p.company:'');
   const biz=document.getElementById('w-biz');if(p.ind&&biz.value==='')biz.value=p.ind;
   document.getElementById('whoCard').style.display='flex';document.getElementById('whoPick').style.display='none';try{localStorage.setItem('imc15_me',String(p.id));}catch(e){}}
-function clearWho(){ME=null;document.getElementById('w-unit').value='';document.getElementById('w-name').value='';document.getElementById('whoCard').style.display='none';document.getElementById('whoPick').style.display='flex';try{localStorage.removeItem('imc15_me');}catch(e){}document.getElementById('w-q').focus();}
+function clearWho(){ME=null;SENT=new Set();renderWall();document.getElementById('w-unit').value='';document.getElementById('w-name').value='';document.getElementById('whoCard').style.display='none';document.getElementById('whoPick').style.display='flex';try{localStorage.removeItem('imc15_me');}catch(e){}document.getElementById('w-q').focus();}
 document.getElementById('w-q').addEventListener('input',e=>{const q=e.target.value.trim();const box=document.getElementById('w-qlist');if(q===''){box.innerHTML='';return;}
   const hits=ROSTER.filter(p=>p.name.includes(q)).slice(0,20);
   box.innerHTML=hits.length?hits.map(p=>'<button type="button" class="btn" style="justify-content:flex-start;gap:12px;background:#fff;border:2px solid var(--line2);color:var(--dark);min-height:50px;padding:0 14px" onclick="setWho(ROSTER.find(x=>x.id==='+p.id+'))"><span style="font-weight:700;white-space:nowrap">'+esc(p.name)+'</span><span class="note" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(p.unit)+(p.role?'・'+esc(p.role):'')+'</span></button>').join(''):'<div class="note" style="color:#8A3B1F">找不到，試試只打一個字</div>';});
@@ -107,7 +122,7 @@ function renderPicked(){document.getElementById('picked').innerHTML=picked.map(i
 function renderWall(){const bizs=['全部',...new Set(LIST.map(w=>w.biz))];
   document.getElementById('filters').innerHTML=bizs.map(b=>'<button type="button" class="pill sm'+(b===filter?' on':'')+'" onclick="filter=\''+esc(b)+'\';renderWall()">'+esc(b)+'</button>').join('');
   document.getElementById('count').textContent=LIST.length;
-  document.getElementById('wall').innerHTML=LIST.length===0?'<div class="note">還沒有人許願，成為第一位吧。</div>':LIST.filter(w=>filter==='全部'||w.biz===filter).map(w=>'<article class="card wish"><div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px"><span class="serif" style="font-size:20px;font-weight:700;color:var(--dark)">'+esc(w.name)+'</span><span class="note">'+esc(w.unit)+'</span><span class="tag tag-gold">'+esc(w.biz)+'</span></div><div style="display:flex;gap:10px"><span class="tag tag-green" style="flex:none">我有</span><span>'+esc(w.have)+'</span></div><div style="display:flex;gap:10px"><span class="tag tag-rose" style="flex:none">想找</span><span>'+esc(w.want)+'</span></div>'+(w.match?'<div style="background:var(--cream);border-radius:10px;padding:10px 14px;font-size:15px;color:var(--dark2)">交流建議：'+esc(w.match)+'</div>':'')+'<div><button type="button" class="btn btn-line sm" onclick="this.textContent=\'已送出交流邀請 ✓\';this.disabled=true">我想和你交流</button></div></article>').join('');}
+  document.getElementById('wall').innerHTML=LIST.length===0?'<div class="note">還沒有人許願，成為第一位吧。</div>':LIST.filter(w=>filter==='全部'||w.biz===filter).map(w=>'<article class="card wish"><div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px"><span class="serif" style="font-size:20px;font-weight:700;color:var(--dark)">'+esc(w.name)+'</span><span class="note">'+esc(w.unit)+'</span><span class="tag tag-gold">'+esc(w.biz)+'</span></div><div style="display:flex;gap:10px"><span class="tag tag-green" style="flex:none">我有</span><span>'+esc(w.have)+'</span></div><div style="display:flex;gap:10px"><span class="tag tag-rose" style="flex:none">想找</span><span>'+esc(w.want)+'</span></div>'+(w.match?'<div style="background:var(--cream);border-radius:10px;padding:10px 14px;font-size:15px;color:var(--dark2)">交流建議：'+esc(w.match)+'</div>':'')+'<div>'+inviteBtn(w)+'</div></article>').join('');}
 document.getElementById('form').addEventListener('submit',async e=>{e.preventDefault();const g=id=>document.getElementById(id).value.trim();if(g('w-name')===''){document.getElementById('w-q').focus();document.getElementById('whoPick').style.display='flex';return;}
   const btn=e.target.querySelector('button[type=submit]');btn.disabled=true;btn.textContent='送出中…';
   const row={unit:g('w-unit'),name:g('w-name'),biz:g('w-biz'),have:g('w-have'),want:g('w-want'),meet_ids:picked,line_id:g('w-line'),updated_at:new Date().toISOString()};if(ME)row.person_id=ME.id;
