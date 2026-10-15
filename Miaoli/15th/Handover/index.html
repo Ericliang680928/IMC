@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>苗栗IMC 第14、15屆社長交接暨理監事就職典禮</title>
-<script src="i18n.js?v=8"></script>
+<script src="i18n.js?v=9"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="style.css?v=3">
@@ -30,6 +30,13 @@
 .badge{display:inline-block;font-size:13px;font-weight:700;letter-spacing:.1em;padding:2px 10px;border-radius:999px;width:max-content;margin-top:4px}
 .spk{display:grid;grid-template-columns:380px 1fr;gap:40px;align-items:start}
 .wide{grid-template-columns:1.2fr 1fr}
+.infolist{gap:0;padding:6px 22px 14px}
+.infolist .ir{display:flex;gap:6px 18px;align-items:baseline;padding:11px 0;border-bottom:1px solid var(--line)}
+.infolist .lbl{flex:0 0 5em;white-space:nowrap}
+.infolist .iv{font-size:19px;font-weight:700;color:var(--dark);line-height:1.5}
+.infolist .nb{display:inline-block;margin-right:18px}
+.infolist .note{padding-top:10px;line-height:1.6}
+@media (max-width:720px){.infolist{padding:4px 16px 12px}.infolist .ir{padding:9px 0}.infolist .iv{font-size:17px}.infolist .lbl{flex-basis:4.4em;font-size:13px;letter-spacing:.04em}.infolist .nb{display:block;margin-right:0}}
 /* 手機版首頁：先看到 15 屆 Logo，再看標題、日期與按鈕（整個畫面不被切一半） */
 @media (max-width:860px){
  .hero-big{padding:16px 16px 22px}
@@ -90,12 +97,13 @@
   <div style="font-variant-numeric:tabular-nums;font-size:16px;color:#8C7A5A">現在時間 <span id="clock"></span></div>
 </div></section>
 
-<section id="info" class="sec" style="scroll-margin-top:72px"><div class="wrap">
+<section id="info" class="sec" style="padding:36px 0 22px;scroll-margin-top:72px"><div class="wrap">
   <h2>活動資訊</h2>
-  <div class="grid g3">
-    <div class="card"><div class="lbl">日期時間</div><div style="font-size:22px;font-weight:700">115年10月17日（週六）</div><div>下午 13:30 開始・13:00 報到</div></div>
-    <div class="card"><div class="lbl">地點</div><div style="font-size:22px;font-weight:700">千八會館・竹南婚宴餐廳</div><div>苗栗縣竹南鎮公園五街 19 號</div></div>
-    <div class="card"><div class="lbl">主席</div><div style="font-size:22px;font-weight:700">第十四屆社長 劉詩詣</div><div>第十五屆社長 林浿安</div><div class="note">年會司儀：宋怡嬅／曾仕傑　濕婆神之夜主持：潘建男／謝碧珍</div></div>
+  <div class="card infolist">
+    <div class="ir"><span class="lbl">報到時間</span><span class="iv">下午 13:30 開始・13:00 報到</span></div>
+    <div class="ir"><span class="lbl">地點</span><span class="iv">苗栗縣竹南鎮公園五街 19 號</span></div>
+    <div class="ir"><span class="lbl">主席</span><span class="iv"><span class="nb">第十四屆社長 劉詩詣</span><span class="nb">第十五屆社長 林浿安</span></span></div>
+    <div class="note">年會司儀：宋怡嬅／曾仕傑　濕婆神之夜主持：潘建男／謝碧珍</div>
   </div>
 </div></section>
 
