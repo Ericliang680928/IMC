@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>苗栗IMC 第14、15屆社長交接暨理監事就職典禮</title>
-<script src="i18n.js?v=14"></script>
+<script src="i18n.js?v=15"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="style.css?v=3">
@@ -51,9 +51,10 @@
  .h-date{order:5;padding:10px 14px!important;border-radius:14px!important}
  .h-date .serif{font-size:30px!important}.h-date .serif span{font-size:18px!important}
  .h-date div:last-child{font-size:15px!important;margin-top:4px!important}
- .h-cta{order:6;flex-wrap:nowrap!important;gap:10px!important;margin-top:2px!important}
- .h-cta .btn{flex:1;justify-content:center;text-align:center;padding-left:8px;padding-right:8px;white-space:nowrap}
+ .h-cta{order:6;flex-wrap:wrap!important;gap:10px!important;margin-top:2px!important}
+ .h-cta .btn{flex:1 1 auto;min-width:0;justify-content:center;text-align:center;padding-left:8px;padding-right:8px;white-space:nowrap}
 }
+@media (max-width:380px){.h-cta .btn{font-size:14.5px;padding-left:6px;padding-right:6px}}
 @media (max-width:860px){.wide{grid-template-columns:1fr}.hero-grid{grid-template-columns:1fr}.spk{grid-template-columns:1fr}.tli .body{grid-template-columns:1fr}}
 </style>
 <script src="nav.js?v=1" defer></script>
@@ -184,7 +185,8 @@
 
 <script>
 const DEMO = new URLSearchParams(location.search).get('t') || null;
-function now(){ return DEMO ? new Date(DEMO) : new Date(); }
+/* 活動時間一律以台灣時間（UTC+8）為準：先換算成台灣的牆上時鐘再比對，手機時區不是台灣（例如日本來賓）也不會差 1 小時 */
+function now(){ if(DEMO) return new Date(DEMO); const d=new Date(); return new Date(d.getTime()+(480+d.getTimezoneOffset())*60000); }
 const D='2026-10-17T';
 const SCHED=[
  ['12:10',null,'友社貴賓高鐵接駁（去程）',['高鐵苗栗站 → 千八會館（友惠遊覽車）','搭 818 次（11:54 抵）／821 次（11:57 抵）到苗栗的友社貴賓'],1,'go'],
@@ -202,6 +204,8 @@ const SCHED=[
 ];
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const pad=n=>String(n).padStart(2,'0');
+let lastTl='';
+const setT=(el,t)=>{if(el&&el.dataset.zh!==t){el.dataset.zh=t;el.textContent=t;}};
 function render(){
   const n=now(), start=new Date(D+'13:00:00'), end=new Date(D+'20:30:00');
   let nowIdx=-1,nextIdx=-1;
@@ -214,19 +218,20 @@ function render(){
       +'</div><div><div class="ttl serif">'+esc(s[2])+'</div>'+s[3].map(t=>'<div class="sub"><span>◆</span><span>'+esc(t)+'</span></div>').join('')
       +(s[5]?'<div class="sub"><span>◆</span><a class="site" href="#" onclick="SHUTTLE.open(\''+s[5]+'\');return false">查看接送名單（社別／姓名）›</a></div>':'')+'</div></div></div>';
   }).join('');
-  document.getElementById('tl').innerHTML=html;
+  if(html!==lastTl){document.getElementById('tl').innerHTML=html;lastTl=html;}
   let title,detail,color='var(--gold3)',pulse=false;
   const sameDay=n.getFullYear()===2026&&n.getMonth()===9&&n.getDate()===17;
   if(n<start){const diff=start-n,days=Math.floor(diff/86400000),hrs=Math.floor(diff/3600000),mins=Math.floor(diff/60000)%60;
-    title=sameDay?'今天 13:00 開始報到':(days>=1?'距離活動還有 '+days+' 天':'明天就是交接典禮');
+    const dd=Math.round((new Date(2026,9,17)-new Date(n.getFullYear(),n.getMonth(),n.getDate()))/86400000);/* 以日曆天數計：10/15 還有 2 天、10/16 明天 */
+    title=sameDay?'今天 13:00 開始報到':(dd>=2?'距離活動還有 '+dd+' 天':'明天就是交接典禮');
     detail=sameDay?('還有 '+hrs+' 小時 '+mins+' 分，歡迎提早到場交流、拍大合照。'):'10/17（六）13:00 報到，地點：千八會館・竹南婚宴餐廳。';}
   else if(nowIdx>=0){title='現正進行：'+SCHED[nowIdx][2];detail=nextIdx>=0?'接下來 '+SCHED[nextIdx][0]+'　'+SCHED[nextIdx][2]:'這是今天的最後一段，謝謝大家。';color='var(--rose)';pulse=true;}
   else if(n<end){title='空檔中';detail=nextIdx>=0?'接下來 '+SCHED[nextIdx][0]+'　'+SCHED[nextIdx][2]:'';}
   else{title='活動圓滿結束';detail='感謝所有社友與貴賓蒞臨，第十五屆正式啟航。';color='var(--gold2)';}
-  document.getElementById('stitle').textContent=title; document.getElementById('sdetail').textContent=detail;
+  setT(document.getElementById('stitle'),title); setT(document.getElementById('sdetail'),detail);
   const dot=document.getElementById('sdot'); dot.style.background=color; dot.className='dot'+(pulse?' pulse':'');
   (function(){
-    const T=h=>new Date('2026-10-17T'+h+':00+08:00');
+    const T=h=>new Date('2026-10-17T'+h+':00');
     const day0=T('00:00'),a1=T('11:50'),dep=T('12:10'),b0=T('19:30'),ret=T('20:10'),fin=T('20:30');
     const el=document.getElementById('shuttleLive'),go=document.getElementById('shuttleGo'),bk=document.getElementById('shuttleBack');
     const left=t=>{const m=Math.max(0,Math.ceil((t-n)/60000));return m>=60?Math.floor(m/60)+' 小時 '+m%60+' 分':m+' 分鐘';};
@@ -238,7 +243,7 @@ function render(){
     else if(n<b0){paint('#FBE9E7','#B3261E','#E8B4AE');msg='⚠ 12:10 的接駁車已發車，已離開高鐵苗栗站。尚在高鐵站的貴賓，請聯絡承辦團隊協助前往會場。';goOp='.55';}
     else if(n<ret){paint('#FFEFD5','#8A4B00','#E8A33D');msg='⏰ 回程接駁 20:10 從會場發車（還有 '+left(ret)+'），請準備上車前往高鐵苗栗站。';goOp='.55';}
     else{paint('#FBE9E7','#B3261E','#E8B4AE');msg='⚠ 20:10 的回程接駁車已發車。尚未上車的貴賓，請聯絡承辦團隊。';goOp='.55';bkOp='.55';}
-    if(el.style.display!=='none')el.textContent=msg;
+    if(el.style.display!=='none')setT(el,msg);
     if(go)go.style.opacity=goOp;if(bk)bk.style.opacity=bkOp;
   })();
   document.getElementById('clock').textContent=(n.getMonth()+1)+'/'+n.getDate()+' '+pad(n.getHours())+':'+pad(n.getMinutes())+':'+pad(n.getSeconds());

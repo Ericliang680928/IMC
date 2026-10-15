@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>社友商品館｜苗栗IMC 第15屆</title>
-<script src="i18n.js?v=14"></script>
+<script src="i18n.js?v=15"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="style.css?v=3">
 <script src="db.js?v=1"></script>
@@ -165,7 +165,7 @@ const isQ=p=>p.price==null;
 function findItem(id){for(const p of PRODUCTS){if(p.opts){for(const o of p.opts){if(p.id+'-'+o.k===id)return {id:id,name:p.name+'（'+o.label+'）',seller:p.seller,price:o.price,unit:o.unit,promo:null,temp:p.temp||''};}}else if(p.id===id)return p;}return null;}
 const CATS=['全部','伴手禮','餐桌點心'];
 async function loadProducts(){let rows=[];try{rows=await dbGet('h15_products?on_shelf=eq.true&cat=neq.贊助廣告&select=*&order=id');}catch(e){rows=[];}
-  const dbp=rows.map(r=>{const imgs=r.img?String(r.img).split('|').map(s=>s.trim()).filter(Boolean):[];const tg=(r.name||'')+' '+(r.descr||''),temp=/[【\[［]冷凍[】\]］]/.test(tg)||/冷凍/.test(r.name||'')?'冷凍':(/[【\[［]冷藏[】\]］]/.test(tg)||/冷藏/.test(r.name||'')?'冷藏':'');return {id:String(r.id),cat:r.cat,name:r.name||'',seller:r.seller,price:r.price||0,unit:r.unit||'',desc:r.descr||'',imgs:imgs,color:'#E8D9B8',temp:temp};});
+  const dbp=rows.map(r=>{const imgs=r.img?String(r.img).split('|').map(s=>s.trim()).filter(Boolean):[];const tg=(r.name||'')+' '+(r.descr||''),temp=/[【\[［]冷凍[】\]］]/.test(tg)||/冷凍/.test(r.name||'')?'冷凍':(/[【\[［]冷藏[】\]］]/.test(tg)||/冷藏/.test(r.name||'')?'冷藏':'');return {id:String(r.id),cat:r.cat,name:r.name||'',seller:r.seller,price:r.price>0?r.price:null,unit:r.unit||'',desc:r.descr||'',imgs:imgs,color:'#E8D9B8',temp:temp};});
   PRODUCTS=STATIC.concat(dbp);
   if(PRODUCTS.length===0){PRODUCTS=DEMO;document.getElementById('demoNote').style.display='block';}
   renderCats();renderProds();renderCart();}
@@ -181,7 +181,7 @@ function seatLookup(){
   seatSel=pick;if(!un.value||unitAuto){un.value=pick.u;unitAuto=true;}
   box.innerHTML='<div style="font-weight:700">找到您了：'+esc(pick.n)+'・'+esc(pick.u)+'</div>'+(seatTxt(pick.a,1)===seatTxt(pick.b,1)?'<div class="sr"><span>桌號</span><b>'+esc(seatTxt(pick.a,1))+'</b></div>':'<div class="sr"><span>午場</span><b>'+esc(seatTxt(pick.a,1))+'</b></div><div class="sr"><span>晚宴</span><b>'+esc(seatTxt(pick.b,1))+'</b></div>')+'<div class="note" style="margin-top:6px">座位以現場桌卡為準</div>'+((window.SHUTTLE&&SHUTTLE.find(pick.n,pick.u))?'<div class="note" style="margin-top:6px;color:#8A4B00;font-weight:700">🚌 您有登記高鐵接駁：去程 12:10 高鐵苗栗站發車、回程 20:10 會場發車（詳見活動主頁）</div>':'');box.style.display='block';}
 function seatPick(i){const p=SEAT[i],un=document.getElementById('f-unit');un.value=p.u;unitAuto=true;seatLookup();}
-fetch('seatmap.json').then(r=>r.ok?r.json():[]).then(d=>{SEAT=Array.isArray(d)?d:[];seatLookup();}).catch(()=>{});
+fetch('seatmap.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():[]).then(d=>{SEAT=Array.isArray(d)?d:[];seatLookup();}).catch(()=>{});
 document.getElementById('f-name').addEventListener('input',seatLookup);
 document.getElementById('f-unit').addEventListener('input',()=>{unitAuto=false;if(SEAT.length)seatLookup();});
 let cat='全部', cart={}, venue=false;
@@ -250,9 +250,10 @@ document.getElementById('form').addEventListener('submit',async e=>{e.preventDef
   const btn=e.target.querySelector('button[type=submit]');btn.disabled=true;btn.textContent='送出中…';
   const gids=Object.keys(cart).filter(id=>findItem(id)&&grpOf(findItem(id))===curGrp),cold=curGrp==='cold';
   const items=gids.map(id=>{const p=findItem(id);const f=freeOf(p,cart[id]);const it={product_id:id,name:p.name,seller:p.seller,price:isQ(p)?0:p.price,unit:p.unit,qty:cart[id]};if(isQ(p))it.quote=true;if(p.temp)it.cold=p.temp;if(f){it.free=f;it.promo=p.promo.label;}return it;});
-  const total=items.reduce((a,i)=>a+i.price*i.qty,0);const no='IMC15-'+String(Date.now()).slice(-6)+(cold?'-C':'');
+  const total=items.reduce((a,i)=>a+i.price*i.qty,0);let no='IMC15-'+String(Date.now()).slice(-6)+(cold?'-C':'');
   const sa=seatSel?seatTxt(seatSel.a,1):'',sb=seatSel?seatTxt(seatSel.b,1):'';const unitRec=g('f-unit')+(seatSel?'｜'+(sa===sb?sa:'午場 '+sa+'・晚宴 '+sb):'');
-  try{await dbInsert('h15_orders',{order_no:no,unit:unitRec,name:g('f-name'),tel:g('f-tel'),addr:g('f-addr'),items:items,total:total},'return=minimal');
+  try{/* 訂單編號萬一和別人撞號（資料庫要求唯一），自動換一個再送，最多 3 次 */
+    for(let k=0;;k++){try{await dbInsert('h15_orders',{order_no:no,unit:unitRec,name:g('f-name'),tel:g('f-tel'),addr:g('f-addr'),items:items,total:total},'return=minimal');break;}catch(e1){const dup=(e1.detail&&e1.detail.code==='23505')||/duplicate key/i.test(String(e1.message||''));if(!dup||k>=2)throw e1;no='IMC15-'+String(100000+Math.floor(Math.random()*900000))+(cold?'-C':'');}}
     document.getElementById('orderNo').textContent=no+(cold?'（冷藏／冷凍低溫配送單）':'');gids.forEach(id=>delete cart[id]);
     const left=Object.keys(cart).filter(id=>findItem(id)),more=document.getElementById('doneMore');
     if(left.length){curGrp=grpOf(findItem(left[0]));more.style.display='block';more.textContent='還有一張「'+GN[curGrp]+'」訂單尚未送出——收件資料已幫您保留，請再按一次下方的「送出訂單」。';renderCart();document.getElementById('done').style.display='block';document.getElementById('done').scrollIntoView({behavior:'smooth',block:'nearest'});}

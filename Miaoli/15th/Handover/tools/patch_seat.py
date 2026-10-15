@@ -6,7 +6,7 @@
   3) 高鐵接駁提醒（資料來源 shuttle.js；改名單請改 shuttle.js）
   4) 中文／日本語 切換（載入 i18n.js、導覽列放切換鈕）
   5) 手機版底部分頁列（載入 tabbar.js）
-  （另有 4b 手機橫向溢出修正、4c 個人頁避開導覽列）
+  （另有 4b 手機橫向溢出修正、4c 個人頁避開導覽列、4d 目前時段用台灣時間）
 排座工具重新匯出會把以上全部洗掉，所以匯出後一定要跑這支，再跑 make_seatmap.py、sync_roster_tables.py。"""
 import os,sys
 here=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -59,7 +59,7 @@ if 'SHUTTLE.find' not in s:
 
 # 4) 日文切換 ---------------------------------------------------------
 if 'i18n.js' not in s:
-    rep('<title>座位查詢｜苗栗IMC 第15屆</title>\n','<title>座位查詢｜苗栗IMC 第15屆</title>\n<script src="i18n.js?v=14"></script>\n','日文切換：載入 i18n.js')
+    rep('<title>座位查詢｜苗栗IMC 第15屆</title>\n','<title>座位查詢｜苗栗IMC 第15屆</title>\n<script src="i18n.js?v=15"></script>\n','日文切換：載入 i18n.js')
 
 # 4b) 手機版橫向溢出修正：標題光暈（.hero::before 寬 520px）會把頁面撐寬，手機上整頁被縮小 ---------
 WRAP_OLD=".wrap{max-width:720px;margin:0 auto;padding:max(18px,env(safe-area-inset-top)) 16px 40px}"
@@ -70,6 +70,12 @@ if WRAP_NEW not in s: rep(WRAP_OLD,WRAP_NEW,'手機橫向溢出修正',True)
 SH_OLD=".sheet{position:fixed;inset:0;z-index:20;"
 SH_NEW=".sheet{position:fixed;inset:50px 0 0 0;z-index:20;"
 if SH_NEW not in s: rep(SH_OLD,SH_NEW,'個人頁避開導覽列',True)
+
+# 4d) 「目前時段」（午場／晚宴預設顯示哪一場）：以台灣時間、且只在活動當天 16:30 後切到晚宴。
+#     原本用裝置時區與任何日期，活動前一晚打開就會顯示成「晚宴」，非台灣時區的手機也會差 1 小時 ---------
+NOW_OLD="const NOW=(()=>{const d=new Date();return d.getHours()*60+d.getMinutes()>=990?1:0;})();"
+NOW_NEW="const NOW=(()=>{const d=new Date(),t=new Date(d.getTime()+(480+d.getTimezoneOffset())*60000);return (t.getMonth()===9&&t.getDate()===17&&t.getHours()*60+t.getMinutes()>=990)?1:0;})();"
+if NOW_NEW not in s: rep(NOW_OLD,NOW_NEW,'目前時段改用台灣時間＋活動當天',True)
 
 # 5) 手機版底部分頁列（tabbar.js） ------------------------------------
 if 'tabbar.js' not in s:

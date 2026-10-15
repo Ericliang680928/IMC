@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>商務交流許願牆｜苗栗IMC 第15屆</title>
-<script src="i18n.js?v=14"></script>
+<script src="i18n.js?v=15"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="style.css?v=3">
 <script src="db.js?v=1"></script>
@@ -100,12 +100,14 @@ async function sendInvite(btn){
   catch(e){btn.disabled=false;btn.textContent='送出失敗，請再試一次';}}
 async function loadWall(){try{const rows=await dbGet('h15_wishes_public?select=*&order=created_at.desc&limit=200');await loadSent();LIST=rows.map(r=>({pid:r.person_id||((ROSTER.find(p=>p.name===r.name&&p.unit===r.unit)||{}).id),unit:r.unit,name:r.name,biz:r.biz||'—',have:r.have||(r.tags_have||[]).join('、')||'—',want:r.want||(r.tags_want||[]).join('、')||'—',match:''}));renderWall();}catch(e){}}
 let ME=null;
-async function loadMine(p){try{const r=await dbGet('h15_wishes?person_id=eq.'+p.id+'&select=biz,have,want,meet_ids,line_id');if(r.length){const x=r[0];if(x.biz)document.getElementById('w-biz').value=x.biz;document.getElementById('w-have').value=x.have||'';document.getElementById('w-want').value=x.want||'';document.getElementById('w-line').value=x.line_id||'';picked=(x.meet_ids||[]).filter(id=>ROSTER.find(y=>y.id===id));renderPicked();}}catch(e){}}
-function setWho(p){ME=p;loadMine(p);loadSent().then(renderWall);document.getElementById('w-unit').value=p.unit;document.getElementById('w-name').value=p.name;
+/* 換人（不是我／選另一位）時清空表單，避免上一位的許願內容、手機號碼被帶到下一位 */
+function resetForm(){['w-biz','w-have','w-want','w-line','w-meet'].forEach(id=>{document.getElementById(id).value='';});picked=[];renderPicked();document.getElementById('saved').style.display='none';document.getElementById('savedInv').style.display='none';document.getElementById('results').style.display='none';const sb=document.querySelector('#form button[type=submit]');if(sb){sb.disabled=false;sb.textContent='送出許願';}}
+async function loadMine(p){try{const r=await dbGet('h15_wishes?person_id=eq.'+p.id+'&select=biz,have,want,meet_ids,line_id');if(!ME||ME.id!==p.id)return;if(r.length){const x=r[0];if(x.biz)document.getElementById('w-biz').value=x.biz;document.getElementById('w-have').value=x.have||'';document.getElementById('w-want').value=x.want||'';document.getElementById('w-line').value=x.line_id||'';picked=(x.meet_ids||[]).filter(id=>ROSTER.find(y=>y.id===id));renderPicked();}}catch(e){}}
+function setWho(p){resetForm();ME=p;loadMine(p);loadSent().then(renderWall);document.getElementById('w-unit').value=p.unit;document.getElementById('w-name').value=p.name;
   document.getElementById('whoAv').textContent=p.name.slice(0,1);document.getElementById('whoName').textContent=p.name;document.getElementById('whoSub').textContent=p.unit+(p.role?'・'+p.role:'')+(p.company?'・'+p.company:'');
   const biz=document.getElementById('w-biz');if(p.ind&&biz.value==='')biz.value=p.ind;
   document.getElementById('whoCard').style.display='flex';document.getElementById('whoPick').style.display='none';try{localStorage.setItem('imc15_me',String(p.id));}catch(e){}}
-function clearWho(){ME=null;SENT=new Set();renderWall();document.getElementById('w-unit').value='';document.getElementById('w-name').value='';document.getElementById('whoCard').style.display='none';document.getElementById('whoPick').style.display='flex';try{localStorage.removeItem('imc15_me');}catch(e){}document.getElementById('w-q').focus();}
+function clearWho(){ME=null;SENT=new Set();resetForm();renderWall();document.getElementById('w-unit').value='';document.getElementById('w-name').value='';document.getElementById('whoCard').style.display='none';document.getElementById('whoPick').style.display='flex';try{localStorage.removeItem('imc15_me');}catch(e){}document.getElementById('w-q').focus();}
 document.getElementById('w-q').addEventListener('input',e=>{const q=e.target.value.trim();const box=document.getElementById('w-qlist');if(q===''){box.innerHTML='';return;}
   const hits=ROSTER.filter(p=>p.name.includes(q)).slice(0,20);
   box.innerHTML=hits.length?hits.map(p=>'<button type="button" class="btn" style="justify-content:flex-start;gap:12px;background:#fff;border:2px solid var(--line2);color:var(--dark);min-height:50px;padding:0 14px" onclick="setWho(ROSTER.find(x=>x.id==='+p.id+'))"><span style="font-weight:700;white-space:nowrap">'+esc(p.name)+'</span><span class="note" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(p.unit)+(p.role?'・'+esc(p.role):'')+'</span></button>').join(''):'<div class="note" style="color:#8A3B1F">找不到，試試只打一個字</div>';});
@@ -121,7 +123,7 @@ function pick(id){picked.push(id);meet.value='';document.getElementById('results
 function unpick(id){picked=picked.filter(x=>x!==id);renderPicked();}
 function renderPicked(){document.getElementById('picked').innerHTML=picked.map(id=>{const r=ROSTER.find(x=>x.id===id);return '<span class="chip">'+esc(r.name)+'<small>'+esc(r.unit)+'</small><button type="button" aria-label="移除" onclick="unpick('+id+')">×</button></span>';}).join('');document.getElementById('nPicked').textContent=picked.length;}
 function renderWall(){const bizs=['全部',...new Set(LIST.map(w=>w.biz))];
-  document.getElementById('filters').innerHTML=bizs.map(b=>'<button type="button" class="pill sm'+(b===filter?' on':'')+'" onclick="filter=\''+esc(b)+'\';renderWall()">'+esc(b)+'</button>').join('');
+  const fl=document.getElementById('filters');fl.innerHTML=bizs.map((b,i)=>'<button type="button" class="pill sm'+(b===filter?' on':'')+'" data-i="'+i+'">'+esc(b)+'</button>').join('');fl.onclick=e=>{const t=e.target.closest('button[data-i]');if(t){filter=bizs[+t.dataset.i];renderWall();}};
   document.getElementById('count').textContent=LIST.length;
   document.getElementById('wall').innerHTML=LIST.length===0?'<div class="note">還沒有人許願，成為第一位吧。</div>':LIST.filter(w=>filter==='全部'||w.biz===filter).map(w=>'<article class="card wish"><div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px"><span class="serif" style="font-size:20px;font-weight:700;color:var(--dark)">'+esc(w.name)+'</span><span class="note">'+esc(w.unit)+'</span><span class="tag tag-gold">'+esc(w.biz)+'</span></div><div style="display:flex;gap:10px"><span class="tag tag-green" style="flex:none">我有</span><span>'+esc(w.have)+'</span></div><div style="display:flex;gap:10px"><span class="tag tag-rose" style="flex:none">想找</span><span>'+esc(w.want)+'</span></div>'+(w.match?'<div style="background:var(--cream);border-radius:10px;padding:10px 14px;font-size:15px;color:var(--dark2)">交流建議：'+esc(w.match)+'</div>':'')+'<div>'+inviteBtn(w)+'</div></article>').join('');}
 document.getElementById('form').addEventListener('submit',async e=>{e.preventDefault();const g=id=>document.getElementById(id).value.trim();if(g('w-name')===''){document.getElementById('w-q').focus();document.getElementById('whoPick').style.display='flex';return;}
