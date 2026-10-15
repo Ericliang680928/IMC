@@ -6,6 +6,7 @@
   3) 高鐵接駁提醒（資料來源 shuttle.js；改名單請改 shuttle.js）
   4) 中文／日本語 切換（載入 i18n.js、導覽列放切換鈕）
   5) 手機版底部分頁列（載入 tabbar.js）
+  （另有 4b 手機橫向溢出修正、4c 個人頁避開導覽列）
 排座工具重新匯出會把以上全部洗掉，所以匯出後一定要跑這支，再跑 make_seatmap.py、sync_roster_tables.py。"""
 import os,sys
 here=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -50,7 +51,7 @@ if WHY_NEW not in s: rep(WHY_OLD,WHY_NEW,'建議名單自訂理由',True)
 # 3) 高鐵接駁提醒 -----------------------------------------------------
 if 'SHUTTLE.find' not in s:
     rep('<div class="sheet" id="sheet"><div class="sh" id="sh"></div></div>\n<script>\nconst D=',
-        '<div class="sheet" id="sheet"><div class="sh" id="sh"></div></div>\n<script src="shuttle.js?v=2"></script>\n<script>\nconst D=','接駁：載入 shuttle.js')
+        '<div class="sheet" id="sheet"><div class="sh" id="sh"></div></div>\n<script src="shuttle.js?v=3"></script>\n<script>\nconst D=','接駁：載入 shuttle.js')
     rep("""+'</div><div class="seats">'+seatBox(p,0)+seatBox(p,1)+'</div></button>';}""",
         """+((window.SHUTTLE&&SHUTTLE.find(p.n,p.u))?'<span style="color:#8A4B00;font-weight:700;font-size:12.5px">🚌 有登記高鐵接駁</span>':'')+'</div><div class="seats">'+seatBox(p,0)+seatBox(p,1)+'</div></button>';}""",'接駁：卡片標籤')
     rep("""h+='<div class="tabs">'""","""h+=(window.SHUTTLE?SHUTTLE.note(SHUTTLE.find(p.n,p.u)):'');
@@ -64,6 +65,11 @@ if 'i18n.js' not in s:
 WRAP_OLD=".wrap{max-width:720px;margin:0 auto;padding:max(18px,env(safe-area-inset-top)) 16px 40px}"
 WRAP_NEW=".wrap{max-width:720px;margin:0 auto;padding:max(18px,env(safe-area-inset-top)) 16px 40px;overflow-x:hidden;overflow-x:clip}"
 if WRAP_NEW not in s: rep(WRAP_OLD,WRAP_NEW,'手機橫向溢出修正',True)
+
+# 4c) 個人頁（.sheet，層級 20）會被頂端導覽列（sitebar，層級 50）蓋住左上角「‹ 返回」鍵：讓個人頁從導覽列下方開始 ---------
+SH_OLD=".sheet{position:fixed;inset:0;z-index:20;"
+SH_NEW=".sheet{position:fixed;inset:50px 0 0 0;z-index:20;"
+if SH_NEW not in s: rep(SH_OLD,SH_NEW,'個人頁避開導覽列',True)
 
 # 5) 手機版底部分頁列（tabbar.js） ------------------------------------
 if 'tabbar.js' not in s:

@@ -62,73 +62,33 @@ function listHTML(dir){
   var h='<div style="color:#6B5424;font-size:14px;margin-bottom:10px">'+(dir==='go'?'去程　12:10 高鐵苗栗站 → 會場':'回程　20:10 會場 → 高鐵苗栗站')+'・共 '+rows.length+' 位</div><div style="color:#8b6b2c;font-size:13.5px;font-weight:700;margin:-4px 0 6px">點選姓名，可查看桌次與詳細資訊</div>';
   order.forEach(function(u){
     h+='<div style="margin:10px 0 4px;font-weight:800;color:#1C2C60">'+esc(u)+'<span style="font-weight:600;color:#8b6b2c;font-size:.85em">　'+by[u].length+' 位</span></div><div style="display:flex;flex-wrap:wrap;gap:6px">'
-      +by[u].map(function(p){return '<button type="button" data-n="'+esc(p.n)+'" data-u="'+esc(p.u)+'" style="background:#FAF4E6;border:1px solid #E5D3A6;border-radius:999px;padding:7px 14px;min-height:40px;font:inherit;font-size:16px;color:#2B1D0A;cursor:pointer">'+esc(p.n)+(p.sp?'<small style="color:#8b6b2c">（特邀）</small>':'')+'</button>';}).join('')+'</div>';
+      +by[u].map(function(p){return '<a data-n="'+esc(p.n)+'" data-u="'+esc(p.u)+'" href="seat.html?q='+encodeURIComponent(p.n)+'" style="display:inline-flex;align-items:center;text-decoration:none;background:#FAF4E6;border:1px solid #E5D3A6;border-radius:999px;padding:7px 14px;min-height:40px;font-size:16px;color:#2B1D0A">'+esc(p.n)+(p.sp?'<small style="color:#8b6b2c">（特邀）</small>':'')+'</a>';}).join('')+'</div>';
   });
   return h;
 }
-/* ── 點姓名看桌次：名冊（roster.json）第一次點才載入，之後沿用 ── */
+/* ── 姓名連到座位查詢頁 seat.html?p=名冊序號（名冊序號＝名冊 id－1）。
+      名冊第一次開視窗時載入；載入前先用 ?q=姓名 搜尋當備援。在 seat.html 內直接開個人頁、不重整 ── */
 var R=null,RP=null,curDir='go';
 function loadR(){
   if(R)return Promise.resolve(R);
   if(!RP)RP=fetch('roster.json?t='+Date.now(),{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error(r.status);return r.json();}).then(function(d){R=d;return d;}).catch(function(e){RP=null;throw e;});
   return RP;
 }
-function pick(ref){
+function pick(n,u){
   if(!R)return null;
-  var i,n=key(ref.n),u=key(ref.u),hit=null;
-  if(ref.id!=null){for(i=0;i<R.length;i++)if(String(R[i].id)===String(ref.id))return R[i];return null;}
-  for(i=0;i<R.length;i++){if(key(R[i].name)===n){if(!u||key(R[i].unit)===u)return R[i];hit=hit||R[i];}}
+  var i,kn=key(n),ku=key(u),hit=null;
+  for(i=0;i<R.length;i++){if(key(R[i].name)===kn){if(!ku||key(R[i].unit)===ku)return R[i];hit=hit||R[i];}}
   return hit;
 }
-function sess(label,t){
-  t=Number(t);var ok=t>0;
-  return '<div style="flex:1;min-width:0;text-align:center;border-radius:14px;padding:10px 8px;background:'+(ok?'#FFF8E7':'#F4F1EA')+';border:1px solid '+(ok?'#E5C97A':'#E2DCCB')+'">'
-    +'<div style="font-size:13px;color:#8b6b2c;font-weight:700">'+label+'</div>'
-    +'<div style="margin-top:2px;line-height:1.3;font-weight:800;color:#2B1D0A;font-size:'+(ok?'26':'17')+'px">'+(ok?'第 '+t+' 桌':(t<0?'座位安排中':'不參加此場'))+'</div>'
-    +(t<0?'<div style="font-size:12px;color:#7a6a4a;margin-top:2px">請洽現場服務台</div>':'')+'</div>';
-}
-function mates(p,k){var t=Number(p[k]);if(!(t>0))return [];return R.filter(function(q){return q.id!==p.id&&Number(q[k])===t;});}
-function mchip(q){return '<button type="button" data-id="'+esc(q.id)+'" style="background:#FAF4E6;border:1px solid #E5D3A6;border-radius:999px;padding:5px 12px;min-height:36px;font:inherit;font-size:15px;color:#2B1D0A;cursor:pointer">'+esc(q.name)+'<small style="margin-left:6px;color:#8b6b2c">'+esc(q.unit)+'</small></button>';}
-function mblock(title,list){
-  if(!list.length)return '';
-  return '<div style="margin:14px 0 6px;font-weight:800;color:#1C2C60;font-size:15px">'+title+'</div><div style="display:flex;flex-wrap:wrap;gap:6px">'+list.map(mchip).join('')+'</div>';
-}
-function personHTML(p){
-  var sh=find(p.name,p.unit),sp=sh&&sh.sp;
-  var lu=mates(p,'lunch'),di=mates(p,'dinner');
-  var same=Number(p.lunch)===Number(p.dinner)&&lu.length===di.length&&lu.every(function(q,i){return q.id===di[i].id;});
-  var mt=same?mblock('同桌賓客',lu)
-    :mblock('<span>午場</span><span style="margin-left:6px">同桌賓客</span>',lu)+mblock('<span>晚宴</span><span style="margin-left:6px">同桌賓客</span>',di);
-  var cj=[];if(p.company)cj.push('<span>'+esc(p.company)+'</span>');if(p.job)cj.push('<span>'+esc(p.job)+'</span>');
-  return '<button type="button" id="shuttleReturn" style="border:0;background:none;padding:6px 0;margin:2px 0 6px;font:inherit;font-size:15px;font-weight:700;color:#8b6b2c;cursor:pointer">‹ 返回名單</button>'
-    +'<div style="font-size:24px;font-weight:800;color:#2B1D0A;line-height:1.3">'+esc(p.name)+'</div>'
-    +'<div style="margin-top:2px;color:#1C2C60;font-weight:700">'+esc(p.unit)+(sp?'<small style="color:#8b6b2c;font-weight:600">（特邀）</small>':'')+'</div>'
-    +(cj.length?'<div style="margin-top:4px;font-size:15px;color:#5B4A28;line-height:1.5">'+cj.join('<span style="margin:0 6px;opacity:.5">／</span>')+'</div>':'')
-    +'<div style="display:flex;gap:10px;margin-top:14px">'+sess('午場 13:00',p.lunch)+sess('晚宴 18:00',p.dinner)+'</div>'
-    +(sh?note(sh):'')
-    +mt
-    +'<a href="seat.html?p='+(Number(p.id)-1)+'" style="display:flex;align-items:center;justify-content:center;min-height:46px;margin-top:16px;border-radius:999px;background:#C5A366;color:#fff;font-weight:800;text-decoration:none">在座位圖上查看 ›</a>';
-}
-function failHTML(ref){
-  return '<button type="button" id="shuttleReturn" style="border:0;background:none;padding:6px 0;font:inherit;font-size:15px;font-weight:700;color:#8b6b2c;cursor:pointer">‹ 返回名單</button>'
-    +'<div style="margin:10px 0;line-height:1.6">桌次資料暫時載入失敗，請稍後再試，或到座位查詢頁輸入姓名查詢。</div>'
-    +'<a href="seat.html?q='+encodeURIComponent(ref.n||'')+'" style="display:flex;align-items:center;justify-content:center;min-height:46px;border-radius:999px;background:#C5A366;color:#fff;font-weight:800;text-decoration:none">在座位圖上查看 ›</a>';
-}
 function bindList(){
-  [].forEach.call(document.querySelectorAll('#shuttleBody button[data-n]'),function(b){b.onclick=function(){showPerson({n:b.getAttribute('data-n'),u:b.getAttribute('data-u')});};});
-}
-function showPerson(ref){
-  var body=document.getElementById('shuttleBody'),tabs=document.getElementById('shuttleTabs'),box=document.getElementById('shuttleBox');
-  if(!body)return;
-  tabs.style.display='none';
-  body.innerHTML='<div style="padding:28px 0;text-align:center;color:#8b6b2c">資料載入中…</div>';
-  function done(html){
-    if(!document.getElementById('shuttleBody'))return;
-    body.innerHTML=html;box.scrollTop=0;
-    var bk=document.getElementById('shuttleReturn');if(bk){bk.onclick=function(){paint(curDir);};}
-    [].forEach.call(body.querySelectorAll('button[data-id]'),function(b){b.onclick=function(){showPerson({id:b.getAttribute('data-id')});};});
-  }
-  loadR().then(function(){var p=pick(ref);done(p?personHTML(p):failHTML(ref));}).catch(function(){done(failHTML(ref));});
+  [].forEach.call(document.querySelectorAll('#shuttleBody a[data-n]'),function(a){
+    var n=a.getAttribute('data-n'),u=a.getAttribute('data-u'),p=pick(n,u);
+    if(p)a.href='seat.html?p='+(Number(p.id)-1);
+    a.onclick=function(e){
+      var q=pick(n,u);
+      if(q&&typeof openP==='function'&&/seat\.html$/.test(location.pathname)){e.preventDefault();close();openP(Number(q.id)-1);}
+    };
+  });
 }
 function paint(d){
   curDir=d;
@@ -154,7 +114,7 @@ function open(dir){
     +'<div style="margin-top:14px;font-size:12.5px;color:#7a6a4a">僅供本次活動接送使用，請勿轉發。名單如有異動，以承辦團隊通知為準。</div></div>';
   document.body.appendChild(m);
   paint(dir==='back'?'back':'go');
-  loadR().catch(function(){});
+  loadR().then(bindList).catch(function(){});
   document.getElementById('shuttleX').onclick=close;
   m.addEventListener('click',function(e){if(e.target===m)close();});
   document.addEventListener('keydown',esc_);
