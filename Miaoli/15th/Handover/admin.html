@@ -81,8 +81,8 @@ const CODE='1517';
 let orders=[],prods=[],edms=[],cat='伴手禮';
 const ON='background:var(--greenbg);color:var(--green)',OFF='background:#FFF6F0;color:#8A3B1F';
 function show(t){document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+t));document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.t===t));}
-/* 社別欄只顯示「社名｜午場 桌號・晚宴 桌號」：去掉桌名括號（舊訂單也一併處理） */
-const unitShow=u=>{const s=String(u||''),i=s.indexOf('｜午場');return i<0?s:s.slice(0,i)+s.slice(i).replace(/（[^）]*）/g,'');};
+/* 社別欄只顯示「社名｜午場 桌號・晚宴 桌號」；午晚同一桌只顯示一個桌號；去掉桌名括號（舊訂單也一併處理） */
+const unitShow=u=>{const s=String(u||''),i=s.indexOf('｜午場');if(i<0)return s;const t=s.slice(i+1).replace(/（[^）]*）/g,''),m=t.match(/^午場 (.+)・晚宴 (.+)$/);return s.slice(0,i)+'｜'+(m&&m[1]===m[2]?m[1]:t);};
 async function loadAll(){try{orders=await dbGet('h15_orders?select=*&order=created_at.desc');const ps=await dbGet('h15_products?select=*&order=id');prods=ps.filter(p=>p.cat!=='贊助廣告');edms=ps.filter(p=>p.cat==='贊助廣告');
   const cnt={};orders.filter(o=>o.status!=='取消').forEach(o=>(o.items||[]).forEach(i=>{cnt[i.product_id]=(cnt[i.product_id]||0)+i.qty;}));prods.forEach(p=>p.qty_ordered=cnt[String(p.id)]||0);}catch(e){alert('讀取失敗：'+e.message);}render();}
 async function setStatus(id,v){try{await dbPatch('h15_orders','id=eq.'+id,{status:v});}catch(e){alert('更新失敗');}loadAll();}

@@ -216,7 +216,7 @@ document.getElementById('form').addEventListener('submit',async e=>{e.preventDef
   const btn=e.target.querySelector('button[type=submit]');btn.disabled=true;btn.textContent='送出中…';
   const items=Object.keys(cart).filter(id=>findItem(id)).map(id=>{const p=findItem(id);const f=freeOf(p,cart[id]);const it={product_id:id,name:p.name,seller:p.seller,price:isQ(p)?0:p.price,unit:p.unit,qty:cart[id]};if(isQ(p))it.quote=true;if(f){it.free=f;it.promo=p.promo.label;}return it;});
   const total=items.reduce((a,i)=>a+i.price*i.qty,0);const no='IMC15-'+String(Date.now()).slice(-6);
-  const unitRec=g('f-unit')+(seatSel?'｜午場 '+seatTxt(seatSel.a,1)+'・晚宴 '+seatTxt(seatSel.b,1):'');
+  const sa=seatSel?seatTxt(seatSel.a,1):'',sb=seatSel?seatTxt(seatSel.b,1):'';const unitRec=g('f-unit')+(seatSel?'｜'+(sa===sb?sa:'午場 '+sa+'・晚宴 '+sb):'');
   try{await dbInsert('h15_orders',{order_no:no,unit:unitRec,name:g('f-name'),tel:g('f-tel'),addr:g('f-addr'),items:items,total:total},'return=minimal');
     document.getElementById('orderNo').textContent=no;cart={};venue=false;renderCart();document.getElementById('done').style.display='block';e.target.reset();seatSel=null;unitAuto=false;document.getElementById('seatInfo').style.display='none';}
   catch(err){alert('送出失敗，請再試一次。');}
