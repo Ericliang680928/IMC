@@ -73,7 +73,7 @@ main{padding:14px 14px 90px;display:flex;flex-direction:column;gap:14px;flex:1}
       <section class="card">
         <div style="display:flex;align-items:baseline;gap:8px"><div class="serif" style="font-size:19px;font-weight:700;color:var(--dark)">今天誰在場</div><span class="note">名片牆・<span id="nFound">0</span> 位</span></div>
         <input class="in" id="q" placeholder="姓名、社別、公司、產業或桌號" autocomplete="off">
-        <div id="unitChips" style="display:flex;flex-wrap:wrap;gap:6px"></div><div class="scroller" id="bizChips"></div>
+        <div style="display:flex;gap:8px"><select class="sel" id="unitSel" aria-label="單位別" style="flex:1"><option value="">全部單位</option></select><select class="sel" id="bizSel" aria-label="產業別" style="flex:1"><option value="">全部產業</option></select></div>
       </section>
       <div id="found" style="display:flex;flex-direction:column;gap:10px"></div>
       <div class="note" style="text-align:center;padding:0 8px">「有興趣」對方不會知道，雙方都按才會互相通知；「直接邀請」對方會立刻收到。<br>產業別由 AI 依公司名稱判斷，可能有誤，請見諒。</div>
@@ -125,8 +125,10 @@ function init(){
     document.getElementById('l-hint').style.display=(q===''&&lUnit==='')?'block':'none';}
   window.renderLogin=renderLogin;
   window.pickMe=id=>{try{localStorage.setItem('imc15_me',String(id));}catch(e){}enter(id);};
-  document.getElementById('unitChips').innerHTML=units.map(u=>'<button type="button" class="quick" data-u="'+esc(u)+'" onclick="setUnitF(this.dataset.u)">'+esc(u)+'</button>').join('');
-  document.getElementById('bizChips').innerHTML=Object.keys(COLORS).map(b=>'<button type="button" class="quick" data-b="'+b+'" onclick="setBizF(this.dataset.b)">'+b+'</button>').join('');
+  const inds=[...new Set(R.map(p=>p.ind).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'zh-Hant'));
+  document.getElementById('unitSel').innerHTML='<option value="">全部單位</option>'+units.map(u=>'<option>'+esc(u)+'</option>').join('');
+  document.getElementById('bizSel').innerHTML='<option value="">全部產業</option>'+inds.map(b=>'<option>'+esc(b)+'</option>').join('');
+  document.getElementById('unitSel').onchange=e=>{unitF=e.target.value;renderFind();};document.getElementById('bizSel').onchange=e=>{bizF=e.target.value;renderFind();};
   document.getElementById('q').addEventListener('input',renderFind);
   const saved=Number((()=>{try{return localStorage.getItem('imc15_me');}catch(e){return null;}})()||0);
   const qid=Number(new URLSearchParams(location.search).get('id')||0);
@@ -155,10 +157,9 @@ async function sendWish(){const b=document.getElementById('wishBtn');b.disabled=
   try{await dbUpsert('h15_wishes',{person_id:me.id,unit:me.unit,name:me.name,biz:me.ind||'',tags_have:th,tags_want:tw,updated_at:new Date().toISOString()},'person_id');b.textContent='已送出許願 ✓';}
   catch(e){b.textContent='送出失敗，請再試一次';b.disabled=false;}}
 async function loadMyWish(){try{const r=await dbGet('h15_wishes?person_id=eq.'+me.id+'&select=tags_have,tags_want');if(r.length){wish.have={};wish.want={};(r[0].tags_have||[]).forEach(t=>wish.have[t]=true);(r[0].tags_want||[]).forEach(t=>wish.want[t]=true);renderMe();const b=document.getElementById('wishBtn');b.textContent='已送出許願 ✓（可修改後再送）';}}catch(e){}}
-function setUnitF(u){unitF=unitF===u?'':u;renderFind();}function setBizF(b){bizF=bizF===b?'':b;renderFind();}
+function setUnitF(u){unitF=u;document.getElementById('unitSel').value=u;renderFind();}function setBizF(b){bizF=b;document.getElementById('bizSel').value=b;renderFind();}
 function renderFind(){if(me===null)return;const q=document.getElementById('q').value.trim();
-  document.querySelectorAll('#unitChips .quick').forEach(x=>x.classList.toggle('on',x.dataset.u===unitF));document.querySelectorAll('#bizChips .quick').forEach(x=>x.classList.toggle('on',x.dataset.b===bizF));
-  const all=R.filter(r=>r.id!==me.id&&(unitF===''||r.unit===unitF)&&(bizF===''||r.grp===bizF)&&(q===''||(r.name+r.unit+(r.ind||'')+(r.grp||'')+(r.role||'')+(r.company||'')+(r.job||'')+r.lunch+r.dinner).includes(q)));
+  const all=R.filter(r=>r.id!==me.id&&(unitF===''||r.unit===unitF)&&(bizF===''||r.ind===bizF)&&(q===''||(r.name+r.unit+(r.ind||'')+(r.grp||'')+(r.role||'')+(r.company||'')+(r.job||'')+r.lunch+r.dinner).includes(q)));
   document.getElementById('nFound').textContent=all.length;
   const list=(q===''&&unitF===''&&bizF==='')?all.slice(0,40):all.slice(0,120);
   document.getElementById('found').innerHTML=list.length?list.map(r=>'<section class="card" style="gap:10px;padding:14px 16px"><div class="person" style="cursor:pointer" onclick="openDetail('+r.id+')"><div class="av2" style="border-color:'+(COLORS[r.grp]||['#C9A24A'])[0]+'">'+esc(r.name.slice(0,1))+'</div><div style="flex:1;min-width:0"><div style="font-weight:700;color:var(--dark)">'+esc(r.name)+' <span class="note">'+esc(r.unit)+(r.title?'・'+esc(r.title):'')+'</span></div><div style="font-size:13px;color:var(--muted2)">'+esc(r.ind||'')+(r.lunch?'・午 '+r.lunch+' 桌':'')+(r.dinner?'／晚 '+r.dinner+' 桌':'')+'</div></div>'+(like[r.id]?'<span class="tag tag-rose">有興趣</span>':'')+'<span style="color:var(--gold);font-size:20px">›</span></div><div style="display:flex;gap:8px"><button type="button" class="btn sm" style="flex:1;'+(like[r.id]?'background:#FBF0F4;color:var(--rose)':'background:#fff;border:2px solid var(--line2);color:var(--muted2)')+'" onclick="tLike('+r.id+')">'+(like[r.id]?'有興趣 ✓':'有興趣')+'</button><button type="button" class="btn sm" style="flex:1;'+(inv[r.id]?'background:var(--greenbg);color:var(--green)':'background:#fff;border:2px solid var(--gold);color:var(--gold2)')+'" onclick="tInv('+r.id+')">'+(inv[r.id]?'已邀請 ✓':'直接邀請')+'</button></div></section>').join('')+(all.length>list.length?'<div class="note" style="text-align:center">還有 '+(all.length-list.length)+' 位，請用搜尋或篩選縮小範圍</div>':'')
