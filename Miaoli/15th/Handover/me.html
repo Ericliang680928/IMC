@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>我的活動頁｜苗栗IMC 第15屆</title>
-<script src="i18n.js?v=1"></script>
+<script src="i18n.js?v=2"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="style.css?v=2">
 <script src="db.js?v=1"></script>
@@ -117,7 +117,7 @@ let REC={ind:[],pr:{}}; let R=[], me=null, sess='lunch', like={}, inv={}, unitF=
 try{like=JSON.parse(localStorage.getItem('imc15_like')||'{}');}catch(e){}
 function store(){try{localStorage.setItem('imc15_like',JSON.stringify(like));}catch(e){}}
 function tableName(p,s){return p?(s==='lunch'?p.lunch:p.dinner):0;}
-Promise.all([fetch('roster.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()),fetch('rec.json?v=3').then(r=>r.json()).catch(()=>({ind:[],pr:{}}))]).then(([d,rc])=>{R=d;REC=rc;init();}).catch(()=>{document.getElementById('login').innerHTML='<div class="note">名單載入失敗，請重新整理。</div>';});
+Promise.all([fetch('roster.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()),fetch('rec.json?v=3').then(r=>r.json()).catch(()=>({ind:[],pr:{}}))]).then(([d,rc])=>{R=d;R.forEach(p=>{p.pend=[p.lunch<0,p.dinner<0];if(p.lunch<0)p.lunch=0;if(p.dinner<0)p.dinner=0;});REC=rc;init();}).catch(()=>{document.getElementById('login').innerHTML='<div class="note">名單載入失敗，請重新整理。</div>';});
 function init(){
   const units=[...new Set(R.map(p=>p.unit))].sort((a,b)=>(ORD.indexOf(a)<0?99:ORD.indexOf(a))-(ORD.indexOf(b)<0?99:ORD.indexOf(b)));
   const lq=document.getElementById('l-q'), lunits=document.getElementById('l-units'), llist=document.getElementById('l-list');
@@ -142,7 +142,7 @@ function init(){
   if(qid&&R.find(p=>p.id===qid))enter(qid); else if(saved&&R.find(p=>p.id===saved))enter(saved); else renderId();
   tick();setInterval(tick,1000);
 }
-function renderId(){document.getElementById('idbox').innerHTML=me?'<div class="av" style="border-color:'+(COLORS[me.grp]||['#fff'])[0]+'">'+esc(me.name.slice(0,1))+'</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:18px;color:#fff">'+esc(me.name)+' <span style="font-size:13px;font-weight:400;color:#E2BD63">'+esc(me.unit)+(me.ind?'・'+esc(me.ind)+'<span title="'+'由 AI 依公司名稱判斷，可能有誤，請見諒。'+'">＊</span>':'')+'</span></div><div style="font-size:13px;color:#D9C9A5">'+(me.ind?'＊產業別'+'由 AI 依公司名稱判斷，可能有誤，請見諒。'+'<br>':'')+(me.lunch?'午場 '+me.lunch+' 桌':'午場座位安排中')+'・'+(me.dinner?'晚宴 '+me.dinner+' 桌':'晚宴座位安排中')+'</div></div><button type="button" class="btn sm" style="background:rgba(255,255,255,.14);color:#F8E7B8" onclick="logout()">不是我</button>'
+function renderId(){document.getElementById('idbox').innerHTML=me?'<div class="av" style="border-color:'+(COLORS[me.grp]||['#fff'])[0]+'">'+esc(me.name.slice(0,1))+'</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:18px;color:#fff">'+esc(me.name)+' <span style="font-size:13px;font-weight:400;color:#E2BD63">'+esc(me.unit)+(me.ind?'・'+esc(me.ind)+'<span title="'+'由 AI 依公司名稱判斷，可能有誤，請見諒。'+'">＊</span>':'')+'</span></div><div style="font-size:13px;color:#D9C9A5">'+(me.ind?'＊產業別'+'由 AI 依公司名稱判斷，可能有誤，請見諒。'+'<br>':'')+(me.lunch?'午場 '+me.lunch+' 桌':(me.pend[0]?'午場座位安排中':'午場不參加'))+'・'+(me.dinner?'晚宴 '+me.dinner+' 桌':(me.pend[1]?'晚宴座位安排中':'晚宴不參加'))+'</div></div><button type="button" class="btn sm" style="background:rgba(255,255,255,.14);color:#F8E7B8" onclick="logout()">不是我</button>'
  :'<div class="av">？</div><div style="flex:1"><div style="font-weight:700;color:#fff">歡迎蒞臨</div><div style="font-size:13px;color:#D9C9A5">請先在下方輸入您的姓名</div></div>';}
 function enter(id){me=R.find(p=>p.id===id);renderId();document.getElementById('login').style.display='none';document.getElementById('tabs').style.display='flex';document.getElementById('tabbar').style.display='flex';renderMe();renderFind();renderMeet();loadMyWish();loadSocial();}
 function logout(){me=null;try{localStorage.removeItem('imc15_me');}catch(e){}renderId();document.getElementById('login').style.display='flex';document.getElementById('l-q').value='';renderLogin();document.getElementById('tabs').style.display='none';document.getElementById('tabbar').style.display='none';}
@@ -150,7 +150,7 @@ function go(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('
 function setSess(s){sess=s;document.getElementById('bLunch').classList.toggle('on',s==='lunch');document.getElementById('bDinner').classList.toggle('on',s==='dinner');renderMe();}
 function renderMe(){if(me===null)return;const t=tableName(me,sess);document.getElementById('seatLink').href='seat.html?p='+(me.id-1);
   document.getElementById('sessLbl').textContent=sess==='lunch'?'午場 13:00・千八會館':'晚宴 18:00・濕婆神之夜';
-  document.getElementById('tblNo').textContent=t||'—';document.getElementById('tblName').textContent=t?'第 '+t+' 桌':'座位安排中';
+  document.getElementById('tblNo').textContent=t||'—';document.getElementById('tblName').textContent=t?'第 '+t+' 桌':(me.pend[sess==='lunch'?0:1]?'座位安排中':'不參加此場');
   const mates=R.filter(p=>p.id!==me.id&&tableName(p,sess)===t&&t);const same=mates.filter(p=>p.unit===me.unit).length;
   document.getElementById('tblMates').textContent=t?('同桌 '+mates.length+' 人'+(same?'・同社 '+same+' 位':'')):'';
   const us=R.filter(p=>p.unit===me.unit&&p.id!==me.id);document.getElementById('unitTitle').textContent='我們社今天來了 '+(us.length+1)+' 位（'+me.unit+'）';
