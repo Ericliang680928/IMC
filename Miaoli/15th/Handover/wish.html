@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>商務交流許願牆｜苗栗IMC 第15屆</title>
-<script src="i18n.js?v=13"></script>
+<script src="i18n.js?v=14"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="style.css?v=3">
 <script src="db.js?v=1"></script>
@@ -62,10 +62,11 @@
       <div id="results" class="res" style="display:none;margin-top:8px"></div>
       <div class="note" id="noRes" style="display:none;color:#8A3B1F">名單中找不到，請換個關鍵字</div>
       <div class="note" style="margin-top:6px">已選 <span id="nPicked">0</span> 位。名單同步自「交接活動座位安排」；產業別由 AI 依公司名稱判斷，可能有誤，請見諒。</div>
+      <div class="note" style="margin-top:6px">送出許願後，會自動向您選的社友發出交流邀請（對方會在「我的活動頁」看到）。</div>
     </div>
     <div class="fld"><label class="f" for="w-line">手機號碼（僅配對成功的社友看得到）</label><input id="w-line" class="in" type="tel" inputmode="tel" autocomplete="tel" placeholder="09xx-xxx-xxx"></div>
-    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center"><button type="submit" class="btn btn-gold">送出許願</button><span id="saved" style="display:none;color:var(--green);font-weight:700">已送出！配對結果會出現在您的活動頁。</span></div>
-    <div class="note">許願牆公開顯示社別、姓名、產業、資源與需求；「想認識誰」與手機號碼不公開。</div>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center"><button type="submit" class="btn btn-gold">送出許願</button><span id="saved" style="display:none;color:var(--green);font-weight:700">已送出！配對結果會出現在您的活動頁。</span><span id="savedInv" style="display:none;font-weight:700"></span></div>
+    <div class="note">許願牆公開顯示社別、姓名、產業、資源與需求；「想認識誰」不會顯示在許願牆，手機號碼不公開。</div>
   </form>
   <section id="wishwall" style="display:flex;flex-direction:column;gap:16px;scroll-margin-top:72px">
     <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px"><div class="serif" style="font-size:24px;font-weight:700;color:var(--dark)">社友許願牆</div><div class="note">共 <span id="count">0</span> 則</div></div>
@@ -126,9 +127,17 @@ function renderWall(){const bizs=['全部',...new Set(LIST.map(w=>w.biz))];
 document.getElementById('form').addEventListener('submit',async e=>{e.preventDefault();const g=id=>document.getElementById(id).value.trim();if(g('w-name')===''){document.getElementById('w-q').focus();document.getElementById('whoPick').style.display='flex';return;}
   const btn=e.target.querySelector('button[type=submit]');btn.disabled=true;btn.textContent='送出中…';
   const row={unit:g('w-unit'),name:g('w-name'),biz:g('w-biz'),have:g('w-have'),want:g('w-want'),meet_ids:picked,line_id:g('w-line'),updated_at:new Date().toISOString()};if(ME)row.person_id=ME.id;
-  try{if(ME)await dbUpsert('h15_wishes',row,'person_id');else await dbInsert('h15_wishes',row,'return=minimal');
-    document.getElementById('saved').style.display='inline';btn.textContent='已送出 ✓（可修改後再送）';btn.disabled=false;picked=[];renderPicked();loadWall();window.scrollTo({top:0,behavior:'smooth'});}
-  catch(err){btn.textContent='送出失敗，請再試一次';btn.disabled=false;}});
+  const inv=ME?[...new Set(picked)].filter(id=>id!==ME.id&&ROSTER.some(y=>y.id===id)):[];
+  try{if(ME)await dbUpsert('h15_wishes',row,'person_id');else await dbInsert('h15_wishes',row,'return=minimal');}
+  catch(err){btn.textContent='送出失敗，請再試一次';btn.disabled=false;return;}
+  /* 「想認識誰」→ 同步對每位寫入 h15_interests（kind=invite），與牆上的「我想和你交流」同一條路；已存在的邀請略過 */
+  const si=document.getElementById('savedInv');si.style.display='none';let invMsg='',invColor='var(--green)';
+  if(inv.length){
+    try{await dbInsert('h15_interests?on_conflict=from_id,to_id,kind',inv.map(to=>({from_id:ME.id,to_id:to,kind:'invite'})),'return=minimal,resolution=ignore-duplicates');inv.forEach(id=>SENT.add(id));invMsg='已同時向您選的社友發出交流邀請。';}
+    catch(err){invMsg='許願已儲存，但交流邀請未送出，請再按一次「送出許願」。';invColor='#8A3B1F';}}
+  document.getElementById('saved').style.display='inline';btn.textContent='已送出 ✓（可修改後再送）';btn.disabled=false;
+  if(invMsg){si.textContent=invMsg;si.style.color=invColor;si.style.display='inline';}
+  if(!invMsg||invColor==='var(--green)')picked=[];renderPicked();loadWall();if(invMsg)document.getElementById('saved').scrollIntoView({behavior:'smooth',block:'center'});else window.scrollTo({top:0,behavior:'smooth'});});
 
 </script>
 <script src="tabbar.js?v=2"></script>
