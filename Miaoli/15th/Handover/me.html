@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>我的活動頁｜苗栗IMC 第15屆</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="style.css?v=1">
+<link rel="stylesheet" href="style.css?v=2">
+<script src="db.js?v=1"></script>
 <style>
 body{background:#F7F3EC}
 .app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:#F7F3EC;box-shadow:0 0 40px rgba(43,29,10,.08)}
@@ -79,7 +80,7 @@ main{padding:14px 14px 90px;display:flex;flex-direction:column;gap:14px;flex:1}
     </div>
     <!-- 交流 -->
     <div class="tab" id="t-meet">
-      <section class="card gold"><div class="serif" style="font-size:19px;font-weight:700;color:var(--dark)">想認識您的社友</div><div class="note">尚無。填許願後，對您有興趣的社友會出現在這裡，您可回覆「我也想交流」或「先不用」。</div></section>
+      <section class="card gold"><div class="serif" style="font-size:19px;font-weight:700;color:var(--dark)">想認識您的社友（<span id="nReq2">0</span>）</div><div id="reqList"><div class="note">尚無。對您有興趣或邀請您的社友會出現在這裡，您可回覆「我也想交流」或「先不用」。</div></div></section>
       <section class="card"><div style="display:flex;align-items:baseline;gap:8px"><div class="serif" style="font-size:19px;font-weight:700;color:var(--dark)">我的碰面清單</div><span class="note">茶敘 15:20・5 桌旁</span></div><div class="note">配對建議與產業別由 AI 依公司名稱判斷，可能有誤，請見諒。</div><div id="matches"></div>
         <div style="display:flex;gap:8px"><button type="button" class="btn btn-line sm" style="flex:1" disabled>活動後寄清單給我</button><button type="button" class="btn btn-ghost sm" onclick="togglePreview()" id="pv">預覽碰面模式</button></div></section>
       <section class="card"><div style="display:flex;align-items:baseline;gap:8px"><div class="serif" style="font-size:19px;font-weight:700;color:var(--dark)">友社交接，我們去回訪</div></div><div class="note">各友社下一場交接日期待承辦團隊補入；按「我想參加」會通知該社。</div><div id="visits"></div></section>
@@ -134,7 +135,7 @@ function init(){
 }
 function renderId(){document.getElementById('idbox').innerHTML=me?'<div class="av" style="border-color:'+(COLORS[me.grp]||['#fff'])[0]+'">'+esc(me.name.slice(0,1))+'</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:18px;color:#fff">'+esc(me.name)+' <span style="font-size:13px;font-weight:400;color:#E2BD63">'+esc(me.unit)+(me.ind?'・'+esc(me.ind)+'<span title="'+'由 AI 依公司名稱判斷，可能有誤，請見諒。'+'">＊</span>':'')+'</span></div><div style="font-size:13px;color:#D9C9A5">'+(me.ind?'＊產業別'+'由 AI 依公司名稱判斷，可能有誤，請見諒。'+'<br>':'')+(me.lunch?'午場 '+me.lunch+' 桌':'午場座位安排中')+'・'+(me.dinner?'晚宴 '+me.dinner+' 桌':'晚宴座位安排中')+'</div></div><button type="button" class="btn sm" style="background:rgba(255,255,255,.14);color:#F8E7B8" onclick="logout()">不是我</button>'
  :'<div class="av">？</div><div style="flex:1"><div style="font-weight:700;color:#fff">歡迎蒞臨</div><div style="font-size:13px;color:#D9C9A5">請先在下方輸入您的姓名</div></div>';}
-function enter(id){me=R.find(p=>p.id===id);renderId();document.getElementById('login').style.display='none';document.getElementById('tabs').style.display='flex';document.getElementById('tabbar').style.display='flex';renderMe();renderFind();renderMeet();}
+function enter(id){me=R.find(p=>p.id===id);renderId();document.getElementById('login').style.display='none';document.getElementById('tabs').style.display='flex';document.getElementById('tabbar').style.display='flex';renderMe();renderFind();renderMeet();loadMyWish();loadSocial();}
 function logout(){me=null;try{localStorage.removeItem('imc15_me');}catch(e){}renderId();document.getElementById('login').style.display='flex';document.getElementById('l-q').value='';renderLogin();document.getElementById('tabs').style.display='none';document.getElementById('tabbar').style.display='none';}
 function go(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.id==='t-'+t));document.querySelectorAll('#tabbar button').forEach((b,i)=>b.classList.toggle('on',['me','find','meet','shop'][i]===t));window.scrollTo({top:0});}
 function setSess(s){sess=s;document.getElementById('bLunch').classList.toggle('on',s==='lunch');document.getElementById('bDinner').classList.toggle('on',s==='dinner');renderMe();}
@@ -149,7 +150,11 @@ function renderMe(){if(me===null)return;const t=tableName(me,sess);document.getE
   mk(['食材供應','場地','人脈介紹','專業諮詢','通路','資金'],'have','haveTags');mk(['行銷','採購窗口','合作通路','人才','法律財務','異業合作'],'want','wantTags');
   const n=Object.values(wish.have).filter(Boolean).length+Object.values(wish.want).filter(Boolean).length;const b=document.getElementById('wishBtn');b.disabled=n===0;b.textContent='送出許願（'+n+' 項）';}
 function tg(k,n){wish[k][n]=wish[k][n]?false:true;renderMe();}
-function sendWish(){const b=document.getElementById('wishBtn');b.textContent='已送出許願 ✓（預覽版未寫入）';b.disabled=true;}
+async function sendWish(){const b=document.getElementById('wishBtn');b.disabled=true;b.textContent='送出中…';
+  const th=Object.keys(wish.have).filter(k=>wish.have[k]),tw=Object.keys(wish.want).filter(k=>wish.want[k]);
+  try{await dbUpsert('h15_wishes',{person_id:me.id,unit:me.unit,name:me.name,biz:me.ind||'',tags_have:th,tags_want:tw,updated_at:new Date().toISOString()},'person_id');b.textContent='已送出許願 ✓';}
+  catch(e){b.textContent='送出失敗，請再試一次';b.disabled=false;}}
+async function loadMyWish(){try{const r=await dbGet('h15_wishes?person_id=eq.'+me.id+'&select=tags_have,tags_want');if(r.length){wish.have={};wish.want={};(r[0].tags_have||[]).forEach(t=>wish.have[t]=true);(r[0].tags_want||[]).forEach(t=>wish.want[t]=true);renderMe();const b=document.getElementById('wishBtn');b.textContent='已送出許願 ✓（可修改後再送）';}}catch(e){}}
 function setUnitF(u){unitF=unitF===u?'':u;renderFind();}function setBizF(b){bizF=bizF===b?'':b;renderFind();}
 function renderFind(){if(me===null)return;const q=document.getElementById('q').value.trim();
   document.querySelectorAll('#unitChips .quick').forEach(x=>x.classList.toggle('on',x.dataset.u===unitF));document.querySelectorAll('#bizChips .quick').forEach(x=>x.classList.toggle('on',x.dataset.b===bizF));
@@ -169,18 +174,40 @@ function openDetail(id){const r=R.find(x=>x.id===id);if(r===undefined)return;con
    +'<div style="display:flex;gap:8px;margin-top:14px"><button type="button" class="btn sm" style="flex:1;'+(like[id]?'background:#FBF0F4;color:var(--rose)':'background:#fff;border:2px solid var(--line2);color:var(--muted2)')+'" onclick="tLike('+id+');openDetail('+id+')">'+(like[id]?'有興趣 ✓':'有興趣')+'</button><button type="button" class="btn sm" style="flex:1;'+(inv[id]?'background:var(--greenbg);color:var(--green)':'background:#fff;border:2px solid var(--gold);color:var(--gold2)')+'" onclick="tInv('+id+');openDetail('+id+')">'+(inv[id]?'已邀請 ✓':'直接邀請')+'</button><a class="btn sm btn-line" href="seat.html?p='+(id-1)+'">看座位</a></div>';
   document.getElementById('sheet').style.display='block';document.getElementById('sheetBg').style.display='block';}
 function closeDetail(){document.getElementById('sheet').style.display='none';document.getElementById('sheetBg').style.display='none';}
-function tLike(id){like[id]=like[id]?false:true;store();renderFind();renderMeet();}
-function tInv(id){inv[id]=true;renderFind();renderMeet();}
-function renderMeet(){if(me===null)return;const ids=Object.keys(like).filter(k=>like[k]).map(Number);
-  document.getElementById('matches').innerHTML=ids.length?ids.map(id=>{const r=R.find(x=>x.id===id);if(r===undefined)return '';return '<div style="display:flex;align-items:center;gap:10px;border-top:1px solid #F0E8D8;padding-top:10px"><span style="width:12px;height:12px;border-radius:50%;background:'+(COLORS[r.grp]||['#C9A24A'])[0]+';flex:none"></span><div style="flex:1"><div style="font-weight:700;color:var(--dark)">'+esc(r.name)+' <span class="note">'+esc(r.unit)+(r.lunch?'・午 '+r.lunch+' 桌':'')+'</span></div><div style="font-size:13px;color:var(--muted2)">'+esc(r.ind||'')+'</div></div><span class="tag tag-gold">等待對方回應</span></div>';}).join('')
+async function tLike(id){like[id]=like[id]?false:true;store();renderFind();renderMeet();
+  try{if(like[id])await dbInsert('h15_interests',{from_id:me.id,to_id:id,kind:'like'},'return=minimal,resolution=ignore-duplicates');else await dbDelete('h15_interests','from_id=eq.'+me.id+'&to_id=eq.'+id+'&kind=eq.like');}catch(e){}
+  loadSocial();}
+async function tInv(id){inv[id]=true;renderFind();renderMeet();try{await dbInsert('h15_interests',{from_id:me.id,to_id:id,kind:'invite'},'return=minimal,resolution=ignore-duplicates');}catch(e){}loadSocial();}
+async function tReply(id,kind){try{await dbInsert('h15_interests',{from_id:me.id,to_id:id,kind:kind},'return=minimal,resolution=ignore-duplicates');}catch(e){}loadSocial();}
+let SOC={in:[],out:[]};
+async function loadSocial(){if(me===null)return;try{const rows=await dbGet('h15_interests?or=(from_id.eq.'+me.id+',to_id.eq.'+me.id+')&select=from_id,to_id,kind');SOC.in=rows.filter(r=>r.to_id===me.id);SOC.out=rows.filter(r=>r.from_id===me.id);
+  SOC.out.forEach(r=>{if(r.kind==='like')like[r.to_id]=true;if(r.kind==='invite')inv[r.to_id]=true;});store();renderFind();renderMeet();}catch(e){}}
+function renderMeet(){if(me===null)return;
+  const myLikes=new Set(SOC.out.filter(r=>r.kind==='like').map(r=>r.to_id)), myAcc=new Set(SOC.out.filter(r=>r.kind==='accept').map(r=>r.to_id)), mySkip=new Set(SOC.out.filter(r=>r.kind==='skip').map(r=>r.to_id));
+  const theirLikes=new Set(SOC.in.filter(r=>r.kind==='like').map(r=>r.from_id)), theirInv=new Set(SOC.in.filter(r=>r.kind==='invite').map(r=>r.from_id)), theirAcc=new Set(SOC.in.filter(r=>r.kind==='accept').map(r=>r.from_id));
+  // requests: invites to me, or mutual likes (both liked) not yet handled
+  const reqIds=[...new Set([...theirInv,...[...theirLikes].filter(x=>myLikes.has(x))])].filter(x=>mySkip.has(x)===false);
+  const matchIds=[...new Set([...reqIds.filter(x=>myAcc.has(x)||(theirLikes.has(x)&&myLikes.has(x))), ...[...theirAcc].filter(x=>inv[x]||myLikes.has(x))])];
+  const pend=reqIds.filter(x=>matchIds.indexOf(x)<0);
+  document.getElementById('nReq').textContent=String(pend.length);document.getElementById('nReq2').textContent=String(reqIds.length);
+  document.getElementById('reqSum').textContent=pend.length?(pend.slice(0,3).map(x=>{const r=R.find(p=>p.id===x);return r?r.unit+' '+r.name:'';}).join('、')+' 想認識您，先回覆，當天就不用找人。'):(matchIds.length?'邀請都回覆了，茶敘時間照碰面清單走。':'填了許願、也有社友對您有興趣後，這裡會列出來。');
+  document.getElementById('reqList').innerHTML=reqIds.length?reqIds.map(x=>{const r=R.find(p=>p.id===x);if(r===undefined)return '';const done=matchIds.indexOf(x)>=0;const mutual=theirLikes.has(x)&&myLikes.has(x);
+    return '<div style="border-top:1px solid #F0E8D8;padding-top:10px;display:flex;flex-direction:column;gap:8px"><div><span style="font-weight:700;color:var(--dark)">'+esc(r.name)+'</span> <span class="note">'+esc(r.unit)+(r.lunch?'・午 '+r.lunch+' 桌':'')+'</span> <span class="tag tag-gold">'+esc(r.ind||'')+'</span></div><div style="font-size:14px;color:var(--ink2)">'+(mutual?'你們互相按了「有興趣」':'對方直接邀請您交流')+'</div>'
+     +(done?'<div style="background:var(--greenbg);border-radius:12px;padding:10px 12px;color:var(--green);font-size:14px"><strong>配對成功</strong>　茶敘 15:20 於 5 桌旁碰面'+(r.lunch?'（對方在午 '+r.lunch+' 桌）':'')+'</div>'
+     :'<div style="display:flex;gap:8px"><button type="button" class="btn" style="background:var(--gold);color:#fff;flex:1" onclick="tReply('+x+',\'accept\')">我也想交流</button><button type="button" class="btn btn-ghost" onclick="tReply('+x+',\'skip\')">先不用</button></div>')+'</div>';}).join('')
+   :'<div class="note">尚無。對您有興趣或邀請您的社友會出現在這裡，您可回覆「我也想交流」或「先不用」。</div>';
+  const waiting=[...myLikes,...Object.keys(inv).filter(k=>inv[k]).map(Number)].filter(x=>matchIds.indexOf(x)<0);
+  const rowHtml=(x,st,stStyle)=>{const r=R.find(p=>p.id===x);if(r===undefined)return '';return '<div style="display:flex;align-items:center;gap:10px;border-top:1px solid #F0E8D8;padding-top:10px"><span style="width:12px;height:12px;border-radius:50%;background:'+(COLORS[r.grp]||['#C9A24A'])[0]+';flex:none"></span><div style="flex:1"><div style="font-weight:700;color:var(--dark)">'+esc(r.name)+' <span class="note">'+esc(r.unit)+(r.lunch?'・午 '+r.lunch+' 桌':'')+'</span></div><div style="font-size:13px;color:var(--muted2)">'+esc(r.ind||'')+'</div></div><span class="tag" style="'+stStyle+'">'+st+'</span></div>';};
+  document.getElementById('matches').innerHTML=(matchIds.length||waiting.length)?matchIds.map(x=>rowHtml(x,'已配對・茶敘見','background:var(--greenbg);color:var(--green)')).join('')+[...new Set(waiting)].map(x=>rowHtml(x,'等待對方回應','background:var(--cream2);color:var(--gold2)')).join('')
    :'<div class="note">還沒有配對成功的社友。到「找人」按「有興趣」，雙方都按就會出現在這裡。</div>';
-  document.getElementById('nReq').textContent='0';
+  MATCHES=matchIds;
   document.getElementById('visits').innerHTML=[['11月','—','新竹社 交接','日期待補'],['11月','—','高雄社 交接','日期待補'],['12月','—','基隆社 交接','日期待補']].map(v=>'<div style="display:flex;align-items:center;gap:10px;border-top:1px solid #F0E8D8;padding-top:10px"><div style="text-align:center;background:var(--cream2);border-radius:10px;padding:4px 10px;min-width:48px"><div style="font-size:11px;color:var(--gold2)">'+v[0]+'</div><div class="serif" style="font-size:20px;font-weight:700;line-height:1;color:var(--dark)">'+v[1]+'</div></div><div style="flex:1"><div style="font-weight:700;color:var(--dark)">'+v[2]+'</div><div style="font-size:13px;color:var(--muted2)">'+v[3]+'</div></div><button type="button" class="btn btn-line sm" onclick="this.textContent=\'已報名 ✓\'">我想參加</button></div>').join('');
   renderMeetMode();}
+let MATCHES=[];
 function togglePreview(){preview=preview===false;document.getElementById('pv').textContent=preview?'關閉預覽':'預覽碰面模式';renderMeetMode();}
 function renderMeetMode(){const d=now(),mins=d.getHours()*60+d.getMinutes();const inWin=d.getMonth()===9&&d.getDate()===17&&mins>=915&&mins<940;const box=document.getElementById('meetMode');
   if(me===null||(inWin===false&&preview===false)){box.style.display='none';return;}
-  const ids=Object.keys(like).filter(k=>like[k]).map(Number);const r=ids.length?R.find(x=>x.id===ids[0]):null;box.style.display='flex';
+  const r=MATCHES.length?R.find(x=>x.id===MATCHES[0]):null;box.style.display='flex';
   box.innerHTML='<div style="display:flex;align-items:center;gap:8px"><span class="pulse" style="width:10px;height:10px;border-radius:50%;background:#E8A0B8"></span><span style="font-size:13px;letter-spacing:.1em;color:#E2BD63">茶敘碰面模式・'+(inWin?'還有 '+(940-mins)+' 分鐘':'預覽')+'</span></div>'+(r?'<div style="display:flex;align-items:center;gap:14px"><div class="av" style="width:56px;height:56px;font-size:24px;background:var(--cream2);border-color:'+(COLORS[r.grp]||['#C9A24A'])[0]+'">'+esc(r.name.slice(0,1))+'</div><div style="flex:1"><div class="serif" style="font-size:24px;font-weight:700;color:#fff">'+esc(r.name)+'</div><div style="font-size:14px;color:#E2BD63">'+esc(r.unit)+'・'+esc(r.ind||'')+'・名牌 '+(COLORS[r.grp]||['','金'])[1]+'色貼紙</div></div><div style="text-align:center;background:rgba(255,255,255,.12);border-radius:12px;padding:6px 12px"><div style="font-size:11px;color:#E2BD63">在</div><div class="serif" style="font-size:30px;font-weight:900;line-height:1;color:#fff">'+(r.lunch||'—')+'</div><div style="font-size:11px;color:#E2BD63">桌</div></div></div><div style="background:rgba(255,255,255,.1);border-radius:12px;padding:10px 14px;font-size:15px"><span style="color:#E2BD63;font-weight:700">破冰：</span>聊聊彼此的事業，看看哪裡能互相介紹。</div><div style="font-size:12px;color:#D9C9A5">碰面點：5 桌旁「商務交流」立牌</div>':'<div style="font-size:15px">還沒有碰面對象，去茶點區認識新朋友吧。</div>');}
 function tick(){const d=now();document.getElementById('clock').textContent=pad(d.getHours())+':'+pad(d.getMinutes());const mins=d.getHours()*60+d.getMinutes();const day=d.getMonth()===9&&d.getDate()===17;
   document.getElementById('nowTitle').textContent=day?(mins>=915&&mins<940?'茶敘交流中，15:40 回座':(mins<780?'今天 13:00 開始報到':mins>=1230?'活動圓滿結束':'活動進行中')):'距離活動還有 '+Math.max(0,Math.ceil((new Date('2026-10-17T13:00:00')-d)/86400000))+' 天';

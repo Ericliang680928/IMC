@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>社友商品館｜苗栗IMC 第15屆</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="style.css?v=1">
+<link rel="stylesheet" href="style.css?v=2">
+<script src="db.js?v=1"></script>
 <style>
 .shop{display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start}
 .cartbox{position:sticky;top:80px}
@@ -30,12 +31,12 @@
 </div></header>
 
 <main class="wrap" style="padding:32px 20px 64px">
-<div class="banner" style="margin-bottom:20px">預覽版：商品為示範資料，訂單尚未連接資料庫，送出後不會真正成立訂單。</div>
+
 <div class="shop">
   <section style="display:flex;flex-direction:column;gap:20px">
     <div id="cats" style="display:flex;flex-wrap:wrap;gap:10px"></div>
     <div id="prods" class="grid g2"></div>
-    <div class="note">正式商品由承辦團隊於後台登錄後顯示。</div>
+    <div class="note" id="demoNote" style="display:none">目前顯示示範商品；承辦團隊於後台登錄並核准上架後，這裡會換成正式商品。</div>
   </section>
   <aside id="cart" class="card cartbox" style="scroll-margin-top:80px">
     <div class="serif" style="font-size:24px;font-weight:700;color:var(--dark)">購物車</div>
@@ -61,19 +62,20 @@
 <footer>社團法人苗栗縣國際工商經營研究社・社友商品館　訂購資料僅供本次出貨使用</footer>
 
 <script>
-const PRODUCTS=[
+const DEMO=[
  {id:'a1',cat:'伴手禮',name:'［社友商品名稱］',seller:'［社友姓名］',price:480,unit:'盒',desc:'一句話商品介紹，例：小農手作，限量供應',color:'#E8D9B8'},
  {id:'a2',cat:'伴手禮',name:'堅果辣油禮盒',seller:'米樂家',price:420,unit:'組',desc:'苗栗在地食材，佐餐拌麵都合適。',color:'#D9C2A3'},
  {id:'a3',cat:'餐桌點心',name:'黑木耳脆片 TaHes',seller:'金稼農業社',price:150,unit:'包',desc:'南庄段木栽培黑木耳製成的酥脆點心。',color:'#C9B48C'},
  {id:'a4',cat:'餐桌點心',name:'［桌上點心名稱］',seller:'［社友姓名］',price:120,unit:'份',desc:'一句話商品介紹',color:'#EADDC3'}
 ];
-const CATS=['全部','伴手禮','餐桌點心'];
+let PRODUCTS=[];const CATS=['全部','伴手禮','餐桌點心'];
+async function loadProducts(){try{const rows=await dbGet('h15_products?on_shelf=eq.true&cat=neq.贊助廣告&select=*&order=id');PRODUCTS=rows.map(r=>({id:String(r.id),cat:r.cat,name:r.name||'',seller:r.seller,price:r.price||0,unit:r.unit||'',desc:r.descr||'',img:r.img||'',color:'#E8D9B8'}));}catch(e){PRODUCTS=[];}if(PRODUCTS.length===0){PRODUCTS=DEMO;document.getElementById('demoNote').style.display='block';}renderProds();}
 let cat='全部', cart={};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function renderCats(){document.getElementById('cats').innerHTML=CATS.map(c=>'<button type="button" class="pill'+(c===cat?' on':'')+'" onclick="setCat(\''+c+'\')">'+c+'</button>').join('');}
 function setCat(c){cat=c;renderCats();renderProds();}
 function renderProds(){
-  document.getElementById('prods').innerHTML=PRODUCTS.filter(p=>cat==='全部'||p.cat===cat).map(p=>'<article class="prod"><div class="img" style="background:'+p.color+'">'+esc(p.name.replace(/^［/,'').slice(0,1))+'</div><div style="padding:18px 20px 20px;display:flex;flex-direction:column;gap:8px;flex:1"><div style="display:flex;justify-content:space-between;font-size:13px"><span class="lbl" style="font-size:13px">'+esc(p.cat)+'</span><span class="note">提供：'+esc(p.seller)+'</span></div><div class="serif" style="font-size:22px;font-weight:700;color:var(--dark)">'+esc(p.name)+'</div><div style="font-size:15px;color:var(--muted2);flex:1">'+esc(p.desc)+'</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px"><div style="font-size:24px;font-weight:700;color:var(--rose)">NT$ '+p.price+'<span class="note" style="font-weight:400;margin-left:4px">／'+esc(p.unit)+'</span></div><button type="button" class="btn btn-gold sm" onclick="change(\''+p.id+'\',1)">加入購物車</button></div></div></article>').join('');
+  document.getElementById('prods').innerHTML=PRODUCTS.filter(p=>cat==='全部'||p.cat===cat).map(p=>'<article class="prod"><div class="img" style="background:'+p.color+'">'+(p.img?'<img src="'+esc(p.img)+'" alt="">':esc(p.name.replace(/^［/,'').slice(0,1)))+'</div><div style="padding:18px 20px 20px;display:flex;flex-direction:column;gap:8px;flex:1"><div style="display:flex;justify-content:space-between;font-size:13px"><span class="lbl" style="font-size:13px">'+esc(p.cat)+'</span><span class="note">提供：'+esc(p.seller)+'</span></div><div class="serif" style="font-size:22px;font-weight:700;color:var(--dark)">'+esc(p.name)+'</div><div style="font-size:15px;color:var(--muted2);flex:1">'+esc(p.desc)+'</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px"><div style="font-size:24px;font-weight:700;color:var(--rose)">NT$ '+p.price+'<span class="note" style="font-weight:400;margin-left:4px">／'+esc(p.unit)+'</span></div><button type="button" class="btn btn-gold sm" onclick="change(\''+p.id+'\',1)">加入購物車</button></div></div></article>').join('');
 }
 function change(id,d){const q=(cart[id]||0)+d; if(q>0)cart[id]=q; else delete cart[id]; document.getElementById('done').style.display='none'; renderCart();}
 function renderCart(){
@@ -84,11 +86,16 @@ function renderCart(){
   document.getElementById('total').textContent=total; document.getElementById('cnt').textContent=count;
   document.getElementById('form').style.display=ids.length?'flex':'none';
 }
-document.getElementById('form').addEventListener('submit',e=>{e.preventDefault();
-  document.getElementById('orderNo').textContent='IMC15-'+String(Date.now()).slice(-6);
-  cart={}; renderCart(); document.getElementById('done').style.display='block'; e.target.reset();});
+document.getElementById('form').addEventListener('submit',async e=>{e.preventDefault();const g=id=>document.getElementById(id).value.trim();
+  const btn=e.target.querySelector('button[type=submit]');btn.disabled=true;btn.textContent='送出中…';
+  const items=Object.keys(cart).map(id=>{const p=PRODUCTS.find(x=>x.id===id);return {product_id:id,name:p.name,seller:p.seller,price:p.price,unit:p.unit,qty:cart[id]};});
+  const total=items.reduce((a,i)=>a+i.price*i.qty,0);const no='IMC15-'+String(Date.now()).slice(-6);
+  try{await dbInsert('h15_orders',{order_no:no,unit:g('f-unit'),name:g('f-name'),tel:g('f-tel'),addr:g('f-addr'),items:items,total:total},'return=minimal');
+    document.getElementById('orderNo').textContent=no;cart={};renderCart();document.getElementById('done').style.display='block';e.target.reset();}
+  catch(err){alert('送出失敗，請再試一次。');}
+  btn.disabled=false;btn.textContent='送出訂單';});
 function reset(){document.getElementById('done').style.display='none';}
-renderCats();renderProds();renderCart();
+renderCats();renderCart();loadProducts();
 </script>
 </body>
 </html>
