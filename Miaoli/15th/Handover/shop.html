@@ -167,7 +167,7 @@ function seatLookup(){
   const pick=hit.length===1?hit[0]:(hit.find(p=>nm(p.u)===nm(un.value))||null);
   if(!pick){if(unitAuto){un.value='';unitAuto=false;}box.innerHTML='<div>有 '+hit.length+' 位同名，請點選您的社別：</div><div class="chips">'+hit.map(p=>'<button type="button" class="chip" onclick="seatPick('+SEAT.indexOf(p)+')">'+esc(p.u)+'</button>').join('')+'</div>';box.style.display='block';return;}
   seatSel=pick;if(!un.value||unitAuto){un.value=pick.u;unitAuto=true;}
-  box.innerHTML='<div style="font-weight:700">找到您了：'+esc(pick.n)+'・'+esc(pick.u)+'</div><div class="sr"><span>午場</span><b>'+esc(seatTxt(pick.a))+'</b></div><div class="sr"><span>晚宴</span><b>'+esc(seatTxt(pick.b))+'</b></div><div class="note" style="margin-top:6px">座位以現場桌卡為準</div>';box.style.display='block';}
+  box.innerHTML='<div style="font-weight:700">找到您了：'+esc(pick.n)+'・'+esc(pick.u)+'</div>'+(seatTxt(pick.a,1)===seatTxt(pick.b,1)?'<div class="sr"><span>桌號</span><b>'+esc(seatTxt(pick.a,1))+'</b></div>':'<div class="sr"><span>午場</span><b>'+esc(seatTxt(pick.a,1))+'</b></div><div class="sr"><span>晚宴</span><b>'+esc(seatTxt(pick.b,1))+'</b></div>')+'<div class="note" style="margin-top:6px">座位以現場桌卡為準</div>';box.style.display='block';}
 function seatPick(i){const p=SEAT[i],un=document.getElementById('f-unit');un.value=p.u;unitAuto=true;seatLookup();}
 fetch('seatmap.json').then(r=>r.ok?r.json():[]).then(d=>{SEAT=Array.isArray(d)?d:[];seatLookup();}).catch(()=>{});
 document.getElementById('f-name').addEventListener('input',seatLookup);
