@@ -6,7 +6,7 @@
 <title>苗栗IMC 第14、15屆社長交接暨理監事就職典禮</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="style.css?v=1">
+<link rel="stylesheet" href="style.css?v=3">
 <style>
 .hero-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:48px;align-items:center;max-width:1120px;margin:0 auto}
 .hero-big{padding:72px 20px 64px}
@@ -31,13 +31,17 @@
 .wide{grid-template-columns:1.2fr 1fr}
 @media (max-width:860px){.wide{grid-template-columns:1fr}.hero-grid{grid-template-columns:1fr}.hero-big h1{font-size:34px}.spk{grid-template-columns:1fr}.tli .body{grid-template-columns:1fr}}
 </style>
+<script src="nav.js?v=1" defer></script>
 </head>
 <body>
 <nav class="nav"><div class="nin">
   <img src="assets/logo15.png" alt="第15屆 ART &amp; ACTION">
+  <div class="links" id="navlinks">
   <a href="#info">活動資訊</a><a href="#seat">座位查詢</a><a href="#schedule">完整流程</a><a href="#speaker">專題演講</a>
-  <a href="#traffic">交通</a><a href="wish.html">商務許願</a><a href="sponsors.html">贊助資訊</a>
+  <a href="#traffic">交通資訊</a><a href="wish.html">商務許願</a><a href="sponsors.html">贊助資訊</a>
+  </div>
   <a href="shop.html" class="cta">社友商品館</a>
+  <button type="button" class="mbtn" aria-expanded="false" aria-controls="navlinks">☰ 選單</button>
 </div></nav>
 
 <header class="hero hero-big">

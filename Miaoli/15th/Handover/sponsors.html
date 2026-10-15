@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>年會贊助資訊｜苗栗IMC 第15屆</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=3">
 <script src="db.js?v=1"></script>
 <style>
 .jump{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 26px}
@@ -38,11 +38,15 @@
 .r .who .co{display:block;color:var(--muted2);font-size:15px;line-height:1.4}
 @media (max-width:760px){.ov .box{grid-template-columns:1fr;padding:14px;gap:16px}.r{grid-template-columns:1fr}.h2s h2{font-size:26px}#grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.edm .cap{padding:10px 12px 12px}.edm .cap .serif{font-size:16px!important}.edm .cap .lbl{font-size:12px!important}.card.th{padding:6px 16px 12px}}
 </style>
+<script src="nav.js?v=1" defer></script>
 </head>
 <body>
 <nav class="nav"><div class="nin">
   <img src="assets/logo15.png" alt="第15屆 ART &amp; ACTION">
+  <div class="links" id="navlinks">
   <a href="index.html">活動主頁</a><a href="seat.html">座位查詢</a><a href="wish.html">商務許願</a><a href="shop.html">社友商品館</a><a href="sponsors.html" class="on">贊助資訊</a>
+  </div>
+  <button type="button" class="mbtn" aria-expanded="false" aria-controls="navlinks">☰ 選單</button>
 </div></nav>
 <header class="hero"><div class="wrap" style="display:flex;flex-direction:column;gap:10px;padding:0">
   <div class="kicker">感謝第十五屆年會贊助</div><h1>年會贊助資訊</h1>

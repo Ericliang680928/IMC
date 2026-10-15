@@ -16,6 +16,23 @@ button,input,select,textarea{font-family:inherit}
 .nav a:hover,.nav a.on{color:#F3D58A;border-bottom-color:var(--gold3)}
 .nav a.cta{background:var(--gold3);color:var(--dark);border-radius:999px;padding:9px 18px;border:0;font-weight:700;margin-left:auto}
 .nav a.cta:hover{background:#E2BD63}
+
+/* 導覽列：電腦版維持一排；手機版收進「☰ 選單」 */
+.nav .links{display:contents}
+.nav .mbtn{display:none}
+@media (max-width:720px){
+ .nav .nin{overflow:visible;gap:8px}
+ .nav .mbtn{display:inline-flex;align-items:center;justify-content:center;margin-left:auto;flex:none;min-height:44px;padding:0 16px;border-radius:999px;border:2px solid var(--gold3);background:transparent;color:#F3D58A;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;white-space:nowrap}
+ .nav .cta~.mbtn,.nav .cartlink~.mbtn{margin-left:0}
+ .nav.open .mbtn{background:var(--gold3);color:var(--dark)}
+ .nav .links{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;background:#2B1D0A;border-bottom:2px solid var(--gold3);padding:6px 20px 12px;box-shadow:0 14px 28px rgba(0,0,0,.4);max-height:calc(100vh - 72px);overflow-y:auto}
+ .nav.open .links{display:flex}
+ .nav .links a{padding:15px 4px;font-size:19px;border-bottom:1px solid rgba(251,248,242,.14)}
+ .nav .links a:last-child{border-bottom:0}
+ .nav .links a.on{color:#F3D58A;font-weight:700}
+ .nav .links a.on::before{content:"◆ ";color:var(--gold3);font-size:.8em}
+ .nav a.cta{margin-left:auto;padding:8px 14px;font-size:15px}
+}
 /* hero */
 .hero{background:linear-gradient(160deg,#2B1D0A 0%,#4A3312 60%,#7A5A1E 100%);color:#FBF8F2;padding:48px 20px}
 .hero h1{margin:0;font-size:40px;font-weight:900;color:#F8E7B8;line-height:1.2}
