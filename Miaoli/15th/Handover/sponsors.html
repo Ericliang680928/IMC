@@ -8,16 +8,35 @@
 <link rel="stylesheet" href="style.css?v=2">
 <script src="db.js?v=1"></script>
 <style>
-.edm{background:none;border:0;padding:0;cursor:pointer;text-align:left;width:100%;border-radius:18px;overflow:hidden;box-shadow:0 2px 14px rgba(43,29,10,.08);display:flex;flex-direction:column;color:inherit;font:inherit}
+.jump{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 26px}
+.jump a{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:999px;border:2px solid var(--line2);background:#fff;color:var(--dark2);font-weight:600;font-size:16px;text-decoration:none}
+.jump a:hover{background:var(--cream2)}
+.h2s{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px;margin:0 0 18px}
+.h2s h2{margin:0;font-size:30px;color:var(--dark);border-left:6px solid var(--gold);padding-left:14px}
+.edm{background:#fff;border:0;padding:0;cursor:pointer;text-align:left;width:100%;border-radius:18px;overflow:hidden;box-shadow:0 2px 14px rgba(43,29,10,.08);display:flex;flex-direction:column;color:inherit;font:inherit}
 .edm:hover{box-shadow:0 8px 28px rgba(43,29,10,.16)}
-.edm .img{aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;color:var(--dark2);font-size:22px;font-weight:700;opacity:.9}
-.edm .img img{width:100%;height:100%;object-fit:cover}
-.edm.on .img{outline:4px solid var(--gold);outline-offset:-4px}
-.ov{position:fixed;inset:0;background:rgba(43,29,10,.7);display:none;align-items:center;justify-content:center;padding:20px;z-index:100}
+.edm .img{aspect-ratio:210/297;display:flex;align-items:center;justify-content:center;background:#F3ECDD;overflow:hidden}
+.edm .img img{width:100%;height:100%;object-fit:contain;display:block}
+.edm .cap{padding:14px 16px 16px;display:flex;flex-direction:column;gap:3px}
+.ov{position:fixed;inset:0;background:rgba(43,29,10,.72);display:none;align-items:center;justify-content:center;padding:16px;z-index:100}
 .ov.show{display:flex}
-.ov .box{background:#fff;border-radius:20px;max-width:920px;width:100%;max-height:92vh;overflow:auto;display:grid;grid-template-columns:1.1fr 1fr;gap:24px;padding:24px;border:2px solid var(--gold3)}
-.ov .big{aspect-ratio:3/4;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--dark2);font-size:28px;font-weight:700}
-@media (max-width:760px){.ov .box{grid-template-columns:1fr}}
+.ov .box{background:#fff;border-radius:20px;max-width:980px;width:100%;max-height:94vh;overflow:auto;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px;padding:20px;border:2px solid var(--gold3)}
+.ov .big{background:#F3ECDD;border-radius:12px;display:flex;align-items:flex-start;justify-content:center;overflow:hidden;align-self:start}
+.ov .big img{width:100%;height:auto;display:block}
+.ov .info{display:flex;flex-direction:column;gap:12px;min-width:0}
+.ov .acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:auto;padding-top:8px}
+.card.th{gap:0;padding:8px 22px 14px}
+.card.th h3{margin:14px 0 6px;font-size:22px;color:var(--dark)}
+.card.th .sub{font-size:15px;color:var(--gold2);font-weight:700;letter-spacing:.08em;margin:14px 0 2px}
+.r{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:4px 20px;padding:10px 0;border-top:1px solid var(--line);align-items:start}
+.r:first-of-type{border-top:0}
+.r .l{font-weight:700;color:var(--dark)}
+.r .l small{font-weight:500;color:var(--muted2);font-size:15px}
+.r .it{color:var(--gold2);font-weight:700}
+.r .who{display:flex;flex-direction:column;gap:8px;min-width:0}
+.r .who .rl{color:var(--muted2);font-size:15px;font-weight:500;margin-left:6px}
+.r .who .co{display:block;color:var(--muted2);font-size:15px;line-height:1.4}
+@media (max-width:760px){.ov .box{grid-template-columns:1fr;padding:14px;gap:16px}.r{grid-template-columns:1fr}.h2s h2{font-size:26px}#grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.edm .cap{padding:10px 12px 12px}.edm .cap .serif{font-size:16px!important}.edm .cap .lbl{font-size:12px!important}.card.th{padding:6px 16px 12px}}
 </style>
 </head>
 <body>
@@ -27,44 +46,149 @@
 </div></nav>
 <header class="hero"><div class="wrap" style="display:flex;flex-direction:column;gap:10px;padding:0">
   <div class="kicker">感謝第十五屆年會贊助</div><h1>年會贊助社友廣告</h1>
-  <p style="max-width:720px">謝謝每一位贊助年會的社友。點一下廣告可放大瀏覽 EDM，歡迎多認識社友的事業，彼此支持。</p>
+  <p style="max-width:720px">感謝歷屆社長、顧問與社友，贊助年會特刊印製、伴手禮、飲品點心與節目設備。點一下廣告可放大瀏覽，歡迎多認識社友的事業，彼此支持。</p>
 </div></header>
 <main class="wrap" style="padding:32px 20px 64px">
-  <div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:18px"><h2 class="serif" style="margin:0;font-size:30px;color:var(--dark);border-left:6px solid var(--gold);padding-left:14px">贊助社友</h2><div class="note">共 <span id="n">0</span> 位社友贊助・依贊助順序排列</div></div>
-  <div id="grid" class="grid g3"></div>
-  <div class="note" id="demoNote" style="margin-top:14px;display:none">目前為示範版位；贊助社友的 EDM 由承辦團隊於後台登錄並核准後即顯示。</div>
+  <div class="jump"><a href="#ads">特刊廣告</a><a href="#thanks">贊助感謝名單</a></div>
+
+  <section id="ads">
+    <div class="h2s"><h2 class="serif">特刊廣告</h2><div class="note">共 <span id="n">0</span> 則廣告・依特刊順序排列</div></div>
+    <div id="grid" class="grid g3"></div>
+  </section>
+
+  <section id="thanks" style="margin-top:56px">
+    <div class="h2s"><h2 class="serif">贊助感謝名單</h2><div class="note">依年會特刊「廣告與贊助感謝」頁整理</div></div>
+    <div class="grid g2" style="align-items:start">
+      <div class="card th gold" id="th-ad"></div>
+      <div class="card th gold" id="th-gift"></div>
+      <div class="card th gold" id="th-drink"></div>
+      <div class="card th gold" id="th-show"></div>
+    </div>
+  </section>
 </main>
 <div class="ov" id="ov" onclick="if(event.target===this)closeOv()">
-  <div class="box">
+  <div class="box" role="dialog" aria-modal="true">
     <div class="big" id="ovImg"></div>
-    <div style="display:flex;flex-direction:column;gap:12px">
+    <div class="info">
       <div class="lbl" id="ovTier"></div>
-      <div class="serif" style="font-size:30px;font-weight:700;color:var(--dark)" id="ovTitle"></div>
-      <div class="note" id="ovMember"></div>
+      <div class="serif" style="font-size:28px;font-weight:700;color:var(--dark);line-height:1.3" id="ovTitle"></div>
+      <div class="note" id="ovMember" style="font-size:16px"></div>
       <p style="margin:0;color:var(--ink2)" id="ovDesc"></p>
-      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:auto"><a class="btn btn-gold" id="ovLink" target="_blank" rel="noopener">前往官網／LINE ›</a><button type="button" class="btn btn-line" onclick="closeOv()">關閉</button></div>
+      <div class="acts">
+        <a class="btn btn-gold" id="ovLink" target="_blank" rel="noopener">前往官網 ›</a>
+        <a class="btn btn-line" id="ovOrig" target="_blank" rel="noopener">看原圖 ›</a>
+      </div>
+      <div class="acts" style="margin-top:0;padding-top:0">
+        <button type="button" class="btn btn-ghost sm" onclick="nav(-1)">‹ 上一則</button>
+        <button type="button" class="btn btn-ghost sm" onclick="nav(1)">下一則 ›</button>
+        <button type="button" class="btn btn-ghost sm" onclick="closeOv()">關閉</button>
+      </div>
     </div>
   </div>
 </div>
 <footer>社團法人苗栗縣國際工商經營研究社・第十五屆年會贊助社友　敬致謝忱</footer>
 <script>
-const DEMO=[
- {member:'［贊助社友 1］',title:'［公司／品牌名稱］',tier:'年會贊助',desc:'［一句話介紹］',link:'',color:'#E8D9B8'},
- {member:'［贊助社友 2］',title:'［公司／品牌名稱］',tier:'伴手禮贊助',desc:'［一句話介紹］',link:'',color:'#D9C2A3'},
- {member:'［贊助社友 3］',title:'［公司／品牌名稱］',tier:'餐桌點心贊助',desc:'［一句話介紹］',link:'',color:'#C9B48C'},
- {member:'［贊助社友 4］',title:'［公司／品牌名稱］',tier:'年會贊助',desc:'［一句話介紹］',link:'',color:'#EADDC3'},
- {member:'［贊助社友 5］',title:'［公司／品牌名稱］',tier:'年會贊助',desc:'［一句話介紹］',link:'',color:'#D4B46A'},
- {member:'［贊助社友 6］',title:'［公司／品牌名稱］',tier:'年會贊助',desc:'［一句話介紹］',link:'',color:'#E2D2AC'}
+/* 廣告資料：依年會特刊順序；圖檔在 assets/ads/（_s 為縮圖） */
+const ADS=[
+ {id:'a01',tier:'全版廣告',role:'創社長',member:'葉欣芝',title:'湯悅溫泉飯店',desc:'泰安第一湯，體驗純・真的感動。',link:'http://www.tangyue.com.tw'},
+ {id:'a02',tier:'全版廣告',role:'第二屆社長',member:'江德利',title:'泰安觀止溫泉（股）公司',desc:'山林之湯，苗栗泰安觀止。全新改裝，線上訂房獨享多項優惠。'},
+ {id:'a03',tier:'全版廣告',role:'第三屆社長',member:'陳宗聖',title:'冠仁環保科技／華品環保工程',desc:'學習、分享～創造被利用的價值。環保專業法令、工程、技術與服務：廢氣、廢水處理工程，環保許可與環評輔導。'},
+ {id:'a04',tier:'全版廣告',role:'第四屆社長',member:'洪錫焜',title:'佰洋科技有限公司',desc:'藍寶石長晶爐設備製造、高純度三氧化二鋁生產設備、氣體設備與稀土原料。'},
+ {id:'a05',tier:'全版廣告',role:'第七屆社長',member:'陳傑堯',title:'晶華窗簾／翔澤設計',desc:'燈飾、家飾。窗簾、窗紗、捲簾、壁紙、百葉窗、木織簾、塑膠地板等。'},
+ {id:'a06',tier:'全版廣告',role:'第九屆社長',member:'林鎂雲',title:'后里薩克斯風玩家館',desc:'Wangful 薩克斯風，創立於 1965 年。薩克斯風玩家館 SaxPlayHouse。'},
+ {id:'a07',tier:'全版廣告',role:'第十屆社長',member:'林振鋒',title:'賀喜能源股份有限公司',desc:'提供企業淨零排放最佳解決方案：節能措施、太陽能建置、儲能調度、森林碳匯、憑證／碳權。'},
+ {id:'a08',tier:'全版廣告',role:'第十一屆社長',member:'翟清楠',title:'恆智重機股份有限公司',desc:'電動堆高機專業製造廠，您工作的好夥伴：油壓拖板車、堆高機、油壓升降台車。'},
+ {id:'a09',tier:'全版廣告',role:'第十二屆社長',member:'梁群儒',title:'米樂家國際貿易有限公司',desc:'創造幸福的好味道。以米起家，提供讓人吃得安心又健康的美好食材。'},
+ {id:'a10',tier:'全版廣告',role:'第十三屆社長',member:'江淑萍',title:'江記永安囍餅股份有限公司',desc:'永世的承諾，安心的幸福。在地老店，堅持傳統口味、自製餡料。'},
+ {id:'a11',tier:'全版廣告',role:'第十四屆社長',member:'劉詩詣',title:'和宸企業社附設阿昌清潔庇護工場',desc:'環保衛生紙系列，100% 再生紙製造；由身心障礙朋友學習包裝，每一包都乘載著一個夢想。',link:'https://a-chang.org/'},
+ {id:'a12',tier:'全版廣告',role:'第十五屆社長',member:'林浿安',title:'EX-亞洲劇團',desc:'2027《106號油井》感動回歸。感動不是用說的，而是讓人感同身受。'},
+ {id:'a13',tier:'全版廣告',role:'第一副社長',member:'姜文玉',title:'夏綠蒂雪花冰城',desc:'雪花冰、刨冰、甜品，另有秋冬限定的熱湯品、燒仙草與薑茶。'},
+ {id:'a14',tier:'全版廣告',role:'第二副社長',member:'劉泇忠',title:'驛颺團體服禮贈品',desc:'團結穿上身，力量更強大。專營團體服、T恤、背心，為您的團隊做一款衣服。'},
+ {id:'a15',tier:'全版廣告',role:'顧問',member:'徐千剛',title:'大千健康醫療體系',desc:'從城市到偏鄉，全方位守護苗栗健康。'},
+ {id:'a16',tier:'全版廣告',role:'顧問',member:'鍾蘭芳',title:'長江鋼鐵股份有限公司',desc:'扎根苗栗・專業鋼筋・築構更好的未來。優質鋼筋、穩定供應、專業加工、快速出貨。'},
+ {id:'a17',tier:'全版廣告',role:'顧問・聯合會第二十一屆理事長',member:'張森烈',title:'財團法人聖島社會福利慈善基金會',desc:'培育經濟弱勢學子，成為翻轉家庭逆境的希望。愛・希望・力量。'},
+ {id:'a18',tier:'全版廣告',role:'顧問・宜蘭社第二屆社長',member:'江文傑',title:'伍豊木業股份有限公司',desc:'雕刻線板、夢幻壁材、彎曲板、地板、飾條等各種木料製品，歡迎來電索取詳細目錄。',link:'http://www.atwood.com.tw'},
+ {id:'a19',tier:'全版廣告',role:'顧問・南瀛社第二十八屆社長',member:'翁志宜',title:'LTPA 腦健康 AI 小管家',desc:'陪你照顧大腦，從今天開始：評估、建議、訓練、追蹤的一站式腦健康服務。'},
+ {id:'a20',tier:'全版廣告',role:'聯合會副理事長',member:'張永賢',title:'沅立彩色製版印刷股份有限公司',desc:'RFID 超高頻電子標籤：智慧標籤、庫存管理、溯源追蹤、防盜防偽、製造銷售。'},
+ {id:'a21',tier:'全版廣告',role:'彰化社第三十五屆社長',member:'林金順',title:'富雨洋傘有限公司',desc:'以環保為傘・以安全為本・以教育為橋。內外銷、批發、洋傘製造、廣告傘設計。'},
+ {id:'a22',tier:'半版廣告',role:'第十四屆秘書長',member:'袁耀慶',title:'慶霖智權科技集團',desc:'以智慧資產驅動企業未來：智慧財產權、法律顧問、企業治理、AI 數位科技、企業成長。'},
+ {id:'a23',tier:'半版廣告',role:'社友',member:'林月蘋',title:'台慶不動產頭份美居仰森加盟店',desc:'買房、賣房、土地、店面、廠房。房地產的事，先找月蘋聊聊。'},
+ {id:'a24',tier:'社友廣告',role:'社友',member:'林勤妹',title:'財團法人苗栗縣私立幼安教養院',desc:'早期療育、成人服務與長期照顧；幼安歡喜兒咖啡屋提供烘焙商品。'}
 ];
-let S=[];
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-function renderS(){document.getElementById('n').textContent=S.length;document.getElementById('grid').innerHTML=S.map((x,i)=>'<button type="button" class="edm" onclick="openOv('+i+')" aria-label="放大 '+esc(x.title)+' 的廣告"><div class="img" style="background:'+x.color+'">'+(x.img?'<img src="'+esc(x.img)+'" alt="">':'EDM 圖片')+'</div><div style="padding:16px 18px;display:flex;flex-direction:column;gap:4px;background:#fff"><div class="lbl" style="font-size:13px">'+esc(x.tier)+'</div><div class="serif" style="font-size:20px;font-weight:700;color:var(--dark)">'+esc(x.title)+'</div><div class="note">'+esc(x.member)+'</div></div></button>').join('');}
-(async()=>{try{const rows=await dbGet('h15_products?on_shelf=eq.true&cat=eq.贊助廣告&select=*&order=id');S=rows.map(r=>({member:r.seller,title:r.title||r.name||'',tier:'年會贊助',desc:r.descr||'',link:r.link||'',img:r.img||'',color:'#E8D9B8'}));}catch(e){}if(S.length===0){S=DEMO;document.getElementById('demoNote').style.display='block';}renderS();})();
-function openOv(i){const x=S[i];const im=document.getElementById('ovImg');im.style.background=x.color;im.innerHTML=x.img?'<img src="'+esc(x.img)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:12px">':'EDM 圖片';
-  document.getElementById('ovTier').textContent=x.tier;document.getElementById('ovTitle').textContent=x.title;document.getElementById('ovMember').textContent='贊助社友：'+x.member;document.getElementById('ovDesc').textContent=x.desc;
-  const a=document.getElementById('ovLink');a.href=x.link||'#';a.style.display=x.link?'':'none';document.getElementById('ov').classList.add('show');}
+/* 贊助感謝名單：照年會特刊 p.17–18 */
+const TH_AD=[
+ ['全版廣告',[['創社長','葉欣芝','湯悅溫泉飯店'],['第二屆社長','江德利','泰安觀止溫泉（股）公司'],['第三屆社長','陳宗聖','冠仁環保科技有限公司／華品環保工程股份有限公司'],['第四屆社長','洪錫焜','佰洋科技有限公司'],['第七屆社長','陳傑堯','晶華窗簾／翔澤設計'],['第八屆社長','朱碧霞',''],['第九屆社長','林鎂雲','后里薩克斯風玩家館'],['第十屆社長','林振鋒','賀喜能源股份有限公司'],['第十一屆社長','翟清楠','恆智重機股份有限公司'],['第十二屆社長','梁群儒','米樂家國際貿易有限公司'],['第十三屆社長','江淑萍','江記永安囍餅股份有限公司'],['第十四屆社長','劉詩詣','和宸企業社附設阿昌清潔庇護工場'],['第十五屆社長','林浿安','EX-亞洲劇團'],['第一副社長','姜文玉','夏綠蒂雪花冰城'],['第二副社長','劉泇忠','驛颺團體服禮贈品'],['顧問','徐千剛','大千健康醫療體系'],['顧問','鍾蘭芳','長江鋼鐵股份有限公司'],['顧問','張森烈','聖島國際專利商標聯合事務所'],['顧問','江文傑','伍豊木業股份有限公司'],['顧問','翁志宜','泰笈投資控股股份有限公司'],['聯合會副理事長','張永賢','沅立彩色製版印刷公司'],['彰化社第 35 屆社長賢伉儷','林金順、周淑秋','富雨洋傘有限公司']]],
+ ['半版廣告',[['第 14 屆秘書長','袁耀慶','慶霖智權科技集團'],['社友','林月蘋','台慶不動產頭份美居仰森加盟店']]],
+ ['贊助',[['台中社第 52 屆社長','陳坤陽','贊助 10,000 元'],['顧問','高麗琴','贊助 10,000 元']]]
+];
+/* 每筆：item＝贊助項目；who＝[職稱,姓名,公司]（共同贊助者一筆多人） */
+const TH_GIFT=[
+ {item:'月曆筆記本 350 本',who:[['社長','林浿安','EX-亞洲劇團']]},
+ {item:'廚房紙巾 350 份',who:[['輔導社長','劉詩詣','阿昌清潔庇護工場']]},
+ {item:'防水強光手電筒 350 支',who:[['第二副社長','劉泇忠','驛颺團體服禮贈品']]},
+ {item:'提袋 350 份',who:[['秘書長','趙震謙','順立印刷']]},
+ {item:'沖泡式冬粉 2 款各 400 包',who:[['副秘書長','陳雪菁','明好企業有限公司']]},
+ {item:'矽膠摺疊水壺 350 份',who:[['例會節目理事','許耕輔','東京禮品'],['經營研究理事','潘建男','舒爽嫁粧百貨總滙'],['月刊編輯理事','葉天賜','社團法人苗栗縣聲暉協進會']]},
+ {item:'筆 350 隻',who:[['資訊發展理事','吳文卿','南山人壽保險股份有限公司']]},
+ {item:'優惠券 350 張',who:[['國際暨全國事務理事','黃麗飛','美麗飛養生美容']]},
+ {item:'濕紙巾 350 包',who:[['候補理事','張勝傑','起點文創']]},
+ {item:'烏色（鳳梨酥＋草莓酥）各 175 顆',who:[['候補理事','謝兆騰','烏色企業有限公司']]},
+ {item:'能量石貼布 350 份',who:[['第 13 屆財務長','沈香君','麥世科股份有限公司'],['社友','魏宏汶','麥世科股份有限公司']]}
+];
+const TH_DRINK=[
+ {item:'夏綠蒂甜品 350 份',who:[['第一副社長','姜文玉','夏綠蒂雪花冰']]},
+ {item:'紅酒 46 瓶',who:[['第十屆社長','林振鋒','賀喜能源股份有限公司']]},
+ {item:'薑母糖、辣豆干',who:[['資訊發展理事','吳文卿','南山人壽保險股份有限公司']]},
+ {item:'小林煎餅（分享包）42 包',who:[['監事','何品翬','和捷金屬工業']]},
+ {item:'綜合橄欖蜜餞 50 包',who:[['候補監事','陳月嬌','天文運輸有限公司']]},
+ {item:'工作人員茶葉蛋 100 顆',who:[['社友發展總幹事','黃婉貞','喜歡就 +1']]},
+ {item:'黑潤原露 80 瓶（每桌 2 瓶）',who:[['社友','黃乾斌','金稼農創科技股份有限公司']]},
+ {item:'紅棗露酒 40 瓶（每桌 1 瓶）',who:[['社友','黃坤盛','樂活小農場']]},
+ {item:'草本茶 1500cc 茶飲（每桌 1 瓶）',who:[['社友','彭琮筌','加貝賀美工文具']]},
+ {item:'鮮梨果丁汁 38 瓶、胖胖梨禮盒 10 盒',who:[['社友','徐詩淳','胖胖梨品牌']]}
+];
+const TH_SHOW=[
+ {item:'蘇維拉樂團演出節目',who:[['顧問','蘇盛泉','蘇維拉莊園']]},
+ {item:'星月寶萊舞團演出節目、音響設備',who:[['社長','林浿安','EX-亞洲劇團']]},
+ {item:'拍照背板＋大圖輸出',who:[['秘書長','趙震謙','順立印刷']]},
+ {item:'投影設備一式（活動當天）',who:[['社友','徐志勳','贏幕科技股份有限公司']]}
+];
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let S=ADS.map(a=>Object.assign({thumb:'assets/ads/'+a.id+'_s.jpg',full:'assets/ads/'+a.id+'.jpg'},a));
+let cur=0;
+function renderS(){
+  document.getElementById('n').textContent=S.length;
+  document.getElementById('grid').innerHTML=S.map((x,i)=>'<button type="button" class="edm" onclick="openOv('+i+')" aria-label="放大 '+esc(x.title)+' 的廣告"><div class="img">'+(x.thumb?'<img src="'+esc(x.thumb)+'" alt="'+esc(x.title)+' 廣告" loading="lazy">':'EDM')+'</div><div class="cap"><div class="lbl" style="font-size:13px">'+esc(x.tier)+'</div><div class="serif" style="font-size:19px;font-weight:700;color:var(--dark);line-height:1.35">'+esc(x.title)+'</div><div class="note">'+esc((x.role?x.role+'　':'')+x.member)+'</div></div></button>').join('');
+}
+function renderThanks(){
+  let h='<h3 class="serif">特刊廣告與贊助</h3><div class="note" style="margin-bottom:4px">特此感謝 IMC 優質廠商鼎力贊助年會特刊印製</div>';
+  TH_AD.forEach(g=>{h+='<div class="sub">'+esc(g[0])+'</div>'+g[1].map(r=>'<div class="r"><div class="l">'+esc(r[0])+'　'+esc(r[1])+'</div><div>'+(r[2]?esc(r[2]):'<span class="note">—</span>')+'</div></div>').join('');});
+  document.getElementById('th-ad').innerHTML=h;
+  const blk=(id,title,note,arr)=>{document.getElementById(id).innerHTML='<h3 class="serif">'+title+'</h3>'+(note?'<div class="note" style="margin-bottom:4px">'+note+'</div>':'')+arr.map(r=>'<div class="r"><div class="it">'+esc(r.item)+'</div><div class="who">'+r.who.map(p=>'<div><b>'+esc(p[1])+'</b><span class="rl">'+esc(p[0])+'</span>'+(p[2]?'<span class="co">'+esc(p[2])+'</span>':'')+'</div>').join('')+'</div></div>').join('');};
+  blk('th-gift','年會伴手禮','感謝下列愛心爆滿的大德鼎力贊助年會伴手禮',TH_GIFT);
+  blk('th-drink','飲品／點心','',TH_DRINK);
+  blk('th-show','節目／設備','',TH_SHOW);
+}
+function openOv(i){
+  cur=i;const x=S[i];
+  document.getElementById('ovImg').innerHTML=x.full?'<img src="'+esc(x.full)+'" alt="'+esc(x.title)+' 廣告">':'<div style="padding:60px 0;color:var(--muted2)">EDM</div>';
+  document.getElementById('ovTier').textContent=x.tier;
+  document.getElementById('ovTitle').textContent=x.title;
+  document.getElementById('ovMember').textContent=(x.role?x.role+'　':'')+x.member+' 贊助';
+  document.getElementById('ovDesc').textContent=x.desc||'';
+  const a=document.getElementById('ovLink');a.href=x.link||'#';a.style.display=x.link?'':'none';
+  const o=document.getElementById('ovOrig');o.href=x.full||'#';o.style.display=x.full?'':'none';
+  const box=document.querySelector('#ov .box');box.scrollTop=0;
+  document.getElementById('ov').classList.add('show');
+}
+function nav(d){openOv((cur+d+S.length)%S.length);}
 function closeOv(){document.getElementById('ov').classList.remove('show');}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOv();});
+document.addEventListener('keydown',e=>{const on=document.getElementById('ov').classList.contains('show');if(e.key==='Escape')closeOv();if(on&&e.key==='ArrowLeft')nav(-1);if(on&&e.key==='ArrowRight')nav(1);});
+renderS();renderThanks();
+/* 承辦團隊若在後台另外登錄 EDM（贊助廣告），會接在特刊廣告之後顯示 */
+(async()=>{try{const rows=await dbGet('h15_products?on_shelf=eq.true&cat=eq.贊助廣告&select=*&order=id');
+  rows.forEach(r=>{S.push({tier:'年會贊助',role:'',member:r.seller||'',title:r.title||r.name||'',desc:r.descr||'',link:r.link||'',thumb:r.img||'',full:r.img||''});});
+  if(rows.length)renderS();}catch(e){}})();
 </script>
 </body>
 </html>
