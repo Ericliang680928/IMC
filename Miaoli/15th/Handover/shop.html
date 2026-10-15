@@ -164,8 +164,10 @@ let PRODUCTS=[];
 const isQ=p=>p.price==null;
 function findItem(id){for(const p of PRODUCTS){if(p.opts){for(const o of p.opts){if(p.id+'-'+o.k===id)return {id:id,name:p.name+'（'+o.label+'）',seller:p.seller,price:o.price,unit:o.unit,promo:null,temp:p.temp||''};}}else if(p.id===id)return p;}return null;}
 const CATS=['全部','伴手禮','餐桌點心'];
+/* 資料庫商品沒有填照片時的備用照片（以「賣家|品名」對應；資料庫有填 img 時以資料庫為準） */
+const IMG_BY_NAME={'姜文玉|嫩仙草凍':['assets/shop/xc1.jpg']};
 async function loadProducts(){let rows=[];try{rows=await dbGet('h15_products?on_shelf=eq.true&cat=neq.贊助廣告&select=*&order=id');}catch(e){rows=[];}
-  const dbp=rows.map(r=>{const imgs=r.img?String(r.img).split('|').map(s=>s.trim()).filter(Boolean):[];const tg=(r.name||'')+' '+(r.descr||''),temp=/[【\[［]冷凍[】\]］]/.test(tg)||/冷凍/.test(r.name||'')?'冷凍':(/[【\[［]冷藏[】\]］]/.test(tg)||/冷藏/.test(r.name||'')?'冷藏':'');return {id:String(r.id),cat:r.cat,name:r.name||'',seller:r.seller,price:r.price>0?r.price:null,unit:r.unit||'',desc:r.descr||'',imgs:imgs,color:'#E8D9B8',temp:temp};});
+  const dbp=rows.map(r=>{let imgs=r.img?String(r.img).split('|').map(s=>s.trim()).filter(Boolean):[];if(!imgs.length)imgs=(IMG_BY_NAME[(r.seller||'')+'|'+(r.name||'')]||[]).slice();const tg=(r.name||'')+' '+(r.descr||''),temp=/[【\[［]冷凍[】\]］]/.test(tg)||/冷凍/.test(r.name||'')?'冷凍':(/[【\[［]冷藏[】\]］]/.test(tg)||/冷藏/.test(r.name||'')?'冷藏':'');return {id:String(r.id),cat:r.cat,name:r.name||'',seller:r.seller,price:r.price>0?r.price:null,unit:r.unit||'',desc:r.descr||'',imgs:imgs,color:'#E8D9B8',temp:temp};});
   PRODUCTS=STATIC.concat(dbp);
   if(PRODUCTS.length===0){PRODUCTS=DEMO;document.getElementById('demoNote').style.display='block';}
   renderCats();renderProds();renderCart();}
