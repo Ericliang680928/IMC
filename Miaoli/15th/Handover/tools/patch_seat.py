@@ -41,6 +41,11 @@ TAG="+esc(D.ind[p.a]||'')+'</span></div>':'');"
 TAG2="+esc(D.ind[p.a]||'')+'</span><div style=\"font-size:11.5px;color:var(--ink2);margin-top:4px\">由 AI 依公司名稱判斷，可能有誤，請見諒。</div></div>':'');"
 if TAG2 not in s: rep(TAG,TAG2,'AI 判斷說明（產業別）',True)
 
+# 2b) 建議交流名單可帶自訂理由（r 的第 3 欄；沒有則用產業互補預設文字） --------------
+WHY_OLD="<div class=\"why\">'+esc(recWhy(p,q))+'</div>"
+WHY_NEW="<div class=\"why\">'+esc(r[2]||recWhy(p,q))+'</div>"
+if WHY_NEW not in s: rep(WHY_OLD,WHY_NEW,'建議名單自訂理由',True)
+
 # 3) 高鐵接駁提醒 -----------------------------------------------------
 if 'SHUTTLE.find' not in s:
     rep('<div class="sheet" id="sheet"><div class="sh" id="sh"></div></div>\n<script>\nconst D=',
@@ -52,7 +57,7 @@ if 'SHUTTLE.find' not in s:
 
 # 4) 日文切換 ---------------------------------------------------------
 if 'i18n.js' not in s:
-    rep('<title>座位查詢｜苗栗IMC 第15屆</title>\n','<title>座位查詢｜苗栗IMC 第15屆</title>\n<script src="i18n.js?v=7"></script>\n','日文切換：載入 i18n.js')
+    rep('<title>座位查詢｜苗栗IMC 第15屆</title>\n','<title>座位查詢｜苗栗IMC 第15屆</title>\n<script src="i18n.js?v=8"></script>\n','日文切換：載入 i18n.js')
 
 open(p,'w',encoding='utf-8').write(s)
 print('已套用：'+('、'.join(done) if done else '（全部已套用過，無變更）'))
