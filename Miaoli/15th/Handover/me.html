@@ -110,7 +110,7 @@ let REC={ind:[],pr:{}}; let R=[], me=null, sess='lunch', like={}, inv={}, unitF=
 try{like=JSON.parse(localStorage.getItem('imc15_like')||'{}');}catch(e){}
 function store(){try{localStorage.setItem('imc15_like',JSON.stringify(like));}catch(e){}}
 function tableName(p,s){return p?(s==='lunch'?p.lunch:p.dinner):0;}
-Promise.all([fetch('roster.json').then(r=>r.json()),fetch('rec.json').then(r=>r.json()).catch(()=>({ind:[],pr:{}}))]).then(([d,rc])=>{R=d;REC=rc;init();}).catch(()=>{document.getElementById('login').innerHTML='<div class="note">名單載入失敗，請重新整理。</div>';});
+Promise.all([fetch('roster.json?v=3').then(r=>r.json()),fetch('rec.json?v=3').then(r=>r.json()).catch(()=>({ind:[],pr:{}}))]).then(([d,rc])=>{R=d;REC=rc;init();}).catch(()=>{document.getElementById('login').innerHTML='<div class="note">名單載入失敗，請重新整理。</div>';});
 function init(){
   const units=[...new Set(R.map(p=>p.unit))].sort((a,b)=>(ORD.indexOf(a)<0?99:ORD.indexOf(a))-(ORD.indexOf(b)<0?99:ORD.indexOf(b)));
   const lq=document.getElementById('l-q'), lunits=document.getElementById('l-units'), llist=document.getElementById('l-list');
