@@ -11,7 +11,7 @@ body.p1{--pearl1:#EEEFF4;--pearl2:#E4E6EE;--pearl3:#DEE0EA;--ink:#2B3150;--ink2:
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0}
 body{font-family:"Microsoft JhengHei","PingFang TC","Noto Sans TC",system-ui,sans-serif;color:var(--ink);background:linear-gradient(160deg,var(--pearl1) 0%,var(--pearl2) 55%,var(--pearl3) 100%) fixed;transition:background .4s;min-height:100vh;line-height:1.55}
-.wrap{max-width:720px;margin:0 auto;padding:max(18px,env(safe-area-inset-top)) 16px 40px}
+.wrap{max-width:720px;margin:0 auto;padding:max(18px,env(safe-area-inset-top)) 16px 40px;overflow-x:hidden;overflow-x:clip}
 .hero{text-align:center;padding:10px 0 4px;position:relative}
 .hero::before{content:"";position:absolute;left:50%;top:-30px;width:520px;height:220px;transform:translateX(-50%);background:radial-gradient(closest-side,#fff9,#fff0);pointer-events:none}
 .hero img.k{width:150px;height:auto;position:relative;filter:drop-shadow(0 4px 10px #c5a36655)}
@@ -216,4 +216,4 @@ function draw(){const p=D.ps[CUR],sc=SC[SI][0],s=p.s[SI];
  $('#sh').querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{SI=+b.dataset.s;FULL=false;draw();});
  const fl=$('#fl');if(fl)fl.onclick=()=>{FULL=!FULL;draw();};
  $('#sh').querySelectorAll('.mate,.rc').forEach(b=>b.onclick=()=>{CUR=+b.dataset.j;draw();$('#sheet').scrollTop=0;});}
-</script></body></html>
+</script><script src="tabbar.js?v=2"></script></body></html>

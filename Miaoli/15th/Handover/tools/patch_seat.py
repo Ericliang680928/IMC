@@ -5,6 +5,7 @@
   2) 「產業別、建議交流名單由 AI 判斷，可能有誤」的說明文字
   3) 高鐵接駁提醒（資料來源 shuttle.js；改名單請改 shuttle.js）
   4) 中文／日本語 切換（載入 i18n.js、導覽列放切換鈕）
+  5) 手機版底部分頁列（載入 tabbar.js）
 排座工具重新匯出會把以上全部洗掉，所以匯出後一定要跑這支，再跑 make_seatmap.py、sync_roster_tables.py。"""
 import os,sys
 here=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -58,6 +59,15 @@ if 'SHUTTLE.find' not in s:
 # 4) 日文切換 ---------------------------------------------------------
 if 'i18n.js' not in s:
     rep('<title>座位查詢｜苗栗IMC 第15屆</title>\n','<title>座位查詢｜苗栗IMC 第15屆</title>\n<script src="i18n.js?v=8"></script>\n','日文切換：載入 i18n.js')
+
+# 4b) 手機版橫向溢出修正：標題光暈（.hero::before 寬 520px）會把頁面撐寬，手機上整頁被縮小 ---------
+WRAP_OLD=".wrap{max-width:720px;margin:0 auto;padding:max(18px,env(safe-area-inset-top)) 16px 40px}"
+WRAP_NEW=".wrap{max-width:720px;margin:0 auto;padding:max(18px,env(safe-area-inset-top)) 16px 40px;overflow-x:hidden;overflow-x:clip}"
+if WRAP_NEW not in s: rep(WRAP_OLD,WRAP_NEW,'手機橫向溢出修正',True)
+
+# 5) 手機版底部分頁列（tabbar.js） ------------------------------------
+if 'tabbar.js' not in s:
+    rep('</script></body></html>','</script><script src="tabbar.js?v=2"></script></body></html>','手機底部分頁列')
 
 open(p,'w',encoding='utf-8').write(s)
 print('已套用：'+('、'.join(done) if done else '（全部已套用過，無變更）'))

@@ -14,17 +14,11 @@ body{background:#F7F3EC}
 .top{background:linear-gradient(160deg,#2B1D0A,#5E4210);padding:14px 18px 16px;display:flex;flex-direction:column;gap:10px;color:#F8E7B8}
 .idbox{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.08);border:1px solid rgba(226,189,99,.4);border-radius:14px;padding:10px 14px}
 .av{width:44px;height:44px;border-radius:50%;background:var(--gold3);color:var(--dark);display:flex;align-items:center;justify-content:center;font-family:'Noto Serif TC',serif;font-size:20px;font-weight:700;border:3px solid #fff;flex:none}
-main{padding:14px 14px 90px;display:flex;flex-direction:column;gap:14px;flex:1}
+main{padding:14px 14px 100px;display:flex;flex-direction:column;gap:14px;flex:1}
 .card{padding:18px 20px;gap:12px}
-.tabbar{position:sticky;bottom:0;background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;padding:0 6px}
-.tabbar button{flex:1;min-height:58px;border:0;background:none;font-size:13px;font-weight:700;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
-.tabbar button span{width:22px;height:4px;border-radius:2px;background:transparent}
-.tabbar a{flex:1;min-height:58px;font-size:13px;font-weight:700;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;justify-content:flex-start;padding-top:0}
-.tabbar a span{width:22px;height:4px;border-radius:2px;background:transparent}
-.tabbar a:before,.tabbar button:before{content:'';display:block;height:0}
 @media (max-width:420px){.top .evt{display:none}}
+#tabbar{position:sticky;bottom:0;z-index:30}
 .backhome{flex:none;color:#F8E7B8;text-decoration:none;font-weight:700;font-size:14px;border:1px solid rgba(226,189,99,.65);border-radius:999px;padding:6px 12px;white-space:nowrap;line-height:1.2}
-.tabbar button.on{color:var(--dark)}.tabbar button.on span{background:var(--gold)}
 .tab{display:none;flex-direction:column;gap:14px}.tab.on{display:flex}
 .quick{min-height:40px;padding:0 14px;border-radius:999px;border:2px solid var(--line2);background:#fff;font-size:14px;font-weight:600;color:var(--dark2);cursor:pointer;white-space:nowrap}
 .quick.on{background:var(--dark);color:#F8E7B8;border-color:var(--dark)}
@@ -102,8 +96,8 @@ main{padding:14px 14px 90px;display:flex;flex-direction:column;gap:14px;flex:1}
   </main>
   <div id="sheetBg" style="position:fixed;inset:0;background:rgba(43,29,10,.55);display:none;z-index:90" onclick="closeDetail()"></div>
   <div id="sheet" style="position:fixed;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;background:#fff;border-radius:22px 22px 0 0;padding:18px 20px 28px;box-shadow:0 -8px 30px rgba(43,29,10,.25);display:none;z-index:95;max-height:88vh;overflow:auto"></div>
-  <nav class="tabbar" id="tabbar" style="display:none">
-    <a href="index.html" aria-label="回活動主頁"><span></span>主頁</a><button type="button" class="on" onclick="go('me')"><span></span>我的</button><button type="button" onclick="go('find')"><span></span>找人</button><button type="button" onclick="go('meet')"><span></span>交流</button><button type="button" onclick="go('shop')"><span></span>商品</button>
+  <nav class="imc-tabbar" id="tabbar" style="display:none">
+    <a class="imc-tab" data-ic="home" href="index.html" aria-label="回活動主頁">主頁</a><button type="button" class="imc-tab on" data-ic="me" onclick="go('me')">我的</button><button type="button" class="imc-tab" data-ic="find" onclick="go('find')">找人</button><button type="button" class="imc-tab" data-ic="meet" onclick="go('meet')">交流</button><button type="button" class="imc-tab" data-ic="shop" onclick="go('shop')">商品</button>
   </nav>
 </div>
 <script>
@@ -144,7 +138,7 @@ function init(){
 }
 function renderId(){document.getElementById('idbox').innerHTML=me?'<div class="av" style="border-color:'+(COLORS[me.grp]||['#fff'])[0]+'">'+esc(me.name.slice(0,1))+'</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:18px;color:#fff">'+esc(me.name)+' <span style="font-size:13px;font-weight:400;color:#E2BD63">'+esc(me.unit)+(me.ind?'・'+esc(me.ind)+'<span title="'+'由 AI 依公司名稱判斷，可能有誤，請見諒。'+'">＊</span>':'')+'</span></div><div style="font-size:13px;color:#D9C9A5">'+(me.ind?'＊產業別'+'由 AI 依公司名稱判斷，可能有誤，請見諒。'+'<br>':'')+(me.lunch?'午場 '+me.lunch+' 桌':(me.pend[0]?'午場座位安排中':'午場不參加'))+'・'+(me.dinner?'晚宴 '+me.dinner+' 桌':(me.pend[1]?'晚宴座位安排中':'晚宴不參加'))+'</div></div><button type="button" class="btn sm" style="background:rgba(255,255,255,.14);color:#F8E7B8" onclick="logout()">不是我</button>'
  :'<div class="av">？</div><div style="flex:1"><div style="font-weight:700;color:#fff">歡迎蒞臨</div><div style="font-size:13px;color:#D9C9A5">請先在下方輸入您的姓名</div></div>';}
-function enter(id){me=R.find(p=>p.id===id);renderId();document.getElementById('login').style.display='none';document.getElementById('tabs').style.display='flex';document.getElementById('tabbar').style.display='flex';renderMe();renderFind();renderMeet();loadMyWish();loadSocial();}
+function enter(id){me=R.find(p=>p.id===id);renderId();document.getElementById('login').style.display='none';document.getElementById('tabs').style.display='flex';document.getElementById('tabbar').style.display='flex';renderMe();renderFind();renderMeet();loadMyWish();loadSocial();{const h=location.hash.slice(1);if(['me','find','meet','shop'].indexOf(h)>=0)go(h);}}
 function logout(){me=null;try{localStorage.removeItem('imc15_me');}catch(e){}renderId();document.getElementById('login').style.display='flex';document.getElementById('l-q').value='';renderLogin();document.getElementById('tabs').style.display='none';document.getElementById('tabbar').style.display='none';}
 function go(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.id==='t-'+t));document.querySelectorAll('#tabbar button').forEach((b,i)=>b.classList.toggle('on',['me','find','meet','shop'][i]===t));window.scrollTo({top:0});}
 function setSess(s){sess=s;document.getElementById('bLunch').classList.toggle('on',s==='lunch');document.getElementById('bDinner').classList.toggle('on',s==='dinner');renderMe();}
@@ -224,5 +218,6 @@ function tick(){const d=now();document.getElementById('clock').textContent=pad(d
   document.getElementById('nowTitle').textContent=day?(mins>=915&&mins<940?'茶敘交流中，15:40 回座':(mins<780?'今天 13:00 開始報到':mins>=1230?'活動圓滿結束':'活動進行中')):'距離活動還有 '+Math.max(0,Math.ceil((new Date('2026-10-17T13:00:00')-d)/86400000))+' 天';
   document.getElementById('nowdot').className=(day&&mins>=915&&mins<940)?'pulse':'';if(d.getSeconds()%30===0)renderMeetMode();}
 </script>
+<script src="tabbar.js?v=2"></script>
 </body>
 </html>
