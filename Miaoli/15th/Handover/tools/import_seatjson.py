@@ -9,6 +9,7 @@
   3) 已在名單中、現在標為「請假」的人 → 保留在名單，兩場都顯示「不參加」；請假且本來就不在名單的人 → 不加入。
   4) 桌位（編號、桌名、座標、午晚桌名）全部以專案檔為準；平面圖沿用 seat.html 內建圖。
   5) 沒有桌位的人 → 「座位安排中」。僅午場／僅晚宴的人另一場 → 「不參加」。
+  7) 承辦人當面指定的個別調整寫在 tools/seat_overrides.json，匯入時最後套用（優先於專案檔）。
   6) 沒有桌號的特設席位（如「資訊控台」）寫在 tools/special_stations.json，會放在桌位清單最前面；成員在專案檔沒排到正式桌次時就坐這裡（午場、晚宴都是）。
 --dry 只印出差異，不寫檔。"""
 import json,os,sys,re,datetime,collections
@@ -75,6 +76,17 @@ def seat_of(q,si):
     return [2,-1]
 for i,(p,q) in enumerate(zip(D['ps'],match)):
     p['s']=[seat_of(q,0),seat_of(q,1)] if q else [[2,-1],[2,-1]]
+# 承辦人指定的個別調整（tools/seat_overrides.json）
+OVP=os.path.join(here,'tools','seat_overrides.json')
+for ov in (json.load(open(OVP,encoding='utf-8')).get('people',[]) if os.path.exists(OVP) else []):
+    hit=[i for i,p in enumerate(D['ps']) if p['n']==ov['name'] and (ov['unit'] in (p.get('u',''),ALIAS.get(p.get('u',''),p.get('u',''))))]
+    if len(hit)!=1: print('⚠ seat_overrides 找不到唯一的人：',ov['name'],ov['unit'],hit); continue
+    for si,sc in ((0,'noon'),(1,'night')):
+        k='noon' if si==0 else 'night'
+        if ov.get(k) is None: continue
+        ti=[j for j,t in enumerate(D['sc'][sc]['tables']) if t['no']==ov[k]]
+        if len(ti)!=1: print('⚠ seat_overrides 找不到桌次',ov[k]); continue
+        D['ps'][hit[0]]['s'][si]=[1,ti[0]]
 # 同桌名單依專案檔的桌內順序（ord）
 order={}
 for i,q in enumerate(match):

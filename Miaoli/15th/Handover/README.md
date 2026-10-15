@@ -14,7 +14,7 @@
 - admin.html 承辦後台（勿公開）：兩種通關碼——管理者（全功能，含刪除訂單、改訂單狀態、看訂購者電話地址）／上架者（只能登錄、上下架商品與 EDM；訂單僅供檢視，電話地址遮蔽，無法刪除或改狀態）。碼設在 admin.html 開頭的 `ADMIN`、`LISTER`；僅前端限制，真正的刪除保護見 tools/admin_lock.sql
 - roster.json 的午場／晚宴桌號（me.html「我的活動頁」用）要與 seat.html 一致：seat.html 重新匯出後，除了 `make_seatmap.py`，也要執行 `python3 tools/sync_roster_tables.py`
 - tabbar.js 手機版底部分頁列（主頁／我的／找人／交流／商品）：index、shop、wish、sponsors、seat 在手機（寬度 720px 以下）自動顯示，me.html 自帶同一排（外觀與圖示共用 tabbar.js）；新增頁面時在 </body> 前加 `<script src="tabbar.js?v=2"></script>`；seat.html 重新匯出後 patch_seat.py 會自動補回
-- **排座工具改存「專案檔」（.seat.json）時**，先執行 `python3 tools/import_seatjson.py <檔案.seat.json> [--dry]`（加 --dry 只看差異不寫檔）：既有名單順序與編號不動、只更新座位與桌位，新增的人接在名單最後（roster.json 同步新增），再接著跑下面三步。沒有桌號的特設席位（目前只有「資訊控台」：吳文卿、歐建隆、張善壹）記在 `tools/special_stations.json`，匯入時自動帶入，不用在排座工具裡建。
+- **排座工具改存「專案檔」（.seat.json）時**，先執行 `python3 tools/import_seatjson.py <檔案.seat.json> [--dry]`（加 --dry 只看差異不寫檔）：既有名單順序與編號不動、只更新座位與桌位，新增的人接在名單最後（roster.json 同步新增），再接著跑下面三步。沒有桌號的特設席位（目前只有「資訊控台」：吳文卿、歐建隆、張善壹）記在 `tools/special_stations.json`，匯入時自動帶入，不用在排座工具裡建。承辦人當面指定、與專案檔不同的個別調整（目前：黃淑惠午場、晚宴都在 12 桌）記在 `tools/seat_overrides.json`，匯入時最後套用。
 - **seat.html 每次從排座工具重新匯出後**，依序執行（缺一不可）：`python3 tools/patch_seat.py`（把導覽列、語言切換鈕、接駁提醒、AI 免責字樣等補丁套回；可重複執行）→ `python3 tools/make_seatmap.py` → `python3 tools/sync_roster_tables.py`
 - **日文版（所有頁面除 admin.html）**：頁面原文維持中文，右上角「日本語／中文」鈕切換（網址加 `?lang=ja` 或 `?lang=zh` 可直接指定；第一次來且瀏覽器語言為日文時預設日文，選擇會記在瀏覽器）。做法是執行時把畫面上的中文文字依字典換成日文，頁面重新產生內容時也會即時換，切回中文會還原。
   - `i18n.js` 切換引擎（各頁 `<head>` 內載入；日文模式才會載入下列字典）
