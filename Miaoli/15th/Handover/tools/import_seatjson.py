@@ -9,6 +9,7 @@
   3) 已在名單中、現在標為「請假」的人 → 保留在名單，兩場都顯示「不參加」；請假且本來就不在名單的人 → 不加入。
   4) 桌位（編號、桌名、座標、午晚桌名）全部以專案檔為準；平面圖沿用 seat.html 內建圖。
   5) 沒有桌位的人 → 「座位安排中」。僅午場／僅晚宴的人另一場 → 「不參加」。
+  6) 沒有桌號的特設席位（如「資訊控台」）寫在 tools/special_stations.json，會放在桌位清單最前面；成員在專案檔沒排到正式桌次時就坐這裡（午場、晚宴都是）。
 --dry 只印出差異，不寫檔。"""
 import json,os,sys,re,datetime,collections
 here=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -23,6 +24,9 @@ OLD=json.loads(json.dumps(D))
 ALIAS={'顧問及來賓':'苗栗來賓寶眷'}   # seat.html 把「苗栗來賓寶眷」顯示成「顧問及來賓」
 W,H=D['sc']['noon']['w'],D['sc']['noon']['h']
 tid={t['id']:t for t in S['tables']}
+STP=os.path.join(here,'tools','special_stations.json')
+ST=json.load(open(STP,encoding='utf-8')).get('stations',[]) if os.path.exists(STP) else []
+STN={(n,u):i for i,st in enumerate(ST) for n,u in st['members']}   # (姓名,社別) → 特設席位的桌位索引
 
 # ── 1) 對應既有人員 ────────────────────────────────────────────
 def clean_unit(q):
@@ -56,8 +60,8 @@ def old_r(x,y):
     return best[1] if best and best[0]<40 else 50
 tindex={}
 for si,sc in enumerate(('noon','night')):
-    lst=[]
-    for k,t in enumerate(tabs):
+    lst=[{'no':None,'k':st['k'],'x':st['x'],'y':st['y'],'r':st['r'],'m':[]} for st in ST]
+    for k,t in enumerate(tabs,start=len(ST)):
         x,y=round(t['x']*W),round(t['y']*H)
         lst.append({'no':t['no'],'k':(t['name'] if si==0 else (t.get('nameN') or t['name'])),'x':x,'y':y,'r':old_r(x,y),'m':[]})
         tindex[(si,t['id'])]=k
@@ -67,6 +71,7 @@ def seat_of(q,si):
     if q['st']=='leave' or (q.get('sc') and q['sc']!=sc): return [0,-1]
     tb=q.get('tblN') if (si==1 and q.get('tblN')) else q.get('tbl')
     if tb in tid: return [1,tindex[(si,tb)]]
+    if (q['name'],clean_unit(q)) in STN: return [1,STN[(q['name'],clean_unit(q))]]
     return [2,-1]
 for i,(p,q) in enumerate(zip(D['ps'],match)):
     p['s']=[seat_of(q,0),seat_of(q,1)] if q else [[2,-1],[2,-1]]

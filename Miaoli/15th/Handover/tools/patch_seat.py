@@ -59,7 +59,7 @@ if 'SHUTTLE.find' not in s:
 
 # 4) 日文切換 ---------------------------------------------------------
 if 'i18n.js' not in s:
-    rep('<title>座位查詢｜苗栗IMC 第15屆</title>\n','<title>座位查詢｜苗栗IMC 第15屆</title>\n<script src="i18n.js?v=15"></script>\n','日文切換：載入 i18n.js')
+    rep('<title>座位查詢｜苗栗IMC 第15屆</title>\n','<title>座位查詢｜苗栗IMC 第15屆</title>\n<script src="i18n.js?v=16"></script>\n','日文切換：載入 i18n.js')
 
 # 4b) 手機版橫向溢出修正：標題光暈（.hero::before 寬 520px）會把頁面撐寬，手機上整頁被縮小 ---------
 WRAP_OLD=".wrap{max-width:720px;margin:0 auto;padding:max(18px,env(safe-area-inset-top)) 16px 40px}"
