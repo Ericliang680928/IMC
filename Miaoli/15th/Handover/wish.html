@@ -75,7 +75,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 let ROSTER=[], picked=[], filter='全部';
 let LIST=[];
 const ORD=['聯合會','苗栗社','基隆社','台北社','新北社','桃園社','新竹社','台中社','彰化社','南投社','雲林社','嘉義社','南瀛社','台南社','高雄社','屏東社','宜蘭社','顧問及來賓','EX-亞洲劇團'];
-fetch('roster.json').then(r=>r.json()).then(d=>{ROSTER=d;initWho();loadWall();}).catch(()=>{document.getElementById('whoPick').style.display='flex';});
+fetch('roster.json?v=3').then(r=>r.json()).then(d=>{ROSTER=d;initWho();loadWall();}).catch(()=>{document.getElementById('whoPick').style.display='flex';});
 async function loadWall(){try{const rows=await dbGet('h15_wishes_public?select=*&order=created_at.desc&limit=200');LIST=rows.map(r=>({unit:r.unit,name:r.name,biz:r.biz||'—',have:r.have||(r.tags_have||[]).join('、')||'—',want:r.want||(r.tags_want||[]).join('、')||'—',match:''}));renderWall();}catch(e){}}
 let ME=null;
 async function loadMine(p){try{const r=await dbGet('h15_wishes?person_id=eq.'+p.id+'&select=biz,have,want,meet_ids,line_id');if(r.length){const x=r[0];if(x.biz)document.getElementById('w-biz').value=x.biz;document.getElementById('w-have').value=x.have||'';document.getElementById('w-want').value=x.want||'';document.getElementById('w-line').value=x.line_id||'';picked=(x.meet_ids||[]).filter(id=>ROSTER.find(y=>y.id===id));renderPicked();}}catch(e){}}
