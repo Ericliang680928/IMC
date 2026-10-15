@@ -30,7 +30,24 @@
 .badge{display:inline-block;font-size:13px;font-weight:700;letter-spacing:.1em;padding:2px 10px;border-radius:999px;width:max-content;margin-top:4px}
 .spk{display:grid;grid-template-columns:380px 1fr;gap:40px;align-items:start}
 .wide{grid-template-columns:1.2fr 1fr}
-@media (max-width:860px){.wide{grid-template-columns:1fr}.hero-grid{grid-template-columns:1fr}.hero-big h1{font-size:34px}.spk{grid-template-columns:1fr}.tli .body{grid-template-columns:1fr}}
+/* 手機版首頁：先看到 15 屆 Logo，再看標題、日期與按鈕（整個畫面不被切一半） */
+@media (max-width:860px){
+ .hero-big{padding:16px 16px 22px}
+ .hero-grid{display:flex!important;flex-direction:column;gap:12px;align-items:stretch}
+ .hero-grid>div{display:contents!important}
+ .h-org{order:1;justify-content:center;gap:10px!important}
+ .h-org img{width:44px!important;height:44px!important}
+ .h-org .kicker{font-size:14px;letter-spacing:.04em}
+ .h-logo{order:2;width:min(172px,24vh)!important;margin:0 auto}
+ .hero-big h1{order:3;text-align:center;font-size:clamp(22px,6.6vw,34px);line-height:1.3;margin:0}
+ .h-tag{order:4;text-align:center;font-size:15px!important;margin:0}
+ .h-date{order:5;padding:10px 14px!important;border-radius:14px!important}
+ .h-date .serif{font-size:30px!important}.h-date .serif span{font-size:18px!important}
+ .h-date div:last-child{font-size:15px!important;margin-top:4px!important}
+ .h-cta{order:6;flex-wrap:nowrap!important;gap:10px!important;margin-top:2px!important}
+ .h-cta .btn{flex:1;justify-content:center;text-align:center;padding-left:8px;padding-right:8px;white-space:nowrap}
+}
+@media (max-width:860px){.wide{grid-template-columns:1fr}.hero-grid{grid-template-columns:1fr}.spk{grid-template-columns:1fr}.tli .body{grid-template-columns:1fr}}
 </style>
 <script src="nav.js?v=1" defer></script>
 <script src="shuttle.js?v=1" defer></script>
@@ -49,17 +66,17 @@
 <header class="hero hero-big">
   <div class="hero-grid">
     <div style="display:flex;flex-direction:column;gap:20px">
-      <div style="display:flex;align-items:center;gap:14px"><img src="assets/imclogo.png" alt="苗栗IMC" style="width:56px;height:56px;border-radius:50%;background:#fff;padding:3px"><div class="kicker">社團法人苗栗縣國際工商經營研究社</div></div>
+      <div class="h-org" style="display:flex;align-items:center;gap:14px"><img src="assets/imclogo.png" alt="苗栗IMC" style="width:56px;height:56px;border-radius:50%;background:#fff;padding:3px"><div class="kicker">社團法人苗栗縣國際工商經營研究社</div></div>
       <h1>第十四、第十五屆<br>社長交接暨理監事就職典禮</h1>
-      <p style="font-size:20px">藝術共感・行動共創　ART &amp; ACTION</p>
-      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:8px">
+      <p class="h-tag" style="font-size:20px">藝術共感・行動共創　ART &amp; ACTION</p>
+      <div class="h-cta" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:8px">
         <a class="btn btn-gold" href="#schedule">查看即時流程</a>
         <a class="btn" href="me.html" style="border:2px solid var(--gold3);color:#F8E7B8">我的活動頁 ›</a>
       </div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:center;gap:16px">
-      <img src="assets/logo15.png" alt="15 ART &amp; ACTION 藝術共感・行動共創" style="width:260px;filter:drop-shadow(0 10px 30px rgba(0,0,0,.35))">
-      <div style="background:rgba(255,255,255,.08);border:1px solid rgba(226,189,99,.5);border-radius:16px;padding:16px 24px;text-align:center">
+      <img class="h-logo" src="assets/logo15.png" alt="15 ART &amp; ACTION 藝術共感・行動共創" style="width:260px;filter:drop-shadow(0 10px 30px rgba(0,0,0,.35))">
+      <div class="h-date" style="background:rgba(255,255,255,.08);border:1px solid rgba(226,189,99,.5);border-radius:16px;padding:16px 24px;text-align:center">
         <div class="serif" style="font-size:40px;font-weight:700;color:#F8E7B8;line-height:1">10/17<span style="font-size:22px;margin-left:6px">(六)</span></div>
         <div style="font-size:17px;color:#F3E3C0;margin-top:6px">13:00 – 20:00　千八會館・竹南婚宴餐廳</div>
       </div>
