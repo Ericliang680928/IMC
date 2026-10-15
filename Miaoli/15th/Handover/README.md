@@ -11,5 +11,5 @@
 - wish.html 商務交流許願牆
 - shop.html 社友商品館
 - sponsors.html 年會贊助資訊（特刊廣告＋贊助感謝名單）
-- admin.html 承辦後台（勿公開）
+- admin.html 承辦後台（勿公開）：兩種通關碼——管理者（全功能，含刪除訂單、改訂單狀態、看訂購者電話地址）／上架者（只能登錄、上下架商品與 EDM；訂單僅供檢視，電話地址遮蔽，無法刪除或改狀態）。碼設在 admin.html 開頭的 `ADMIN`、`LISTER`；僅前端限制，真正的刪除保護見 tools/admin_lock.sql
 - roster.json 的午場／晚宴桌號（me.html「我的活動頁」用）要與 seat.html 一致：seat.html 重新匯出後，除了 `make_seatmap.py`，也要執行 `python3 tools/sync_roster_tables.py`
