@@ -25,8 +25,13 @@ W,H=D['sc']['noon']['w'],D['sc']['noon']['h']
 tid={t['id']:t for t in S['tables']}
 
 # ── 1) 對應既有人員 ────────────────────────────────────────────
+def clean_unit(q):
+    # 手動新增時把「單位 職稱」打在一起的情形（如「台日貿易交流會 副會長」）拆開
+    u=q['unit']
+    if q['title'] and u.endswith(' '+q['title']): u=u[:-len(q['title'])-1].strip()
+    return u
 pool=collections.defaultdict(list)
-for p in S['people']: pool[(p['name'],p['unit'])].append(p)
+for p in S['people']: pool[(p['name'],clean_unit(p))].append(p)
 match=[]                                      # match[i] = 專案檔人員 或 None
 for p in D['ps']:
     L=pool.get((p['n'],ALIAS.get(p['u'],p['u'])))
@@ -36,9 +41,7 @@ lost=[(i,p['n']) for i,p in enumerate(D['ps']) if match[i] is None]
 if lost: print('⚠ 專案檔找不到這些既有人員（座位將設為「座位安排中」）：',lost)
 fresh=[q for q in S['people'] if id(q) not in used and q['st']!='leave']
 for q in fresh:
-    u=q['unit']
-    # 手動新增時把「單位 職稱」打在一起的情形（如「台日貿易交流會 副會長」）拆開
-    if q['title'] and u.endswith(' '+q['title']): u=u[:-len(q['title'])-1].strip()
+    u=clean_unit(q)
     D['ps'].append({'n':q['name'],'c':q['raw'].get('任職公司',''),'o':q['raw'].get('擔任職位',''),'u':u,'t':q['title'],'s':[[2,-1],[2,-1]],'a':-1,'b':''})
     match.append(q)
 
