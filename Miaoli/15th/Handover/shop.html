@@ -169,6 +169,8 @@ const CATS=['全部','伴手禮','餐桌點心'];
 const IMG_BY_NAME={'姜文玉|嫩仙草凍':['assets/shop/xc1.jpg']};
 /* 資料庫商品的賣家官網連結（以「賣家|品名」對應） */
 /* 資料庫商品要顯示的賣家寫法（職稱・品牌；以「賣家|品名」對應），沒有對應就顯示資料庫的賣家欄 */
+/* 商品排序：品名 → 要排在第幾個 */
+const PIN_POS={'嫩仙草凍':3};
 const SELLER_SHOW={'姜文玉|嫩仙草凍':'姜文玉第一副社長・夏綠蒂雪花冰'};
 const SITE_BY_NAME={'姜文玉|嫩仙草凍':{url:'https://csnowice.com.tw/',label:'看夏綠蒂官網'}};
 /* 判斷低溫商品：品名或說明裡有【冷藏】【冷凍】標記、品名含冷藏／冷凍字樣、或說明一開頭就寫冷藏／冷凍（如「冷藏/像果凍般…」） */
@@ -179,6 +181,8 @@ function coldOf(n,d){n=n||'';d=d||'';const tg=n+' '+d;
 async function loadProducts(){let rows=[];try{rows=await dbGet('h15_products?on_shelf=eq.true&cat=neq.贊助廣告&select=*&order=id');}catch(e){rows=[];}
   const dbp=rows.map(r=>{let imgs=r.img?String(r.img).split('|').map(s=>s.trim()).filter(Boolean):[];if(!imgs.length)imgs=(IMG_BY_NAME[(r.seller||'')+'|'+(r.name||'')]||[]).slice();const temp=coldOf(r.name,r.descr);return {id:String(r.id),cat:r.cat,name:r.name||'',seller:SELLER_SHOW[(r.seller||'')+'|'+(r.name||'')]||r.seller,price:r.price>0?r.price:null,unit:r.unit||'',desc:r.descr||'',imgs:imgs,site:SITE_BY_NAME[(r.seller||'')+'|'+(r.name||'')]||null,color:'#E8D9B8',temp:temp,promo:(r.title&&String(r.title).trim())?{label:'活動價：'+String(r.title).trim()}:null};});
   PRODUCTS=STATIC.concat(dbp);
+  /* 指定排序位置（排第 N 個，以品名對應；其餘維持「固定商品在前、資料庫商品依上架順序在後」） */
+  Object.keys(PIN_POS).forEach(n=>{const i=PRODUCTS.findIndex(p=>p.name===n);if(i>=0){const x=PRODUCTS.splice(i,1)[0];PRODUCTS.splice(Math.min(PIN_POS[n]-1,PRODUCTS.length),0,x);}});
   if(PRODUCTS.length===0){PRODUCTS=DEMO;document.getElementById('demoNote').style.display='block';}
   renderCats();renderProds();renderCart();}
 let SEAT=[],unitAuto=false,seatSel=null;
