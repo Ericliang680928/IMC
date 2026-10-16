@@ -23,17 +23,18 @@ td{padding:12px;border-bottom:1px solid #F0E8D8;vertical-align:top}
 .sel{min-height:40px;font-size:15px;border:2px solid var(--line2);border-radius:10px;padding:0 10px;background:#fff}
 .st{display:inline-block;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:700;white-space:nowrap}
 @media (max-width:720px){.kpi{grid-template-columns:repeat(2,minmax(0,1fr))}}
+body.memb #hdr,body.memb .kpi,body.memb .tabs,body.memb #p-orders,body.memb #p-prods,body.memb #p-edm{display:none!important}
 </style>
 </head>
 <body>
 <nav class="nav"><div class="nin" style="gap:12px;overflow:visible;flex-wrap:wrap;height:auto;min-height:64px;padding-top:6px;padding-bottom:6px">
   <img src="assets/logo15.png" alt="第15屆" style="margin:0">
-  <span style="color:#F8E7B8;font-weight:700;font-size:18px">承辦後台</span><span class="tag" style="background:var(--rose);color:#fff;letter-spacing:.1em">僅承辦團隊</span><span class="tag" id="roleTag" style="background:#F8E7B8;color:#5B3B00"></span>
+  <span id="navTitle" style="color:#F8E7B8;font-weight:700;font-size:18px">承辦後台</span><span id="navTeam" class="tag" style="background:var(--rose);color:#fff;letter-spacing:.1em">僅承辦團隊</span><span class="tag" id="roleTag" style="background:#F8E7B8;color:#5B3B00"></span>
   <a href="#" onclick="logout();return false" style="margin-left:auto">登出</a><a href="index.html">回活動主頁 ›</a>
 </div></nav>
 <main class="wrap" style="padding:32px 20px 64px;display:flex;flex-direction:column;gap:24px">
   <div class="banner" id="topBanner">此頁含訂購者電話與地址，僅承辦團隊使用，請勿對外分享連結。</div>
-  <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px">
+  <div id="hdr" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px">
     <div><h1 class="serif" style="margin:0;font-size:30px;color:var(--dark)">社友商品館・訂單與登錄管理</h1><div class="note">資料即時讀取自資料庫；<button type="button" class="btn btn-ghost sm" onclick="loadAll()">重新整理</button></div></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn btn-gold" onclick="show('new')">＋ 登錄商品／EDM</button><button type="button" class="btn btn-line" disabled>匯出訂單 Excel</button></div>
   </div>
@@ -46,20 +47,21 @@ td{padding:12px;border-bottom:1px solid #F0E8D8;vertical-align:top}
   <div class="tabs"><button type="button" class="tab on" data-t="orders" onclick="show('orders')">訂單</button><button type="button" class="tab" data-t="prods" onclick="show('prods')">上架商品</button><button type="button" class="tab" data-t="edm" onclick="show('edm')">贊助 EDM</button><button type="button" class="tab" data-t="new" onclick="show('new')">登錄商品／EDM</button></div>
 
   <div class="pane on" id="p-orders"><div class="card" style="padding:8px 8px 16px;overflow-x:auto"><table><thead><tr><th>訂單編號</th><th>時間</th><th>社別／單位</th><th>姓名</th><th>電話</th><th>地址</th><th>商品明細</th><th>金額</th><th>狀態</th><th>管理</th></tr></thead><tbody id="orders"></tbody></table></div><div class="note" style="margin-top:8px">依「提供社友」分拆出貨：「匯出訂單 Excel」會同時產生各社友的出貨名單分頁。</div></div>
-  <div class="pane" id="p-prods"><div class="card" style="padding:8px 8px 16px;overflow-x:auto"><table><thead><tr><th>類別</th><th>商品</th><th>提供社友</th><th>售價</th><th>已訂數量</th><th>聯絡方式</th><th>狀態</th><th></th></tr></thead><tbody id="prods"></tbody></table></div></div>
+  <div class="pane" id="p-prods"><div class="banner" id="pendNote" style="display:none;margin-bottom:12px;font-weight:700"></div><div class="card" style="padding:8px 8px 16px;overflow-x:auto"><table><thead><tr><th>類別</th><th>商品</th><th>提供社友</th><th>售價</th><th>已訂數量</th><th>聯絡方式</th><th>狀態</th><th></th></tr></thead><tbody id="prods"></tbody></table></div></div>
   <div class="pane" id="p-edm"><div class="card" style="padding:8px 8px 16px;overflow-x:auto"><table><thead><tr><th>贊助社友</th><th>公司／品牌</th><th>連結</th><th>EDM</th><th>狀態</th><th></th></tr></thead><tbody id="edms"></tbody></table></div></div>
 
   <div class="pane" id="p-new">
     <form class="card" id="nf" style="gap:16px;max-width:760px">
-      <div class="serif" style="font-size:24px;font-weight:700;color:var(--dark)">登錄社友商品／贊助 EDM</div>
-      <div class="note">承辦團隊代社友登錄；社友把商品資料、照片或 EDM 交給承辦即可。</div>
+      <div class="serif" id="nHead" style="font-size:24px;font-weight:700;color:var(--dark)">登錄社友商品／贊助 EDM</div>
+      <div class="note" id="nNote">承辦團隊代社友登錄；社友把商品資料、照片或 EDM 交給承辦即可。</div>
       <div><span class="lbl">類別</span><div id="cats" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px"></div></div>
-      <div class="fld"><label class="f" for="n-seller" id="n-seller-l">提供社友／商號</label><input id="n-seller" class="in" required placeholder="例：米樂家 林社友"></div>
+      <div class="fld"><label class="f" for="n-seller" id="n-seller-l">提供社友／商號</label><input id="n-seller" class="in" required placeholder="例：米樂家 林社友"><div id="m-info" class="note" role="status" aria-live="polite" style="display:none;margin-top:6px;font-size:15px;font-weight:700;line-height:1.6"></div></div>
       <div id="prodFields" style="display:flex;flex-direction:column;gap:16px">
         <div class="fld"><label class="f" for="n-name">商品名稱</label><input id="n-name" class="in" placeholder="例：堅果辣油禮盒"></div>
         <div class="grid g2" style="gap:16px"><div class="fld"><label class="f" for="n-price">售價（NT$；留白＝價格洽詢）</label><input id="n-price" class="in" type="number" min="0" step="1"></div><div class="fld"><label class="f" for="n-unit">單位</label><input id="n-unit" class="in" placeholder="盒／組／包／份"></div></div>
         <div class="fld"><label class="f" for="n-desc">一句話介紹</label><textarea id="n-desc" class="in" placeholder="食材來源、口味特色、份量、保存方式…"></textarea></div>
-        <div class="note" style="margin-top:-8px">冷藏／冷凍商品請在商品名稱或一句話介紹開頭加上「【冷藏】」或「【冷凍】」，商品館會自動標示並要求與常溫商品分開下單。</div>
+        <div class="fld" id="tempFld" style="display:none"><label class="f" for="n-temp">保存方式</label><select id="n-temp" class="in"><option value="">常溫</option><option value="冷藏">冷藏</option><option value="冷凍">冷凍</option></select></div>
+        <div class="note" id="coldNote" style="margin-top:-8px">冷藏／冷凍商品請在商品名稱或一句話介紹開頭加上「【冷藏】」或「【冷凍】」，商品館會自動標示並要求與常溫商品分開下單。</div>
         <div class="fld"><label class="f" for="n-img">商品照片網址（選填，貼圖片連結）</label><input id="n-img" class="in" type="url" placeholder="https://"></div>
       </div>
       <div id="adFields" style="display:none;flex-direction:column;gap:16px">
@@ -70,27 +72,32 @@ td{padding:12px;border-bottom:1px solid #F0E8D8;vertical-align:top}
         <div class="fld"><label class="f" for="a-edm">EDM 圖片網址（貼圖片連結；建議直式 3:4，寬 1080px 以上）</label><input id="a-edm" class="in" type="url" placeholder="https://"></div>
       </div>
       <div class="fld"><label class="f" for="n-contact">社友聯絡方式（不公開，出貨聯繫用）</label><input id="n-contact" class="in" placeholder="LINE ID 或電話"></div>
+      <div id="m-err" role="alert" style="display:none;color:#8A3B1F;font-weight:700;line-height:1.6"></div>
       <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button type="submit" class="btn btn-gold" id="nBtn">上架商品</button><span id="nSaved" style="display:none;color:var(--green);font-weight:700"></span></div>
     </form>
   </div>
 </main>
-<footer>承辦後台含訂購者電話與地址，請勿對外分享此頁連結</footer>
+<footer id="foot">承辦後台含訂購者電話與地址，請勿對外分享此頁連結</footer>
 <script>
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-/* 兩種身分：管理者（1517）可刪除訂單、變更訂單狀態、看訂購者電話地址；
-   上架者（1415）只能登錄／上下架商品與 EDM，訂單僅供檢視（不含電話地址），無法刪除或改狀態。
+/* 三種身分：管理者（1517）可刪除訂單、變更訂單狀態、看訂購者電話地址；
+   上架者（1017）只能登錄／上下架商品與 EDM，訂單僅供檢視（不含電話地址），無法刪除或改狀態；
+   社友上架（1415，臨時登錄碼，發給苗栗社社友）只看得到「登錄商品」表單：每人最多 2 項、送出後為待審核（要由管理者／上架者按「核准上架」才會出現在商品館）、截止時間到就關閉，看不到訂單也不能改別人的商品。
    注意：此為前端限制，密碼寫在網頁原始碼中；真正的刪除保護需在資料庫端安裝 tools/admin_lock.sql。 */
-const ADMIN='1517',LISTER='1415';
+const ADMIN='1517',LISTER='1017',MEMBER='1415';
+const MEM_DEADLINE=Date.parse('2026-10-17T00:00:00+08:00'),MEM_MAX=2; /* 社友上架：台北時間 10/16 24:00 截止；每位社友最多 2 項 */
+const MEM_STATIC={'徐詩淳':2,'黃乾斌':1,'梁群儒':1}; /* shop.html 頁面內固定商品的提供社友（要和 shop.html 的 STATIC 一致） */
 const LISTER_SEE_PII=false; /* 改成 true 則上架者也能看到訂購者電話與地址 */
-const roleOf=c=>c===ADMIN?'admin':(c===LISTER?'lister':'');
+const roleOf=c=>c===ADMIN?'admin':(c===LISTER?'lister':(c===MEMBER?'member':''));
 let ROLE='';
-(function gate(){let saved='';try{saved=localStorage.getItem('h15_admin')||'';}catch(e){}ROLE=roleOf(saved);if(!ROLE){const v=(prompt('請輸入承辦後台通關碼')||'').trim();ROLE=roleOf(v);if(ROLE){try{localStorage.setItem('h15_admin',v);}catch(e){}}else{document.body.innerHTML='<div style="padding:40px;text-align:center;color:#8A3B1F">通關碼錯誤。</div>';throw new Error('gate');}}})();
-const IS_ADMIN=ROLE==='admin';
+(function gate(){let saved='';try{saved=localStorage.getItem('h15_admin')||'';}catch(e){}ROLE=roleOf(saved);if(!ROLE){const v=(prompt('請輸入通關碼（苗栗社社友上架，請輸入公告中的「上架碼」）')||'').trim();ROLE=roleOf(v);if(ROLE){try{localStorage.setItem('h15_admin',v);}catch(e){}}else{document.body.innerHTML='<div style="padding:40px;text-align:center;color:#8A3B1F">通關碼錯誤，請重新整理網頁再試一次。</div>';throw new Error('gate');}}})();
+const IS_ADMIN=ROLE==='admin',IS_MEMBER=ROLE==='member';
+if(IS_MEMBER)document.body.classList.add('memb');
 const pii=v=>(IS_ADMIN||LISTER_SEE_PII)?esc(v):'<span class="note">（僅管理者可見）</span>';
 function logout(){try{localStorage.removeItem('h15_admin');}catch(e){}location.reload();}
 let orders=[],prods=[],edms=[],cat='伴手禮';
 const ON='background:var(--greenbg);color:var(--green)',OFF='background:#FFF6F0;color:#8A3B1F';
-function show(t){document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+t));document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.t===t));}
+function show(t){if(IS_MEMBER)t='new';document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+t));document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.t===t));}
 /* 社別欄只顯示「社名｜午場 桌號・晚宴 桌號」；午晚同一桌只顯示一個桌號；去掉桌名括號（舊訂單也一併處理） */
 const unitShow=u=>{const s=String(u||''),i=s.indexOf('｜午場');if(i<0)return s;const t=s.slice(i+1).replace(/（[^）]*）/g,''),m=t.match(/^午場 (.+)・晚宴 (.+)$/);return s.slice(0,i)+'｜'+(m&&m[1]===m[2]?m[1]:t);};
 async function loadAll(){try{orders=await dbGet('h15_orders?select=*&order=created_at.desc');const ps=await dbGet('h15_products?select=*&order=id');prods=ps.filter(p=>p.cat!=='贊助廣告');edms=ps.filter(p=>p.cat==='贊助廣告');
@@ -114,25 +121,91 @@ async function delOrder(id){
   }
   loadAll();
 }
-async function toggle(id,on){try{await dbPatch('h15_products','id=eq.'+id,{on_shelf:on});}catch(e){alert('更新失敗');}loadAll();}
-async function del(id){if(confirm('確定刪除這筆登錄？')){try{await dbDelete('h15_products','id=eq.'+id);}catch(e){alert('刪除失敗');}loadAll();}}
+async function toggle(id,on){if(IS_MEMBER)return;try{await dbPatch('h15_products','id=eq.'+id,{on_shelf:on});}catch(e){alert('更新失敗');}loadAll();}
+async function del(id){if(IS_MEMBER)return;if(confirm('確定刪除這筆登錄？')){try{await dbDelete('h15_products','id=eq.'+id);}catch(e){alert('刪除失敗');}loadAll();}}
 function fmt(t){const d=new Date(t);return (d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
 function render(){
   document.getElementById('orders').innerHTML=orders.length?orders.map(o=>'<tr><td style="font-weight:700">'+esc(o.order_no)+'</td><td style="white-space:nowrap;color:var(--muted2)">'+fmt(o.created_at)+'</td><td>'+esc(unitShow(o.unit))+'</td><td style="font-weight:700">'+esc(o.name)+'</td><td style="white-space:nowrap">'+pii(o.tel)+'</td><td style="min-width:180px">'+pii(o.addr)+'</td><td style="min-width:200px">'+(o.items||[]).map(i=>esc(i.name)+' ×'+(Number(i.qty)||0)+(i.cold?' <b style="color:#14507F">❄'+esc(i.cold)+'</b>':'')+(i.quote?' <b style="color:var(--rose)">（價格洽詢）</b>':'')+(i.free?' <b style="color:var(--green)">＋贈 '+(Number(i.free)||0)+esc(i.unit||'')+'</b>':'')+(i.perk?' <b style="color:var(--green)">'+esc(i.perk)+'</b>':'')+(i.bundle?' <b style="color:var(--green)">會場活動價 '+(Number(i.bundle.n)||0)+esc(i.unit||'')+' NT$ '+(Number(i.bundle.price)||0)+' × '+(Number(i.bundle.sets)||0)+' 組</b>':'')+'<span class="note">（'+esc(i.seller)+'）</span>').join('<br>')+'</td><td style="white-space:nowrap;font-weight:700;color:var(--rose)">NT$ '+(Number(o.total)||0)+'</td><td>'+(IS_ADMIN?'<select class="sel" onchange="setStatus('+(Number(o.id)||0)+',this.value)">'+['待確認','待出貨','已出貨','已完成','取消'].map(s=>'<option'+(s===o.status?' selected':'')+'>'+s+'</option>').join('')+'</select>':'<span class="st" style="background:#F4EFE3;color:#6B5424">'+esc(o.status)+'</span>')+'</td><td>'+(IS_ADMIN?'<button type="button" class="btn btn-ghost sm" style="color:var(--rose);border-color:#E3B9C8" onclick="delOrder('+(Number(o.id)||0)+')">刪除</button>':'<span class="note">—</span>')+'</td></tr>').join(''):'<tr><td colspan="10" class="note">尚無訂單</td></tr>';
-  document.getElementById('prods').innerHTML=prods.length?prods.map(p=>'<tr><td><span class="st tag-gold">'+esc(p.cat)+'</span></td><td style="font-weight:700">'+esc(p.name)+'</td><td>'+esc(p.seller)+'</td><td style="white-space:nowrap">'+(p.price>0?'NT$ '+(Number(p.price)||0)+'／'+esc(p.unit):'價格洽詢')+'</td><td>'+(Number(p.qty_ordered)||0)+'</td><td style="color:var(--muted2)">'+esc(p.contact)+'</td><td><span class="st" style="'+(p.on_shelf?ON:OFF)+'">'+(p.on_shelf?'上架中':'待審核')+'</span></td><td style="white-space:nowrap"><button type="button" class="btn btn-line sm" onclick="toggle('+(Number(p.id)||0)+','+(p.on_shelf?'false':'true')+')">'+(p.on_shelf?'下架':'核准上架')+'</button> <button type="button" class="btn btn-ghost sm" onclick="del('+(Number(p.id)||0)+')">刪除</button></td></tr>').join(''):'<tr><td colspan="8" class="note">尚無登錄商品，按「登錄商品／EDM」新增</td></tr>';
+  const pend=prods.filter(p=>!p.on_shelf).length+edms.filter(e=>!e.on_shelf).length;
+  const pn=document.getElementById('pendNote');pn.style.display=pend?'block':'none';pn.textContent=pend?'⚠ 有 '+pend+' 項（含社友自行登錄的）待審核——請確認內容後按「核准上架」，或刪除。':'';
+  const tp=document.querySelector('.tab[data-t=prods]');if(tp)tp.textContent='上架商品'+(pend?'（'+pend+' 項待審核）':'');
+  document.getElementById('prods').innerHTML=prods.length?prods.slice().sort((a,b)=>(a.on_shelf?1:0)-(b.on_shelf?1:0)||((Number(a.id)||0)-(Number(b.id)||0))).map(p=>'<tr><td><span class="st tag-gold">'+esc(p.cat)+'</span></td><td style="font-weight:700">'+esc(p.name)+'</td><td>'+esc(p.seller)+'</td><td style="white-space:nowrap">'+(p.price>0?'NT$ '+(Number(p.price)||0)+'／'+esc(p.unit):'價格洽詢')+'</td><td>'+(Number(p.qty_ordered)||0)+'</td><td style="color:var(--muted2)">'+esc(p.contact)+'</td><td><span class="st" style="'+(p.on_shelf?ON:OFF)+'">'+(p.on_shelf?'上架中':'待審核')+'</span></td><td style="white-space:nowrap"><button type="button" class="btn btn-line sm" onclick="toggle('+(Number(p.id)||0)+','+(p.on_shelf?'false':'true')+')">'+(p.on_shelf?'下架':'核准上架')+'</button> <button type="button" class="btn btn-ghost sm" onclick="del('+(Number(p.id)||0)+')">刪除</button></td></tr>').join(''):'<tr><td colspan="8" class="note">尚無登錄商品，按「登錄商品／EDM」新增</td></tr>';
   document.getElementById('edms').innerHTML=edms.length?edms.map(e=>'<tr><td style="font-weight:700">'+esc(e.seller)+'</td><td>'+esc(e.title)+'</td><td style="color:var(--muted2);max-width:220px;overflow:hidden;text-overflow:ellipsis">'+esc(e.link||'—')+'</td><td>'+(e.img?'<img src="'+esc(e.img)+'" alt="" style="width:48px;height:64px;object-fit:cover;border-radius:6px">':'<span style="display:inline-block;width:48px;height:64px;border-radius:6px;background:#E8D9B8"></span>')+'</td><td><span class="st" style="'+(e.on_shelf?ON:OFF)+'">'+(e.on_shelf?'刊登中':'待審核')+'</span></td><td style="white-space:nowrap"><button type="button" class="btn btn-line sm" onclick="toggle('+(Number(e.id)||0)+','+(e.on_shelf?'false':'true')+')">'+(e.on_shelf?'下架':'核准刊登')+'</button> <button type="button" class="btn btn-ghost sm" onclick="del('+(Number(e.id)||0)+')">刪除</button></td></tr>').join(''):'<tr><td colspan="6" class="note">尚無 EDM</td></tr>';
-  document.getElementById('kOrders').textContent=orders.length;document.getElementById('kSum').textContent=orders.filter(o=>o.status!=='取消').reduce((a,o)=>a+(Number(o.total)||0),0);document.getElementById('kPending').textContent=orders.filter(o=>o.status==='待確認'||o.status==='待出貨').length;document.getElementById('kProd').textContent=prods.length;document.getElementById('kEdm').textContent=edms.length;
-  document.getElementById('cats').innerHTML=['伴手禮','餐桌點心','贊助廣告'].map(c=>'<button type="button" class="pill'+(c===cat?' on':'')+'" onclick="setCat(\''+c+'\')">'+c+'</button>').join('');
-  const ad=cat==='贊助廣告';document.getElementById('prodFields').style.display=ad?'none':'flex';document.getElementById('adFields').style.display=ad?'flex':'none';document.getElementById('n-seller-l').textContent=ad?'贊助社友姓名':'提供社友／商號';document.getElementById('nBtn').textContent=ad?'刊登 EDM':'上架商品';}
+  document.getElementById('kOrders').textContent=orders.length;document.getElementById('kSum').textContent=orders.filter(o=>o.status!=='取消').reduce((a,o)=>a+(Number(o.total)||0),0);document.getElementById('kPending').textContent=orders.filter(o=>o.status==='待確認'||o.status==='待出貨').length;document.getElementById('kProd').textContent=prods.filter(p=>p.on_shelf).length;document.getElementById('kEdm').textContent=edms.length;
+  document.getElementById('cats').innerHTML=(IS_MEMBER?['伴手禮','餐桌點心']:['伴手禮','餐桌點心','贊助廣告']).map(c=>'<button type="button" class="pill'+(c===cat?' on':'')+'" onclick="setCat(\''+c+'\')">'+c+'</button>').join('');
+  const ad=cat==='贊助廣告';document.getElementById('prodFields').style.display=ad?'none':'flex';document.getElementById('adFields').style.display=ad?'flex':'none';document.getElementById('n-seller-l').textContent=ad?'贊助社友姓名':(IS_MEMBER?'社友姓名（商號可接在姓名後面）':'提供社友／商號');document.getElementById('nBtn').textContent=ad?'刊登 EDM':(IS_MEMBER?'送出上架申請':'上架商品');}
 function setCat(c){cat=c;render();}
-document.getElementById('nf').addEventListener('submit',async e=>{e.preventDefault();const g=id=>document.getElementById(id).value.trim();const btn=document.getElementById('nBtn');btn.disabled=true;
+
+/* ===== 社友上架（member 身分） ===== */
+const $=id=>document.getElementById(id);
+const nmz=s=>String(s||'').normalize('NFKC').replace(/\s+/g,' ').trim();
+let MEMB=[],memTok=0,memState={ok:false,left:0,name:'',brand:''};
+function memParse(){const raw=nmz($('n-seller').value);const m=raw.match(/^([^\s・･·•]+)(?:[\s・･·•]+(.*))?$/);if(!m)return {name:'',brand:''};return {name:m[1].replace(/社友$/,''),brand:(m[2]||'').trim()};}
+async function memCount(name){let n=MEM_STATIC[name]||0;const rows=await dbGet('h15_products?cat=neq.'+encodeURIComponent('贊助廣告')+'&seller=ilike.'+encodeURIComponent('*'+name+'*')+'&select=id');return n+rows.length;}
+function memSay(t,k){const i=$('m-info');i.style.display=t?'block':'none';i.textContent=t||'';i.style.color=k==='ok'?'var(--green)':(k==='bad'?'#8A3B1F':'var(--muted2)');}
+function memErr(t){const e=$('m-err');e.style.display=t?'block':'none';e.textContent=t||'';}
+async function memLookup(){
+  const tok=++memTok,{name,brand}=memParse();memState={ok:false,left:0,name,brand};
+  if(!name){memSay('');return;}
+  if(!/^[㐀-鿿]{2,6}$/.test(name)){memSay('請先輸入您的姓名（中文），商號可接在姓名後面，例：王小明・小明農場','bad');return;}
+  const hits=MEMB.filter(p=>nmz(p.n)===name);
+  if(hits.length&&!hits.some(p=>p.u==='苗栗社')){memSay('名單裡的「'+name+'」是'+hits[0].u+'的社友；社友上架目前只開放苗栗社社友。','bad');return;}
+  memSay('正在確認您已登錄的數量…');
+  let n;try{n=await memCount(name);}catch(e){if(tok===memTok)memSay('目前連不上資料庫，請稍後再試。','bad');return;}
+  if(tok!==memTok)return;
+  const left=Math.max(0,MEM_MAX-n);memState={ok:left>0,left,name,brand};
+  memSay((hits.length?'找到您了：'+name+'・苗栗社。':'名單裡找不到「'+name+'」，仍可送出，承辦會再確認。')+(left>0?'您已登錄 '+n+' 項，這次還可再上架 '+left+' 項。':'您已登錄 '+n+' 項，已達每人 '+MEM_MAX+' 項的上限；如要更換，請洽承辦。'),left>0?'ok':'bad');
+}
+function memClosed(){return Date.now()>=MEM_DEADLINE;}
+function memApplyClosed(){if(!IS_MEMBER||!memClosed())return;const f=$('nf');if(f&&!f.dataset.closed){f.dataset.closed='1';f.style.display='none';const d=document.createElement('div');d.className='card';d.style.maxWidth='760px';d.innerHTML='<div class="serif" style="font-size:24px;font-weight:700;color:var(--dark)">社友上架已截止</div><div style="line-height:1.7">登錄時間到 10/16（五）24:00 為止。如需補登或更換商品，請洽承辦團隊。</div>';f.parentNode.insertBefore(d,f);const tb=$('topBanner');if(tb)tb.textContent='社友上架已截止（10/16 24:00）。';}}
+async function memSubmit(g,btn){
+  memErr('');
+  if(memClosed()){memApplyClosed();return;}
+  if(!MEMB.length){try{MEMB=await (await fetch('seatmap.json?t='+Date.now(),{cache:'no-store'})).json();}catch(e){MEMB=[];}}
+  btn.disabled=true;
+  try{
+    await memLookup();
+    if(!memState.name||!/^[㐀-鿿]{2,6}$/.test(memState.name)){memErr('請先輸入您的姓名（中文）。');return;}
+    if(!memState.ok){memErr(memState.left===0&&memState.name?'您已達每人 '+MEM_MAX+' 項的上限，或姓名無法確認，請看上方說明。':'請先確認姓名。');return;}
+    const name=g('n-name'),unit=g('n-unit'),desc=g('n-desc'),contact=g('n-contact'),img=g('n-img'),priceRaw=g('n-price');
+    if(!name){memErr('請填商品名稱。');return;}
+    if(!unit){memErr('請填單位（盒／包／罐／份…）。');return;}
+    if(!desc){memErr('請用一句話介紹商品（食材、口味、份量、保存方式…）。');return;}
+    if(!contact){memErr('請填聯絡方式（LINE ID 或電話，不會公開，只給出貨聯繫用）。');return;}
+    if(img&&!/^https:\/\//i.test(img)){memErr('商品照片網址要以 https:// 開頭；沒有網址可以先空白，照片之後傳給承辦補上。');return;}
+    if(priceRaw!==''&&!(Number(priceRaw)>=0)){memErr('售價請填數字，或留白（價格洽詢）。');return;}
+    const n2=await memCount(memState.name);if(n2>=MEM_MAX){memErr('您已達每人 '+MEM_MAX+' 項的上限。');await memLookup();return;}
+    if(memClosed()){memApplyClosed();return;}
+    const tag=$('n-temp').value?'【'+$('n-temp').value+'】':'';
+    const row={cat,seller:memState.name+'社友'+(memState.brand?'・'+memState.brand:''),name,price:Number(priceRaw)||0,unit,descr:tag+desc,img,contact,on_shelf:false};
+    await dbInsert('h15_products',row,'return=minimal');
+    ['n-name','n-price','n-unit','n-desc','n-img'].forEach(i=>{$(i).value='';});$('n-temp').value='';
+    const sv=$('nSaved');sv.textContent='已送出「'+name+'」！承辦確認後就會出現在社友商品館。';sv.style.display='inline';
+    await memLookup();
+  }catch(err){memErr('送出失敗，請稍後再試一次。');}
+  finally{btn.disabled=false;}
+}
+if(IS_MEMBER){
+  fetch('seatmap.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():[]).then(d=>{MEMB=Array.isArray(d)?d:[];}).catch(()=>{});
+  let t0=null;$('n-seller').addEventListener('input',()=>{clearTimeout(t0);$('nSaved').style.display='none';t0=setTimeout(memLookup,450);});
+  setInterval(memApplyClosed,30000);
+}
+document.getElementById('nf').addEventListener('submit',async e=>{e.preventDefault();const g=id=>document.getElementById(id).value.trim();const btn=document.getElementById('nBtn');if(IS_MEMBER){await memSubmit(g,btn);return;}btn.disabled=true;
   const row=cat==='贊助廣告'?{cat,seller:g('n-seller'),title:g('a-title'),link:g('a-link'),descr:g('a-desc'),img:g('a-edm'),contact:g('n-contact'),on_shelf:true}
     :{cat,seller:g('n-seller'),name:g('n-name'),price:Number(g('n-price'))||0,unit:g('n-unit'),descr:g('n-desc'),img:g('n-img'),contact:g('n-contact'),on_shelf:true};
   try{await dbInsert('h15_products',row,'return=minimal');document.getElementById('nSaved').textContent='已登錄並上架（可在列表下架）。';document.getElementById('nSaved').style.display='inline';e.target.reset();loadAll();}
   catch(err){alert('登錄失敗：'+err.message);}btn.disabled=false;});
-document.getElementById('roleTag').textContent=IS_ADMIN?'管理者':'上架者';
-if(!IS_ADMIN)document.getElementById('topBanner').textContent='您是「上架者」身分：可登錄商品／EDM、上架與下架；訂單僅供檢視（不顯示訂購者電話地址），無法刪除或變更訂單。請勿對外分享此頁連結。';
-render();loadAll();
+document.getElementById('roleTag').textContent=IS_ADMIN?'管理者':(IS_MEMBER?'社友上架':'上架者');
+if(!IS_ADMIN&&!IS_MEMBER)document.getElementById('topBanner').textContent='您是「上架者」身分：可登錄商品／EDM、上架與下架；訂單僅供檢視（不顯示訂購者電話地址），無法刪除或變更訂單。請勿對外分享此頁連結。';
+if(IS_MEMBER){
+  document.getElementById('navTitle').textContent='社友上架';document.getElementById('navTeam').style.display='none';
+  document.getElementById('topBanner').textContent='苗栗社社友專用：請登錄您的自家商品，每位社友最多 2 項（一次送一項，可再送第二項）。送出後由承辦確認，通過就會出現在「社友商品館」。登錄截止：10/16（五）今晚 24:00。';
+  document.getElementById('nHead').textContent='社友上架：登錄您的商品';
+  document.getElementById('nNote').textContent='姓名請填真實姓名；聯絡方式只給承辦出貨聯繫用，不會公開。照片貼圖片網址即可，沒有網址先空白，之後傳給承辦補上。';
+  document.getElementById('n-seller').placeholder='例：王小明・小明農場';document.getElementById('tempFld').style.display='flex';document.getElementById('coldNote').style.display='none';
+  document.getElementById('foot').textContent='苗栗IMC 第15屆・社友上架';
+  show('new');memApplyClosed();render();
+}else{render();loadAll();}
 </script>
 </body>
 </html>
