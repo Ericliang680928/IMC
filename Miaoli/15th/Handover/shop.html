@@ -177,7 +177,7 @@ function coldOf(n,d){n=n||'';d=d||'';const tg=n+' '+d;
   if(/[【\[［]冷藏[】\]］]/.test(tg)||/冷藏/.test(n)||/^\s*冷藏/.test(d))return '冷藏';
   return '';}
 async function loadProducts(){let rows=[];try{rows=await dbGet('h15_products?on_shelf=eq.true&cat=neq.贊助廣告&select=*&order=id');}catch(e){rows=[];}
-  const dbp=rows.map(r=>{let imgs=r.img?String(r.img).split('|').map(s=>s.trim()).filter(Boolean):[];if(!imgs.length)imgs=(IMG_BY_NAME[(r.seller||'')+'|'+(r.name||'')]||[]).slice();const temp=coldOf(r.name,r.descr);return {id:String(r.id),cat:r.cat,name:r.name||'',seller:SELLER_SHOW[(r.seller||'')+'|'+(r.name||'')]||r.seller,price:r.price>0?r.price:null,unit:r.unit||'',desc:r.descr||'',imgs:imgs,site:SITE_BY_NAME[(r.seller||'')+'|'+(r.name||'')]||null,color:'#E8D9B8',temp:temp};});
+  const dbp=rows.map(r=>{let imgs=r.img?String(r.img).split('|').map(s=>s.trim()).filter(Boolean):[];if(!imgs.length)imgs=(IMG_BY_NAME[(r.seller||'')+'|'+(r.name||'')]||[]).slice();const temp=coldOf(r.name,r.descr);return {id:String(r.id),cat:r.cat,name:r.name||'',seller:SELLER_SHOW[(r.seller||'')+'|'+(r.name||'')]||r.seller,price:r.price>0?r.price:null,unit:r.unit||'',desc:r.descr||'',imgs:imgs,site:SITE_BY_NAME[(r.seller||'')+'|'+(r.name||'')]||null,color:'#E8D9B8',temp:temp,promo:(r.title&&String(r.title).trim())?{label:'活動價：'+String(r.title).trim()}:null};});
   PRODUCTS=STATIC.concat(dbp);
   if(PRODUCTS.length===0){PRODUCTS=DEMO;document.getElementById('demoNote').style.display='block';}
   renderCats();renderProds();renderCart();}
@@ -238,7 +238,7 @@ function pickGrp(g){curGrp=g;renderCart();}
 function renderCart(){
   const ids=Object.keys(cart).filter(id=>findItem(id));
   const G={amb:[],cold:[]},sub={amb:0,cold:0};let count=0,hasPromo=false,hasQuote=false;
-  ids.forEach(id=>{const p=findItem(id),g=grpOf(p);G[g].push(id);if(isQ(p))hasQuote=true;else sub[g]+=lineTotal(p,cart[id]);count+=cart[id];if(p.promo)hasPromo=true;});
+  ids.forEach(id=>{const p=findItem(id),g=grpOf(p);G[g].push(id);if(isQ(p))hasQuote=true;else sub[g]+=lineTotal(p,cart[id]);count+=cart[id];if(p.promo&&(p.promo.buy||p.promo.n))hasPromo=true;});
   const both=G.amb.length>0&&G.cold.length>0;
   if(both&&!prevBoth)curGrp='amb';prevBoth=both;
   if(!G[curGrp].length)curGrp=G.amb.length?'amb':'cold';
@@ -269,7 +269,7 @@ function renderCart(){
 document.getElementById('form').addEventListener('submit',async e=>{e.preventDefault();const g=id=>document.getElementById(id).value.trim();
   const btn=e.target.querySelector('button[type=submit]');btn.disabled=true;btn.textContent='送出中…';
   const gids=Object.keys(cart).filter(id=>findItem(id)&&grpOf(findItem(id))===curGrp),cold=curGrp==='cold';
-  const items=gids.map(id=>{const p=findItem(id);const f=freeOf(p,cart[id]);const it={product_id:id,name:p.name,seller:p.seller,price:isQ(p)?0:p.price,unit:p.unit,qty:cart[id]};if(isQ(p))it.quote=true;if(p.temp)it.cold=p.temp;if(f){it.free=f;it.promo=p.promo.label;if(p.promo.perk)it.perk=p.promo.perk;}const st=setsOf(p,cart[id]);if(st){it.promo=p.promo.label;it.bundle={n:p.promo.n,price:p.promo.price,sets:st};}return it;});
+  const items=gids.map(id=>{const p=findItem(id);const f=freeOf(p,cart[id]);const it={product_id:id,name:p.name,seller:p.seller,price:isQ(p)?0:p.price,unit:p.unit,qty:cart[id]};if(isQ(p))it.quote=true;if(p.temp)it.cold=p.temp;if(p.promo&&!p.promo.buy&&!p.promo.n&&p.promo.label)it.promo=p.promo.label;if(f){it.free=f;it.promo=p.promo.label;if(p.promo.perk)it.perk=p.promo.perk;}const st=setsOf(p,cart[id]);if(st){it.promo=p.promo.label;it.bundle={n:p.promo.n,price:p.promo.price,sets:st};}return it;});
   const total=gids.reduce((a,id)=>a+lineTotal(findItem(id),cart[id]),0);let no='IMC15-'+String(Date.now()).slice(-6)+(cold?'-C':'');
   const sa=seatSel?seatTxt(seatSel.a,1):'',sb=seatSel?seatTxt(seatSel.b,1):'';const unitRec=g('f-unit')+(seatSel?'｜'+(sa===sb?sa:'午場 '+sa+'・晚宴 '+sb):'');
   try{/* 訂單編號萬一和別人撞號（資料庫要求唯一），自動換一個再送，最多 3 次 */

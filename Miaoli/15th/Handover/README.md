@@ -11,7 +11,7 @@
 - wish.html 商務交流許願牆
 - shop.html 社友商品館
 - sponsors.html 年會贊助資訊（特刊廣告＋贊助感謝名單）
-- admin.html 承辦後台（勿公開）：兩種通關碼——管理者（全功能，含刪除訂單、改訂單狀態、看訂購者電話地址）／上架者（只能登錄、上下架商品與 EDM；訂單僅供檢視，電話地址遮蔽，無法刪除或改狀態）。碼設在 admin.html 開頭的 `ADMIN`、`LISTER`、`MEMBER`；第三種「社友上架」身分（臨時登錄碼，發給苗栗社社友）只看得到登錄表單：姓名須是苗栗社社友（對照 seatmap.json）、每人最多 2 項（`MEM_MAX`；`MEM_STATIC` 記 shop.html 內固定商品的提供社友，要和 STATIC 一致）、送出後為待審核（on_shelf=false，要由管理者／上架者按「核准上架」）、截止時間 `MEM_DEADLINE`（台北 2026-10-17 00:00）後表單關閉；僅前端限制，真正的刪除保護見 tools/admin_lock.sql
+- admin.html 承辦後台（勿公開）：兩種通關碼——管理者（全功能，含刪除訂單、改訂單狀態、看訂購者電話地址）／上架者（只能登錄、上下架商品與 EDM；訂單僅供檢視，電話地址遮蔽，無法刪除或改狀態）。碼設在 admin.html 開頭的 `ADMIN`、`LISTER`、`MEMBER`；第三種「社友上架」身分（臨時登錄碼，發給苗栗社社友）只看得到登錄表單：姓名須是苗栗社社友（對照 seatmap.json）、每人最多 2 項（`MEM_MAX`；`MEM_STATIC` 記 shop.html 內固定商品的提供社友，要和 STATIC 一致）、送出後為待審核（on_shelf=false，要由管理者／上架者按「核准上架」）；不用填聯絡方式；照片直接上傳（前端縮成 720px 內 JPEG、最多 2 張，以 data URL 存在 h15_products.img，用「|」分隔）；「活動優惠方案」說明文字存在 h15_products.title（商品卡顯示「活動價：…」，只是說明，購物車不自動計價）、截止時間 `MEM_DEADLINE`（台北 2026-10-17 00:00）後表單關閉；僅前端限制，真正的刪除保護見 tools/admin_lock.sql
 - roster.json 的午場／晚宴桌號（me.html「我的活動頁」用）要與 seat.html 一致：seat.html 重新匯出後，除了 `make_seatmap.py`，也要執行 `python3 tools/sync_roster_tables.py`
 - tabbar.js 手機版底部分頁列（主頁／我的／找人／交流／商品）：index、shop、wish、sponsors、seat 在手機（寬度 720px 以下）自動顯示，me.html 自帶同一排（外觀與圖示共用 tabbar.js）；新增頁面時在 </body> 前加 `<script src="tabbar.js?v=2"></script>`；seat.html 重新匯出後 patch_seat.py 會自動補回
 - **排座工具改存「專案檔」（.seat.json）時**，先執行 `python3 tools/import_seatjson.py <檔案.seat.json> [--dry]`（加 --dry 只看差異不寫檔）：既有名單順序與編號不動、只更新座位與桌位，新增的人接在名單最後（roster.json 同步新增），再接著跑下面三步。沒有桌號的特設席位（目前只有「資訊控台」：吳文卿、歐建隆、張善壹）記在 `tools/special_stations.json`，匯入時自動帶入，不用在排座工具裡建。承辦人當面指定、與專案檔不同的個別調整（目前：黃淑惠午場、晚宴都在 12 桌）記在 `tools/seat_overrides.json`，匯入時最後套用。
