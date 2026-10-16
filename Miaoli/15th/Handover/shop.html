@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>社友商品館｜苗栗IMC 第15屆</title>
-<script src="i18n.js?v=20"></script>
+<script src="i18n.js?v=21"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="style.css?v=3">
 <script src="db.js?v=1"></script>
@@ -110,6 +110,7 @@
     <div id="done" style="display:none;background:var(--greenbg);border:1px solid #BFE0C8;border-radius:14px;padding:18px;color:var(--green)">
       <div style="font-weight:700;font-size:20px">訂單已送出，謝謝支持社友！</div>
       <div style="font-size:15px">訂單編號 <span id="orderNo"></span>・我們彙整後會儘早安排出貨，並以您留的電話聯繫。</div>
+      <div id="donePerk" style="display:none;margin-top:8px;font-weight:700"></div>
       <div id="doneMore" style="display:none;margin-top:8px;background:#EAF3FC;border:1px solid #BCD6EE;color:#14507F;border-radius:10px;padding:10px 12px;font-size:15px;line-height:1.6;font-weight:600"></div>
       <button type="button" class="btn btn-line" style="margin-top:10px" onclick="reset()">再逛一次</button>
     </div>
@@ -120,7 +121,7 @@
       <div class="fld"><label class="f" for="f-unit">社別／單位</label><input id="f-unit" class="in" required placeholder="例：苗栗IMC"></div>
       <div class="fld"><label class="f" for="f-tel">電話</label><input id="f-tel" class="in" type="tel" required placeholder="09xx-xxx-xxx"></div>
       <div class="fld"><label class="f" for="f-addr">地址</label><input id="f-addr" class="in" required placeholder="收件地址"></div>
-      <div class="note">出貨時間未定、會儘早送達；付款方式由各社友與您聯繫確認。</div>
+      <div class="note" id="payNote">出貨時間未定、會儘早送達；付款方式由各社友與您聯繫確認。</div>
       <div class="note" id="grpNote" style="display:none"></div>
       <button type="submit" class="btn btn-gold" id="subBtn">送出訂單</button>
     </form>
@@ -138,7 +139,7 @@ const DEMO=[
  {id:'a3',cat:'餐桌點心',name:'黑木耳脆片 TaHes',seller:'金稼農業社',price:150,unit:'包',desc:'南庄段木栽培黑木耳製成的酥脆點心。',color:'#C9B48C'},
  {id:'a4',cat:'餐桌點心',name:'［桌上點心名稱］',seller:'［社友姓名］',price:120,unit:'份',desc:'一句話商品介紹',color:'#EADDC3'}
 ];
-/* 正式商品（寫在頁面內，圖檔在 assets/shop/）；promo＝會場活動價：每 n 件一組、組價 price（超出一組的零頭照單價）；舊寫法 buy/free＝每買 buy 送 free 仍可用 */
+/* 正式商品（寫在頁面內，圖檔在 assets/shop/）；promo＝會場活動價：{buy,free}＝每買 buy 送 free（有送才算達標）、perk＝達標後的附加優惠（寫進訂單明細）；另支援 {n,price}＝每 n 件一組、組價 price（超出一組的零頭照單價） */
 const STATIC=[
  {id:'jj-heirun',cat:'餐桌點心',name:'水藏・黑潤原露',seller:'金稼農創科技股份有限公司・黃乾斌社友',unit:'瓶',price:70,ar:'3/4',temp:'冷藏',
   desc:'苗栗小農自己種植的黑木耳，加上紅棗、枸杞、老薑，以冬瓜糖慢火熬煮。在地新鮮熬煮，無添加防腐劑，全素，養生無負擔。成分：水、黑木耳、冬瓜糖（全素）、紅棗、枸杞、老薑。需冷藏 5°C 以下，冷藏保存 14 天。',
@@ -148,7 +149,7 @@ const STATIC=[
  {id:'mf-guoren',cat:'餐桌點心',name:'滿福果仁辣醬',seller:'米樂家食材',price:350,unit:'罐',
   desc:'純素、香麻小辣，淨重 250 公克。內含松子、腰果、杏仁、花生、白芝麻、葵瓜子，拌麵、拌飯、拌豆腐、涼青菜、火鍋沾醬都合適。過敏原：含堅果類、花生、芝麻、大豆、含麩質穀物，詳見瓶身標示。',
   imgs:['assets/shop/mf1.jpg','assets/shop/mf2.jpg','assets/shop/mf3.jpg','assets/shop/mf4.jpg','assets/shop/mf5.jpg'],
-  promo:{n:4,price:1000,label:'活動價：凡在苗栗IMC交接會場下訂，4 罐 NT$ 1,000'}},
+  promo:{buy:4,free:1,perk:'免運宅配＋貨到付款',label:'活動價：凡在苗栗IMC交接會場下訂，買 4 罐送 1 罐，可免運宅配＋貨到付款'}},
  /* price:null＝價格洽詢（預購登記，賣家另行聯繫報價）；有價格後改成數字即可 */
  {id:'pp-classic',cat:'伴手禮',name:'胖胖梨 經典禮盒',seller:'徐詩淳社友・胖胖梨',unit:'盒',price:null,ar:'1/1',
   desc:'苗栗大湖九田園農莊自種自銷的高接梨，套袋、疏果、測糖、採收都在自家果園完成。6 顆裝，可選寶島甘露梨或日本青龍梨，逐顆套網、提把紙盒。',
@@ -224,6 +225,8 @@ let cartSeen=false;function fabVis(){document.getElementById('fab').classList.to
 if('IntersectionObserver' in window){new IntersectionObserver(es=>{cartSeen=es[0].isIntersecting;fabVis();},{threshold:.25}).observe(document.getElementById('cart'));addEventListener('resize',fabVis);}
 function change(id,d){const q=(cart[id]||0)+d; if(q>0)cart[id]=q; else delete cart[id]; document.getElementById('done').style.display='none'; renderCart();}
 function freeOf(p,q){return (venue&&p.promo&&p.promo.buy)?Math.floor(q/p.promo.buy)*p.promo.free:0;}
+/* 買 N 送 1 達標（有送才算）且有附加優惠（免運宅配＋貨到付款） */
+function perkOn(p,q){return !!(p&&p.promo&&p.promo.perk&&freeOf(p,q)>0);}
 /* 會場活動價（組價）：湊滿 n 件算一組 price 元，不足一組的零頭照單價 */
 function setsOf(p,q){return (venue&&p.promo&&p.promo.n)?Math.floor(q/p.promo.n):0;}
 function lineTotal(p,q){if(isQ(p))return 0;const s=setsOf(p,q);return s?s*p.promo.price+(q-s*p.promo.n)*p.price:q*p.price;}
@@ -240,7 +243,7 @@ function renderCart(){
   if(both&&!prevBoth)curGrp='amb';prevBoth=both;
   if(!G[curGrp].length)curGrp=G.amb.length?'amb':'cold';
   const row=id=>{const p=findItem(id),f=freeOf(p,cart[id]);
-    return '<div class="row"><div style="flex:1;min-width:0"><div style="font-weight:700;line-height:1.35;overflow-wrap:anywhere">'+esc(p.name)+'</div><div class="note">'+(isQ(p)?'價格洽詢':'NT$ '+p.price)+' × '+cart[id]+(f?' <span class="free">＋ 贈 '+f+' '+esc(p.unit)+'</span>':'')+(setsOf(p,cart[id])?' <span class="free">活動價 '+p.promo.n+' '+esc(p.unit)+' NT$ '+money(p.promo.price)+' × '+setsOf(p,cart[id])+' 組（省 NT$ '+money(setsOf(p,cart[id])*(p.promo.n*p.price-p.promo.price))+'）</span>':'')+(venue&&p.promo&&p.promo.n&&cart[id]%p.promo.n?' <span class="note">（再 '+(p.promo.n-cart[id]%p.promo.n)+' '+esc(p.unit)+'可湊 1 組活動價）</span>':'')+'</div></div><button type="button" class="qty" aria-label="減少" onclick="change(\''+esc(id)+'\',-1)">−</button><span style="min-width:24px;text-align:center;font-weight:700">'+cart[id]+'</span><button type="button" class="qty" aria-label="增加" onclick="change(\''+esc(id)+'\',1)">+</button></div>';};
+    return '<div class="row"><div style="flex:1;min-width:0"><div style="font-weight:700;line-height:1.35;overflow-wrap:anywhere">'+esc(p.name)+'</div><div class="note">'+(isQ(p)?'價格洽詢':'NT$ '+p.price)+' × '+cart[id]+(f?' <span class="free">＋ 贈 '+f+' '+esc(p.unit)+'</span>':'')+(perkOn(p,cart[id])?' <span class="free">'+esc(p.promo.perk)+'</span>':'')+(venue&&p.promo&&p.promo.buy&&cart[id]%p.promo.buy?' <span class="note">（再買 '+(p.promo.buy-cart[id]%p.promo.buy)+' '+esc(p.unit)+(freeOf(p,cart[id])?'，多送 '+p.promo.free+' '+esc(p.unit):'，送 '+p.promo.free+' '+esc(p.unit)+(p.promo.perk?'並享'+p.promo.perk:''))+'）</span>':'')+(setsOf(p,cart[id])?' <span class="free">活動價 '+p.promo.n+' '+esc(p.unit)+' NT$ '+money(p.promo.price)+' × '+setsOf(p,cart[id])+' 組（省 NT$ '+money(setsOf(p,cart[id])*(p.promo.n*p.price-p.promo.price))+'）</span>':'')+(venue&&p.promo&&p.promo.n&&cart[id]%p.promo.n?' <span class="note">（再 '+(p.promo.n-cart[id]%p.promo.n)+' '+esc(p.unit)+'可湊 1 組活動價）</span>':'')+'</div></div><button type="button" class="qty" aria-label="減少" onclick="change(\''+esc(id)+'\',-1)">−</button><span style="min-width:24px;text-align:center;font-weight:700">'+cart[id]+'</span><button type="button" class="qty" aria-label="增加" onclick="change(\''+esc(id)+'\',1)">+</button></div>';};
   let h='';
   if(both){
     h='<div class="splitnote">❄ 冷藏／冷凍商品需低溫配送，無法與常溫商品放在同一張訂單，已為您分成 2 張訂單，請依序各送出一次。</div>'
@@ -252,8 +255,10 @@ function renderCart(){
   }
   if(!ids.length)h='<div style="background:var(--cream);border-radius:12px;padding:20px;text-align:center;color:var(--muted)">還沒有商品，先逛逛左邊的社友好物吧。</div>';
   if(hasQuote)h+='<div class="note" style="background:var(--cream);border-radius:10px;padding:10px 12px;line-height:1.6">※ 標示「價格洽詢」的品項不含在合計內，賣家會另行聯繫，告知金額與宅配運費。</div>';
-  if(hasPromo)h+='<label class="venue"><input type="checkbox" id="venue"'+(venue?' checked':'')+' onchange="venue=this.checked;renderCart()"><span>我現在人在苗栗IMC交接會場下訂（勾選享活動價：4 罐 NT$ 1,000）</span></label>';
+  if(hasPromo)h+='<label class="venue"><input type="checkbox" id="venue"'+(venue?' checked':'')+' onchange="venue=this.checked;renderCart()"><span>我現在人在苗栗IMC交接會場下訂（勾選享活動價：買 4 罐送 1 罐，免運宅配＋貨到付款）</span></label>';
   document.getElementById('cartList').innerHTML=h;
+  const pn=document.getElementById('payNote'),pk=G[curGrp].filter(id=>perkOn(findItem(id),cart[id])),oth=G[curGrp].some(id=>!perkOn(findItem(id),cart[id]));
+  pn.textContent=pk.length?'活動優惠（'+pk.map(id=>findItem(id).name).join('、')+'）：'+findItem(pk[0]).promo.perk.replace('＋','、')+'（收到商品時再付款）。'+(oth?'其他商品的付款方式由各社友與您聯繫確認。':'')+'出貨時間未定、會儘早送達。':'出貨時間未定、會儘早送達；付款方式由各社友與您聯繫確認。';
   document.getElementById('total').textContent=sub[curGrp]; document.getElementById('cnt').textContent=count;document.getElementById('fabN').textContent=count;document.getElementById('fab').setAttribute('aria-label','購物車，'+count+' 件商品');
   document.getElementById('totLbl').textContent=both?'本張訂單合計（'+(curGrp==='cold'?'冷藏／冷凍':'常溫')+'）':'合計';
   const gn=document.getElementById('grpNote'),sb=document.getElementById('subBtn');
@@ -264,12 +269,12 @@ function renderCart(){
 document.getElementById('form').addEventListener('submit',async e=>{e.preventDefault();const g=id=>document.getElementById(id).value.trim();
   const btn=e.target.querySelector('button[type=submit]');btn.disabled=true;btn.textContent='送出中…';
   const gids=Object.keys(cart).filter(id=>findItem(id)&&grpOf(findItem(id))===curGrp),cold=curGrp==='cold';
-  const items=gids.map(id=>{const p=findItem(id);const f=freeOf(p,cart[id]);const it={product_id:id,name:p.name,seller:p.seller,price:isQ(p)?0:p.price,unit:p.unit,qty:cart[id]};if(isQ(p))it.quote=true;if(p.temp)it.cold=p.temp;if(f){it.free=f;it.promo=p.promo.label;}const st=setsOf(p,cart[id]);if(st){it.promo=p.promo.label;it.bundle={n:p.promo.n,price:p.promo.price,sets:st};}return it;});
+  const items=gids.map(id=>{const p=findItem(id);const f=freeOf(p,cart[id]);const it={product_id:id,name:p.name,seller:p.seller,price:isQ(p)?0:p.price,unit:p.unit,qty:cart[id]};if(isQ(p))it.quote=true;if(p.temp)it.cold=p.temp;if(f){it.free=f;it.promo=p.promo.label;if(p.promo.perk)it.perk=p.promo.perk;}const st=setsOf(p,cart[id]);if(st){it.promo=p.promo.label;it.bundle={n:p.promo.n,price:p.promo.price,sets:st};}return it;});
   const total=gids.reduce((a,id)=>a+lineTotal(findItem(id),cart[id]),0);let no='IMC15-'+String(Date.now()).slice(-6)+(cold?'-C':'');
   const sa=seatSel?seatTxt(seatSel.a,1):'',sb=seatSel?seatTxt(seatSel.b,1):'';const unitRec=g('f-unit')+(seatSel?'｜'+(sa===sb?sa:'午場 '+sa+'・晚宴 '+sb):'');
   try{/* 訂單編號萬一和別人撞號（資料庫要求唯一），自動換一個再送，最多 3 次 */
     for(let k=0;;k++){try{await dbInsert('h15_orders',{order_no:no,unit:unitRec,name:g('f-name'),tel:g('f-tel'),addr:g('f-addr'),items:items,total:total},'return=minimal');break;}catch(e1){const dup=(e1.detail&&e1.detail.code==='23505')||/duplicate key/i.test(String(e1.message||''));if(!dup||k>=2)throw e1;no='IMC15-'+String(100000+Math.floor(Math.random()*900000))+(cold?'-C':'');}}
-    document.getElementById('orderNo').textContent=no+(cold?'（冷藏／冷凍低溫配送單）':'');gids.forEach(id=>delete cart[id]);
+    document.getElementById('orderNo').textContent=no+(cold?'（冷藏／冷凍低溫配送單）':'');{const pkn=items.filter(i=>i.perk).map(i=>i.name);const dp=document.getElementById('donePerk');dp.textContent=pkn.length?'活動優惠（'+pkn.join('、')+'）：免運宅配、貨到付款，收到商品時再付款。':'';dp.style.display=pkn.length?'block':'none';}gids.forEach(id=>delete cart[id]);
     const left=Object.keys(cart).filter(id=>findItem(id)),more=document.getElementById('doneMore');
     if(left.length){curGrp=grpOf(findItem(left[0]));more.style.display='block';more.textContent='還有一張「'+GN[curGrp]+'」訂單尚未送出——收件資料已幫您保留，請再按一次下方的「送出訂單」。';renderCart();document.getElementById('done').style.display='block';document.getElementById('done').scrollIntoView({behavior:'smooth',block:'nearest'});}
     else{more.style.display='none';venue=false;curGrp='amb';renderCart();document.getElementById('done').style.display='block';e.target.reset();seatSel=null;unitAuto=false;document.getElementById('seatInfo').style.display='none';}}
