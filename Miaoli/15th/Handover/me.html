@@ -4,10 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>我的活動頁｜苗栗IMC 第15屆</title>
-<script src="i18n.js?v=23"></script>
+<script src="i18n.js?v=24"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=5">
 <script src="db.js?v=1"></script>
+<script src="who.js?v=1"></script>
 <style>
 body{background:#F7F3EC}
 .app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:#F7F3EC;box-shadow:0 0 40px rgba(43,29,10,.08)}
@@ -44,10 +45,12 @@ main{padding:14px 14px 100px;display:flex;flex-direction:column;gap:14px;flex:1}
     <section class="card gold" id="login">
       <div class="serif" style="font-size:20px;font-weight:700;color:var(--dark)">先告訴我們您是誰</div>
       <div class="note">輸入姓名任一個字就會出現，點一下進入；選一次就記住。</div>
-      <input class="in" id="l-q" placeholder="輸入姓名，例：林、秀英" autocomplete="off" inputmode="text" style="font-size:20px;min-height:54px">
-      <div id="l-units" style="display:flex;flex-wrap:wrap;gap:6px"></div>
-      <div id="l-list" style="display:flex;flex-direction:column;gap:6px"></div>
+      <input class="in" id="l-q" placeholder="輸入姓名，例：林、秀英" autocomplete="off" inputmode="text" enterkeyhint="search" style="font-size:20px;min-height:54px">
+      <div id="l-list" class="pk-res"></div>
+      <div id="l-confirm" style="display:none"></div>
       <div class="note" id="l-hint">找不到自己？請洽報到處，或請承辦團隊協助。</div>
+      <div class="note">不確定怎麼打？改選社別：</div>
+      <div id="l-units" style="display:flex;flex-wrap:wrap;gap:6px"></div>
     </section>
 
     <div id="tabs" style="display:none;flex-direction:column;gap:14px">
@@ -59,7 +62,7 @@ main{padding:14px 14px 100px;display:flex;flex-direction:column;gap:14px;flex:1}
       </section>
       <div style="display:flex;gap:8px"><button type="button" class="quick on" id="bLunch" onclick="setSess('lunch')">午場</button><button type="button" class="quick" id="bDinner" onclick="setSess('dinner')">晚宴</button><a href="seat.html" id="seatLink" class="quick" style="margin-left:auto;display:inline-flex;align-items:center;text-decoration:none">看平面圖 ›</a></div>
       <section class="card gold"><div style="display:flex;align-items:center;gap:8px"><span class="tag tag-dark" id="nReq">0</span><div class="serif" style="font-size:19px;font-weight:700;color:var(--dark)">今天有人等著認識您</div><button type="button" class="btn btn-line sm" style="margin-left:auto" onclick="go('meet')">去看 ›</button></div><div style="font-size:14px;color:var(--muted2)" id="reqSum">填了許願、也有社友對您有興趣後，這裡會列出來。</div></section>
-      <section class="card"><div style="display:flex;align-items:center;gap:8px"><div class="serif" style="font-size:19px;font-weight:700;color:var(--dark)" id="unitTitle">我們社今天來了</div></div><div id="unitList" style="display:flex;flex-wrap:wrap;gap:6px"></div></section>
+      <section class="card" id="unitCard"><div style="display:flex;align-items:center;gap:8px"><div class="serif" style="font-size:19px;font-weight:700;color:var(--dark)" id="unitTitle"></div></div><div id="unitList" style="display:flex;flex-wrap:wrap;gap:6px"></div></section>
       <section class="card" style="background:linear-gradient(135deg,#fff,var(--cream2))">
         <div class="serif" style="font-size:19px;font-weight:700;color:var(--dark)">30 秒填許願，活動前就幫您配好對</div>
         <div class="note">點標籤就好，不用打字。</div>
@@ -125,28 +128,41 @@ function init(){
   const lq=document.getElementById('l-q'), lunits=document.getElementById('l-units'), llist=document.getElementById('l-list');
   let lUnit='';
   lunits.innerHTML=['全部',...units].map(u=>'<button type="button" class="quick'+(u==='全部'?' on':'')+'" data-u="'+(u==='全部'?'':esc(u))+'">'+esc(u)+'</button>').join('');
-  lunits.querySelectorAll('button').forEach(b=>b.onclick=()=>{lUnit=b.dataset.u;lunits.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));renderLogin();});
+  lunits.querySelectorAll('button').forEach(b=>b.onclick=()=>{lUnit=b.dataset.u;lunits.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));renderLogin();llist.scrollIntoView({block:'start',behavior:'smooth'});});
   lq.addEventListener('input',renderLogin);
   function renderLogin(){const q=lq.value.trim();
-    const hits=(q===''&&lUnit==='')?[]:R.filter(p=>(lUnit===''||p.unit===lUnit)&&(q===''||p.name.includes(q))).slice(0,30);
-    llist.innerHTML=hits.map(p=>'<button type="button" class="btn" style="justify-content:flex-start;gap:12px;background:#fff;border:2px solid var(--line2);color:var(--dark);min-height:52px;padding:0 14px;text-align:left" onclick="pickMe('+p.id+')"><span style="font-weight:700;font-size:18px;white-space:nowrap;flex:none">'+esc(p.name)+'</span><span class="note" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">'+esc(p.unit)+(p.title?'・'+esc(p.title):'')+'</span><span style="margin-left:auto;color:var(--gold);flex:none">›</span></button>').join('')
-      +((q!==''||lUnit!=='')&&hits.length===0?'<div class="note" style="padding:8px 4px;color:#8A3B1F">找不到，試試只打一個字，或改用社別篩選</div>':'');
+    const all=(q===''&&lUnit==='')?[]:R.filter(p=>(lUnit===''||p.unit===lUnit)&&(q===''||p.name.includes(q)));
+    const cap=q===''?80:30,hits=all.slice(0,cap);
+    llist.innerHTML=hits.length?('<div class="pk-head"><span class="arr">▼</span><span>'+(hits.length===1?'找到了！請點下面這一位，才算選好':'找到 '+all.length+' 位，請點選您的名字，才算選好')+'</span></div>'
+        +hits.map(p=>'<button type="button" class="pk-btn" onclick="pickMe('+p.id+')"><span class="nm">'+esc(p.name)+'</span><span class="sb">'+esc(p.unit)+(p.title?'・'+esc(p.title):'')+'</span><span class="go">點我進入 ›</span></button>').join('')
+        +(all.length>cap?'<div class="pk-more">只顯示前 '+cap+' 位，請多打一個字縮小範圍</div>':''))
+      :((q!==''||lUnit!=='')?'<div class="pk-none">找不到，試試只打一個字，或改用下方社別篩選</div>':'');
     document.getElementById('l-hint').style.display=(q===''&&lUnit==='')?'block':'none';}
+  lq.addEventListener('keydown',e=>{if(e.key!=='Enter')return;e.preventDefault();const bs=llist.querySelectorAll('.pk-btn');if(bs.length===1)bs[0].click();else if(bs.length){lq.blur();bs[0].scrollIntoView({block:'center',behavior:'smooth'});}});
   window.renderLogin=renderLogin;
-  window.pickMe=id=>{try{localStorage.setItem('imc15_me',String(id));}catch(e){}enter(id);};
+  window.pickMe=id=>{const p=R.find(x=>x.id===id);if(!p)return;const cb=document.getElementById('l-confirm');
+    llist.style.display='none';cb.style.display='block';
+    WHO.confirm(cb,p,q=>{cb.style.display='none';cb.innerHTML='';llist.style.display='';known=q.id;WHO.set(q.id);enter(q.id);},()=>{cb.style.display='none';cb.innerHTML='';llist.style.display='';lq.focus();});};
   const inds=[...new Set(R.map(p=>p.ind).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'zh-Hant'));
   document.getElementById('unitSel').innerHTML='<option value="">全部單位</option>'+units.map(u=>'<option>'+esc(u)+'</option>').join('');
   document.getElementById('bizSel').innerHTML='<option value="">全部產業</option>'+inds.map(b=>'<option>'+esc(b)+'</option>').join('');
   document.getElementById('unitSel').onchange=e=>{unitF=e.target.value;renderFind();};document.getElementById('bizSel').onchange=e=>{bizF=e.target.value;renderFind();};
   document.getElementById('q').addEventListener('input',renderFind);
-  const saved=Number((()=>{try{return localStorage.getItem('imc15_me');}catch(e){return null;}})()||0);
+  const saved=WHO.get();known=saved;
   const qid=Number(new URLSearchParams(location.search).get('id')||0);
   if(qid&&R.find(p=>p.id===qid))enter(qid); else if(saved&&R.find(p=>p.id===saved))enter(saved); else renderId();
   tick();setInterval(tick,1000);
 }
-function renderId(){document.getElementById('idbox').innerHTML=me?'<div class="av" style="border-color:'+(COLORS[me.grp]||['#fff'])[0]+'">'+esc(me.name.slice(0,1))+'</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:18px;color:#fff">'+esc(me.name)+' <span style="font-size:13px;font-weight:400;color:#E2BD63">'+esc(me.unit)+(me.ind?'・'+esc(me.ind)+'<span title="'+'由 AI 依公司名稱判斷，可能有誤，請見諒。'+'">＊</span>':'')+'</span></div><div style="font-size:13px;color:#D9C9A5">'+(me.ind?'＊產業別'+'由 AI 依公司名稱判斷，可能有誤，請見諒。'+'<br>':'')+(me.lunch?'午場 '+me.lunch+' 桌':(me.pend[0]?'午場座位安排中':'午場不參加'))+'・'+(me.dinner?'晚宴 '+me.dinner+' 桌':(me.pend[1]?'晚宴座位安排中':'晚宴不參加'))+'</div></div><button type="button" class="btn sm" style="background:rgba(255,255,255,.14);color:#F8E7B8" onclick="logout()">不是我</button>'
+function renderId(){document.getElementById('idbox').innerHTML=me?'<div class="av" style="border-color:'+(COLORS[me.grp]||['#fff'])[0]+'">'+esc(me.name.slice(0,1))+'</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:18px;color:#fff">'+esc(me.name)+' <span style="font-size:13px;font-weight:400;color:#E2BD63">'+esc(me.unit)+(me.ind?'・'+esc(me.ind)+'<span title="'+'由 AI 依公司名稱判斷，可能有誤，請見諒。'+'">＊</span>':'')+'</span></div><div style="font-size:13px;color:#D9C9A5">'+(me.ind?'＊產業別'+'由 AI 依公司名稱判斷，可能有誤，請見諒。'+'<br>':'')+(me.lunch?'午場 '+me.lunch+' 桌':(me.pend[0]?'午場座位安排中':'午場不參加'))+'・'+(me.dinner?'晚宴 '+me.dinner+' 桌':(me.pend[1]?'晚宴座位安排中':'晚宴不參加'))+'</div></div><button type="button" class="btn sm" style="background:rgba(255,255,255,.14);color:#F8E7B8" onclick="askLogout()">不是我？換人</button>'
  :'<div class="av">？</div><div style="flex:1"><div style="font-weight:700;color:#fff">歡迎蒞臨</div><div style="font-size:13px;color:#D9C9A5">請先在下方輸入您的姓名</div></div>';}
 function enter(id){resetState();me=R.find(p=>p.id===id);renderId();document.getElementById('login').style.display='none';document.getElementById('tabs').style.display='flex';document.getElementById('tabbar').style.display='flex';renderMe();renderFind();renderMeet();loadMyWish();loadSocial();{const h=location.hash.slice(1);if(['me','find','meet','shop'].indexOf(h)>=0)go(h);}}
+let known=0;
+/* 換人：已有許願／交流紀錄時，先問要不要一併撤回（選錯人時用） */
+function askLogout(){WHO.switchOut(me,()=>{known=0;logout();});}
+/* 在別頁（座位查詢／商務許願／商品館）換人或選人後，回到這一頁自動跟上 */
+function syncWho(){if(!R.length)return;const cur=WHO.get();if(cur===known)return;known=cur;
+  if(cur&&R.find(p=>p.id===cur)){if(!me||me.id!==cur)enter(cur);}else if(me){logout();}}
+window.addEventListener('pageshow',syncWho);window.addEventListener('storage',e=>{if(e.key==='imc15_me')syncWho();});document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncWho();});
 function logout(){me=null;resetState();try{localStorage.removeItem('imc15_me');}catch(e){}renderId();document.getElementById('login').style.display='flex';document.getElementById('l-q').value='';renderLogin();document.getElementById('tabs').style.display='none';document.getElementById('tabbar').style.display='none';}
 function go(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.id==='t-'+t));document.querySelectorAll('#tabbar button').forEach((b,i)=>b.classList.toggle('on',['me','find','meet','shop'][i]===t));window.scrollTo({top:0});}
 function setSess(s){sess=s;document.getElementById('bLunch').classList.toggle('on',s==='lunch');document.getElementById('bDinner').classList.toggle('on',s==='dinner');renderMe();}
@@ -154,8 +170,8 @@ function renderMe(){if(me===null)return;const t=tableName(me,sess);document.getE
   document.getElementById('sessLbl').textContent=sess==='lunch'?'午場 13:00・千八會館':'晚宴 18:00・濕婆神之夜';
   document.getElementById('tblNo').textContent=t||'—';document.getElementById('tblName').textContent=t?'第 '+t+' 桌':(stnName(me,sess)||(me.pend[sess==='lunch'?0:1]?'座位安排中':'不參加此場'));
   const mates=R.filter(p=>p.id!==me.id&&tableName(p,sess)===t&&t);const same=mates.filter(p=>p.unit===me.unit).length;
-  document.getElementById('tblMates').textContent=t?('同桌 '+mates.length+' 人'+(same?'・同社 '+same+' 位':'')):'';
-  const us=R.filter(p=>p.unit===me.unit&&p.id!==me.id);document.getElementById('unitTitle').textContent='我們社今天來了 '+(us.length+1)+' 位（'+me.unit+'）';
+  document.getElementById('tblMates').textContent=t?('同桌 '+mates.length+' 人'+(same?'・'+(/社$/.test(me.unit)?'同社':'同為'+me.unit)+' '+same+' 位':'')):'';
+  const us=R.filter(p=>p.unit===me.unit&&p.id!==me.id);document.getElementById('unitTitle').textContent=/來賓$/.test(me.unit)?'今天的'+me.unit+'共 '+(us.length+1)+' 位':me.unit+'今天來了 '+(us.length+1)+' 位';document.getElementById('unitCard').style.display=me.unit==='未分類'?'none':'';
   document.getElementById('unitList').innerHTML=us.slice(0,8).map(p=>'<button type="button" class="tag" style="background:var(--cream);color:var(--dark2);border:1px solid var(--line);font:inherit;font-size:inherit;cursor:pointer" aria-label="看 '+esc(p.name)+' 的資料" onclick="openDetail('+p.id+')">'+esc(p.name)+(p.lunch?'・'+p.lunch+' 桌':'')+'</button>').join('')+(us.length>8?'<button type="button" class="quick" style="min-height:32px;font-size:13px" onclick="setUnitF(\''+esc(me.unit)+'\');go(\'find\')">全部 '+(us.length+1)+' 位 ›</button>':'');
   const mk=(list,key,el)=>document.getElementById(el).innerHTML=list.map(n=>'<button type="button" class="quick'+(wish[key][n]?' on':'')+'" onclick="tg(\''+key+'\',\''+n+'\')">'+n+'</button>').join('');
   mk(['食材供應','場地','人脈介紹','專業諮詢','通路','資金'],'have','haveTags');mk(['行銷','採購窗口','合作通路','人才','法律財務','異業合作'],'want','wantTags');
