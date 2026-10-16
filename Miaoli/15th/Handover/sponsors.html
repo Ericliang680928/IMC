@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>年會贊助資訊｜苗栗IMC 第15屆</title>
-<script src="i18n.js?v=16"></script>
+<script src="i18n.js?v=17"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="style.css?v=3">
 <script src="db.js?v=1"></script>
@@ -142,8 +142,8 @@ const TH_GIFT=[
 ];
 const TH_DRINK=[
  {item:'夏綠蒂甜品 350 份',who:[['第一副社長','姜文玉','夏綠蒂雪花冰']]},
- {item:'滿福果仁辣醬 40 罐（每桌 1 罐）',who:[['第十二屆社長／常務監事','梁群儒','米樂家國際貿易有限公司'],['社友','張廖欣儀','米樂家國際貿易有限公司']]},
  {item:'紅酒 46 瓶',who:[['第十屆社長','林振鋒','賀喜能源股份有限公司']]},
+ {item:'滿福果仁辣醬 35 罐',who:[['第十二屆社長／常務監事','梁群儒','米樂家國際貿易有限公司'],['社友','張廖欣儀','米樂家國際貿易有限公司']]},
  {item:'薑母糖、辣豆干',who:[['資訊發展理事','吳文卿','南山人壽保險股份有限公司']]},
  {item:'小林煎餅（分享包）42 包',who:[['監事','何品翬','和捷金屬工業']]},
  {item:'綜合橄欖蜜餞 50 包',who:[['候補監事','陳月嬌','天文運輸有限公司']]},
@@ -151,13 +151,16 @@ const TH_DRINK=[
  {item:'黑潤原露 80 瓶（每桌 2 瓶）',who:[['社友','黃乾斌','金稼農創科技股份有限公司']]},
  {item:'紅棗露酒 40 瓶（每桌 1 瓶）',who:[['社友','黃坤盛','樂活小農場']]},
  {item:'草本茶 1500cc 茶飲（每桌 1 瓶）',who:[['社友','彭琮筌','加貝賀美工文具']]},
- {item:'鮮梨果丁汁 38 瓶、胖胖梨禮盒 10 盒',who:[['社友','徐詩淳','胖胖梨品牌']]}
+ {item:'鮮梨果丁汁 38 瓶、胖胖梨禮盒 10 盒',who:[['社友','徐詩淳','胖胖梨品牌']]},
+ {item:'10/17 工作人員手工三明治 100 個',who:[['社友','涂瑞宜','菊磨坊']]}
 ];
 const TH_SHOW=[
  {item:'蘇維拉樂團演出節目',who:[['顧問','蘇盛泉','蘇維拉莊園']]},
  {item:'星月寶萊舞團演出節目、音響設備',who:[['社長','林浿安','EX-亞洲劇團']]},
  {item:'拍照背板＋大圖輸出',who:[['秘書長','趙震謙','順立印刷']]},
  {item:'投影設備一式（活動當天）',who:[['社友','徐志勳','贏幕科技股份有限公司']]},
+ {item:'遊覽車接駁',who:[['第九屆社長','林鎂雲','后里薩克斯風玩家館']]},
+ {item:'鮮花一束',who:[['','黃淑惠','東京禮品']]},
  {item:'排桌座位系統＋交接活動網頁',who:[['第十二屆社長／常務監事','梁群儒','米樂家國際貿易有限公司'],['社友','張廖欣儀','米樂家國際貿易有限公司']]}
 ];
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -171,7 +174,7 @@ function renderThanks(){
   let h='<h3 class="serif">特刊廣告與贊助</h3><div class="note" style="margin-bottom:4px">特此感謝 IMC 優質廠商鼎力贊助年會特刊印製</div>';
   TH_AD.forEach(g=>{h+='<div class="sub">'+esc(g[0])+'</div>'+g[1].map(r=>'<div class="r"><div class="l">'+esc(r[0])+'　'+esc(r[1])+'</div><div>'+(r[2]?esc(r[2]):'<span class="note">—</span>')+'</div></div>').join('');});
   document.getElementById('th-ad').innerHTML=h;
-  const blk=(id,title,note,arr)=>{document.getElementById(id).innerHTML='<h3 class="serif">'+title+'</h3>'+(note?'<div class="note" style="margin-bottom:4px">'+note+'</div>':'')+arr.map(r=>'<div class="r"><div class="it">'+esc(r.item)+'</div><div class="who">'+r.who.map(p=>'<div><b>'+esc(p[1])+'</b><span class="rl">'+esc(p[0])+'</span>'+(p[2]?'<span class="co">'+esc(p[2])+'</span>':'')+'</div>').join('')+'</div></div>').join('');};
+  const blk=(id,title,note,arr)=>{document.getElementById(id).innerHTML='<h3 class="serif">'+title+'</h3>'+(note?'<div class="note" style="margin-bottom:4px">'+note+'</div>':'')+arr.map(r=>'<div class="r"><div class="it">'+esc(r.item)+'</div><div class="who">'+r.who.map(p=>'<div><b>'+esc(p[1])+'</b>'+(p[0]?'<span class="rl">'+esc(p[0])+'</span>':'')+(p[2]?'<span class="co">'+esc(p[2])+'</span>':'')+'</div>').join('')+'</div></div>').join('');};
   blk('th-gift','年會伴手禮','感謝下列愛心爆滿的大德鼎力贊助年會伴手禮',TH_GIFT);
   blk('th-drink','飲品／點心','',TH_DRINK);
   blk('th-show','節目／設備','',TH_SHOW);
