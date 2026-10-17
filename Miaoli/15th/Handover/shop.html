@@ -152,11 +152,15 @@ const STATIC=[
   desc:'純素、香麻小辣，淨重 250 公克。內含松子、腰果、杏仁、花生、白芝麻、葵瓜子，拌麵、拌飯、拌豆腐、涼青菜、火鍋沾醬都合適。過敏原：含堅果類、花生、芝麻、大豆、含麩質穀物，詳見瓶身標示。',
   imgs:['assets/shop/mf1.jpg','assets/shop/mf2.jpg','assets/shop/mf3.jpg','assets/shop/mf4.jpg','assets/shop/mf5.jpg'],
   promo:{buy:4,free:1,perk:'免運宅配＋貨到付款',label:'活動價：凡在苗栗IMC交接會場下訂，買 4 罐送 1 罐，可免運宅配＋貨到付款'}},
+ {id:'pp-yanwo',cat:'伴手禮',name:'胖胖梨｜燕窩潤梨',seller:'徐詩淳社友・胖胖梨',unit:'組',price:1499,ar:'1/1',
+  desc:'燕窩潤梨 100ml（固形物 50%）。成份：燕窩・水梨・紅棗。5 入 1,499 元。',
+  imgs:['assets/shop/pp-yw1.jpg','assets/shop/pp-yw2.jpg'],
+  opts:[{k:'5',label:'100ml・5 入',price:1499,unit:'組'}]}
 ].map(x=>Object.assign({color:'#E8D9B8'},x));
 let PRODUCTS=[];
 const isQ=p=>p.price==null;
 function findItem(id){for(const p of PRODUCTS){if(p.opts){for(const o of p.opts){if(p.id+'-'+o.k===id)return {id:id,name:p.name+'（'+o.label+'）',seller:p.seller,price:o.price,unit:o.unit,promo:null,temp:p.temp||''};}}else if(p.id===id)return p;}return null;}
-const CATS=['全部','餐桌點心'];
+const CATS=['全部','伴手禮','餐桌點心'];
 /* 資料庫商品沒有填照片時的備用照片（以「賣家|品名」對應；資料庫有填 img 時以資料庫為準） */
 const IMG_BY_NAME={'姜文玉|嫩仙草凍':['assets/shop/xc1.jpg']};
 /* 資料庫商品的賣家官網連結（以「賣家|品名」對應） */
