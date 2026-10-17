@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>商務交流許願牆｜苗栗IMC 第15屆</title>
-<script src="i18n.js?v=27"></script>
+<script src="i18n.js?v=28"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="style.css?v=5">
 <script src="db.js?v=1"></script>
-<script src="who.js?v=1"></script>
+<script src="who.js?v=2"></script>
 <style>
 .wrap2{display:grid;grid-template-columns:1fr 1.1fr;gap:28px;align-items:start}
 .chip{display:inline-flex;align-items:center;gap:6px;background:var(--dark);color:#F8E7B8;padding:6px 8px 6px 14px;border-radius:999px;font-size:15px;font-weight:600}
@@ -111,13 +111,13 @@ function resetForm(){['w-biz','w-have','w-want','w-line','w-meet'].forEach(id=>{
 /* typed＝選名字當下，欄位裡「使用者已經打的字」；已打的不被舊資料蓋掉 */
 async function loadMine(p,typed){typed=typed||{};try{const r=await dbGet('h15_wishes?person_id=eq.'+p.id+'&select=biz,have,want,meet_ids,line_id');if(!ME||ME.id!==p.id)return;if(r.length){const x=r[0];const f=(id,v)=>{if(!typed[id]&&v)document.getElementById(id).value=v;};f('w-biz',x.biz);f('w-have',x.have);f('w-want',x.want);f('w-line',x.line_id);picked=[...new Set([...picked,...(x.meet_ids||[]).filter(id=>ROSTER.find(y=>y.id===id))])];renderPicked();}}catch(e){}}
 function setWho(p){if(ME&&ME.id!==p.id)resetForm();const typed={};['w-biz','w-have','w-want','w-line'].forEach(id=>{typed[id]=document.getElementById(id).value.trim();});ME=p;loadMine(p,typed);document.getElementById('whoMsg').style.display='none';loadSent().then(renderWall);document.getElementById('w-unit').value=p.unit;document.getElementById('w-name').value=p.name;
-  document.getElementById('whoAv').textContent=p.name.slice(0,1);document.getElementById('whoName').textContent=p.name;document.getElementById('whoSub').textContent=p.unit+(p.role?'・'+p.role:'')+(p.company?'・'+p.company:'');
+  document.getElementById('whoAv').textContent=p.name.slice(0,1);document.getElementById('whoName').innerHTML=esc(p.name)+LV(p);document.getElementById('whoSub').textContent=p.unit+(p.role?'・'+p.role:'')+(p.company?'・'+p.company:'');
   const biz=document.getElementById('w-biz');if(p.ind&&biz.value==='')biz.value=p.ind;
   document.getElementById('whoCard').style.display='flex';document.getElementById('whoPick').style.display='none';WHO.set(p.id);lockForm();}
 function clearWho(nf){ME=null;SENT=new Set();resetForm();renderWall();document.getElementById('w-unit').value='';document.getElementById('w-name').value='';document.getElementById('whoCard').style.display='none';document.getElementById('whoPick').style.display='flex';WHO.clear();lockForm();if(!nf)document.getElementById('w-q').focus();}
 document.getElementById('w-q').addEventListener('input',e=>{const q=e.target.value.trim();const box=document.getElementById('w-qlist');document.getElementById('whoMsg').style.display='none';if(q===''){box.innerHTML='';return;}
   const hits=ROSTER.filter(p=>p.name.includes(q)).slice(0,20);
-  box.innerHTML=hits.length?'<div class="pk-head"><span class="arr">▼</span><span>'+(hits.length===1?'找到了！請點下面這一位，才算選好':'找到 '+hits.length+' 位，請點選您的名字，才算選好')+'</span></div>'+hits.map(p=>'<button type="button" class="pk-btn" onclick="askWho('+p.id+')"><span class="nm">'+esc(p.name)+'</span><span class="sb">'+esc(p.unit)+(p.role?'・'+esc(p.role):'')+'</span><span class="go">就是我 ›</span></button>').join(''):'<div class="pk-none">找不到，試試只打一個字</div>';});
+  box.innerHTML=hits.length?'<div class="pk-head"><span class="arr">▼</span><span>'+(hits.length===1?'找到了！請點下面這一位，才算選好':'找到 '+hits.length+' 位，請點選您的名字，才算選好')+'</span></div>'+hits.map(p=>'<button type="button" class="pk-btn" onclick="askWho('+p.id+')"><span class="nm">'+esc(p.name)+LV(p)+'</span><span class="sb">'+esc(p.unit)+(p.role?'・'+esc(p.role):'')+'</span><span class="go">就是我 ›</span></button>').join(''):'<div class="pk-none">找不到，試試只打一個字</div>';});
 /* 點了名字 → 先確認「您是這一位嗎？」，避免點錯、同名選錯 */
 function askWho(id){const p=ROSTER.find(x=>x.id===id);if(!p)return;const cb=document.getElementById('w-confirm'),ql=document.getElementById('w-qlist'),q=document.getElementById('w-q');
   ql.style.display='none';cb.style.display='block';
@@ -136,14 +136,14 @@ meet.addEventListener('input',()=>{const q=meet.value.trim();const box=document.
   if(q===''){box.style.display='none';no.style.display='none';return;}
   const rs=ROSTER.filter(r=>picked.indexOf(r.id)<0&&(r.name+r.unit+(r.ind||'')+(r.grp||'')).includes(q)).slice(0,8);
   box.style.display=rs.length?'flex':'none';no.style.display=rs.length?'none':'block';
-  box.innerHTML=rs.map(r=>'<button type="button" onclick="pick('+r.id+')"><span style="font-weight:700;color:var(--dark)">'+esc(r.name)+'</span><span class="note">'+esc(r.unit)+'</span><span class="tag tag-gold" style="margin-left:auto">'+esc(r.ind||'')+'</span><span class="note" style="white-space:nowrap">'+(r.lunch?'午 '+r.lunch+' 桌':'')+'</span></button>').join('');});
+  box.innerHTML=rs.map(r=>'<button type="button" onclick="pick('+r.id+')"><span style="font-weight:700;color:var(--dark)">'+esc(r.name)+LV(r)+'</span><span class="note">'+esc(r.unit)+'</span><span class="tag tag-gold" style="margin-left:auto">'+esc(r.ind||'')+'</span><span class="note" style="white-space:nowrap">'+(r.lunch?'午 '+r.lunch+' 桌':'')+'</span></button>').join('');});
 function pick(id){picked.push(id);meet.value='';document.getElementById('results').style.display='none';renderPicked();}
 function unpick(id){picked=picked.filter(x=>x!==id);renderPicked();}
-function renderPicked(){document.getElementById('picked').innerHTML=picked.map(id=>{const r=ROSTER.find(x=>x.id===id);return '<span class="chip">'+esc(r.name)+'<small>'+esc(r.unit)+'</small><button type="button" aria-label="移除" onclick="unpick('+id+')">×</button></span>';}).join('');document.getElementById('nPicked').textContent=picked.length;}
+function renderPicked(){document.getElementById('picked').innerHTML=picked.map(id=>{const r=ROSTER.find(x=>x.id===id);return '<span class="chip">'+esc(r.name)+LV(r)+'<small>'+esc(r.unit)+'</small><button type="button" aria-label="移除" onclick="unpick('+id+')">×</button></span>';}).join('');document.getElementById('nPicked').textContent=picked.length;}
 function renderWall(){const bizs=['全部',...new Set(LIST.map(w=>w.biz))];
   const fl=document.getElementById('filters');fl.innerHTML=bizs.map((b,i)=>'<button type="button" class="pill sm'+(b===filter?' on':'')+'" data-i="'+i+'">'+esc(b)+'</button>').join('');fl.onclick=e=>{const t=e.target.closest('button[data-i]');if(t){filter=bizs[+t.dataset.i];renderWall();}};
   document.getElementById('count').textContent=LIST.length;
-  document.getElementById('wall').innerHTML=LIST.length===0?'<div class="note">還沒有人許願，成為第一位吧。</div>':LIST.filter(w=>filter==='全部'||w.biz===filter).map(w=>'<article class="card wish"><div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px"><span class="serif" style="font-size:20px;font-weight:700;color:var(--dark)">'+esc(w.name)+'</span><span class="note">'+esc(w.unit)+'</span><span class="tag tag-gold">'+esc(w.biz)+'</span></div><div style="display:flex;gap:10px"><span class="tag tag-green" style="flex:none">我有</span><span>'+esc(w.have)+'</span></div><div style="display:flex;gap:10px"><span class="tag tag-rose" style="flex:none">想找</span><span>'+esc(w.want)+'</span></div>'+(w.match?'<div style="background:var(--cream);border-radius:10px;padding:10px 14px;font-size:15px;color:var(--dark2)">交流建議：'+esc(w.match)+'</div>':'')+'<div>'+inviteBtn(w)+'</div></article>').join('');}
+  document.getElementById('wall').innerHTML=LIST.length===0?'<div class="note">還沒有人許願，成為第一位吧。</div>':LIST.filter(w=>filter==='全部'||w.biz===filter).map(w=>'<article class="card wish"><div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px"><span class="serif" style="font-size:20px;font-weight:700;color:var(--dark)">'+esc(w.name)+LV(ROSTER.find(x=>x.id===w.pid))+'</span><span class="note">'+esc(w.unit)+'</span><span class="tag tag-gold">'+esc(w.biz)+'</span></div><div style="display:flex;gap:10px"><span class="tag tag-green" style="flex:none">我有</span><span>'+esc(w.have)+'</span></div><div style="display:flex;gap:10px"><span class="tag tag-rose" style="flex:none">想找</span><span>'+esc(w.want)+'</span></div>'+(w.match?'<div style="background:var(--cream);border-radius:10px;padding:10px 14px;font-size:15px;color:var(--dark2)">交流建議：'+esc(w.match)+'</div>':'')+'<div>'+inviteBtn(w)+'</div></article>').join('');}
 document.getElementById('form').addEventListener('submit',async e=>{e.preventDefault();const g=id=>document.getElementById(id).value.trim();
   /* 只打了全名、沒點選單 → 名字完全相符且唯一就直接當作是本人，已填的內容保留 */
   if(g('w-name')===''){const q=g('w-q');const ex=q?ROSTER.filter(p=>p.name===q):[];if(ex.length===1)setWho(ex[0]);}

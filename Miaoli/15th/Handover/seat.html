@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light"><meta name="theme-color" content="#F1EFEB">
 <title>座位查詢｜苗栗IMC 第15屆</title>
-<script src="i18n.js?v=27"></script>
+<script src="i18n.js?v=28"></script>
 <style>
 :root{--pearl1:#F6F4F1;--pearl2:#ECEAE5;--gold:#C5A366;--gold2:#DCB481;--gold3:#F8E2B9;--ink:#3D3D3D;--ink2:#535353;--blue:#1C2C60;--line:#DDD6C8;--card:#FFFFFFcc;--pearl3:#F0E9D9;--sb1:#F7F3E8f2;--sb2:#F2EBDBd9;--line2:#E3D9C0}
 body.p0{--pearl1:#F9F5EB;--pearl2:#F3ECDD;--pearl3:#F0E9D9}
@@ -168,7 +168,7 @@ function seatBox(p,si){const s=p.s[si],lab=SC[si][1],cl=' s'+si+(si===NOW?' cur'
  if(s[0]===2)return '<div class="seat no'+(si===NOW?' cur':'')+'"><i>'+lab+'</i><strong>座位安排中</strong><em>請洽現場服務台</em></div>';
  const t=D.sc[SC[si][0]].tables[s[1]];
  return '<div class="seat'+cl+'"><i>'+lab+'</i><strong>'+esc(tl(si,t))+'</strong>'+(t.no!=null&&t.k?'<em>'+esc(t.k)+'</em>':'')+'</div>';}
-function card(i){const p=D.ps[i];return '<button class="card" data-i="'+i+'"><div class="who"><b>'+esc(p.n)+'</b><span>'+esc([p.u,p.t].filter(Boolean).join('・'))+'</span>'+((p.c||p.o)?'<span class="co">'+esc([p.c,p.o].filter(Boolean).join('・'))+'</span>':'')+((window.SHUTTLE&&SHUTTLE.find(p.n,p.u))?'<span style="color:#8A4B00;font-weight:700;font-size:12.5px">🚌 有登記高鐵接駁</span>':'')+'</div><div class="seats">'+seatBox(p,0)+seatBox(p,1)+'</div></button>';}
+function card(i){const p=D.ps[i];return '<button class="card" data-i="'+i+'"><div class="who"><b>'+esc(p.n)+LV(p)+'</b><span>'+esc([p.u,p.t].filter(Boolean).join('・'))+'</span>'+((p.c||p.o)?'<span class="co">'+esc([p.c,p.o].filter(Boolean).join('・'))+'</span>':'')+((window.SHUTTLE&&SHUTTLE.find(p.n,p.u))?'<span style="color:#8A4B00;font-weight:700;font-size:12.5px">🚌 有登記高鐵接駁</span>':'')+'</div><div class="seats">'+seatBox(p,0)+seatBox(p,1)+'</div></button>';}
 let LIM=30;
 function run(reset){ if(reset!==false)LIM=30; const q=norm($('#q').value); $('#x').style.display=q?'block':'none';
  const L=$('#list'); let idx=[];
@@ -200,9 +200,9 @@ function mapSvg(sc,t){const S=D.sc[sc];const full=FULL;let w=S.w,h=S.h,x=0,y=0;
  return '<svg viewBox="'+x+' '+y+' '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg"><image href="'+S.img+'" x="0" y="0" width="'+S.w+'" height="'+S.h+'"/>'+lab+'<circle class="ring" cx="'+t.x+'" cy="'+t.y+'" r="'+(r*1.35)+'" fill="#C5A36633" stroke="#C5A366" stroke-width="'+(full?9:5)+'"/><circle cx="'+t.x+'" cy="'+t.y+'" r="'+(r*1.05)+'" fill="none" stroke="#fff" stroke-width="3"/>'+mine+'</svg>';}
 function recTb(q,si){const s=q.s[si];if(s[0]===1){const t=D.sc[SC[si][0]].tables[s[1]];return '<div class="tb t'+si+'">'+esc(tl(si,t))+(t.no!=null&&t.k?'<em>'+esc(t.k)+'</em>':'')+'</div>';}return '<div class="tb t2">'+(s[0]===2?'座位安排中':'不參加此場')+'</div>';}
 function recWhy(p,q){if(p.a===q.a)return '同業交流，分享經驗';const a=Math.min(p.a,q.a),b=Math.max(p.a,q.a);return D.pr[a+'-'+b]||'跨業互補';}
-function recHtml(p,si){if(!p.r||!p.r.length)return '';return '<h3>建議交流名單</h3><div class="recnote">產業別與建議交流名單由 AI 依公司名稱判斷，可能有誤，請見諒。</div><div class="rec">'+p.r.map(r=>{const q=D.ps[r[0]];return '<button class="rc" data-j="'+r[0]+'"><div class="tx"><b>'+esc(q.n)+'</b><span class="lv lv'+r[1]+'">'+(r[1]===2?'商務強連結':'建議連結')+'</span><small>'+esc(q.c||'')+'（'+esc(D.ind[q.a]||'')+'）</small>'+(q.b?'<small class="biz">營業項目：'+esc(q.b)+'</small>':'')+(q.o?'<small>'+esc(q.o)+'</small>':'')+'<div class="why">'+esc(r[2]||recWhy(p,q))+'</div></div>'+recTb(q,si)+'</button>';}).join('')+'</div>';}
+function recHtml(p,si){if(!p.r||!p.r.length)return '';return '<h3>建議交流名單</h3><div class="recnote">產業別與建議交流名單由 AI 依公司名稱判斷，可能有誤，請見諒。</div><div class="rec">'+p.r.map(r=>{const q=D.ps[r[0]];return '<button class="rc" data-j="'+r[0]+'"><div class="tx"><b>'+esc(q.n)+LV(q)+'</b><span class="lv lv'+r[1]+'">'+(r[1]===2?'商務強連結':'建議連結')+'</span><small>'+esc(q.c||'')+'（'+esc(D.ind[q.a]||'')+'）</small>'+(q.b?'<small class="biz">營業項目：'+esc(q.b)+'</small>':'')+(q.o?'<small>'+esc(q.o)+'</small>':'')+'<div class="why">'+esc(r[2]||recWhy(p,q))+'</div></div>'+recTb(q,si)+'</button>';}).join('')+'</div>';}
 function draw(){const p=D.ps[CUR],sc=SC[SI][0],s=p.s[SI];
- let h='<button class="back" id="bk">‹ 返回</button><h2>'+esc(p.n)+'</h2><div class="sub">'+esc([p.u,p.t].filter(Boolean).join('・'))+'</div>'+((p.c||p.o)?'<div class="sub co">'+esc([p.c,p.o].filter(Boolean).join('・'))+'</div>':'')+(p.a>=0&&D.ind?'<div><span class="indtag">產業別｜'+esc(D.ind[p.a]||'')+'</span><div style="font-size:11.5px;color:var(--ink2);margin-top:4px">由 AI 依公司名稱判斷，可能有誤，請見諒。</div></div>':'');
+ let h='<button class="back" id="bk">‹ 返回</button><h2>'+esc(p.n)+LV(p)+'</h2><div class="sub">'+esc([p.u,p.t].filter(Boolean).join('・'))+'</div>'+((p.c||p.o)?'<div class="sub co">'+esc([p.c,p.o].filter(Boolean).join('・'))+'</div>':'')+(p.a>=0&&D.ind?'<div><span class="indtag">產業別｜'+esc(D.ind[p.a]||'')+'</span><div style="font-size:11.5px;color:var(--ink2);margin-top:4px">由 AI 依公司名稱判斷，可能有誤，請見諒。</div></div>':'');
  h+=(window.SHUTTLE?SHUTTLE.note(SHUTTLE.find(p.n,p.u)):'');
  h+='<div class="tabs">'+SC.map((x,i)=>'<button data-s="'+i+'" class="'+(i===SI?'on t'+i:'')+'">'+x[1]+(i===NOW?'<small>現在</small>':'')+'</button>').join('')+'</div>';
  if(s[0]===0)h+='<div class="big"><div class="nm">您未參加'+SC[SI][1]+'</div></div>';
@@ -210,11 +210,11 @@ function draw(){const p=D.ps[CUR],sc=SC[SI][0],s=p.s[SI];
  else{const t=D.sc[sc].tables[s[1]];
   h+='<div class="big b'+SI+'"><div class="no">'+esc(tl(SI,t))+'</div>'+(t.no!=null&&t.k?'<div class="nm">'+esc(t.k)+'</div>':'')+'</div>';
   h+='<div class="map">'+mapSvg(sc,t)+'<button id="fl">'+(FULL?'放大到座位':'看整個會場')+'</button></div>';
-  h+='<h3>同桌賓客</h3><div class="mates">'+t.m.map(j=>{const q=D.ps[j];return '<button class="mate'+(j===CUR?' me':'')+'" data-j="'+j+'"><span>'+esc(q.n)+'</span><small>'+esc(q.u||'')+'</small></button>';}).join('')+'</div>'+recHtml(p,SI);}
+  h+='<h3>同桌賓客</h3><div class="mates">'+t.m.map(j=>{const q=D.ps[j];return '<button class="mate'+(j===CUR?' me':'')+'" data-j="'+j+'"><span>'+esc(q.n)+LV(q)+'</span><small>'+esc(q.u||'')+'</small></button>';}).join('')+'</div>'+recHtml(p,SI);}
  h+='<div class="foot"><span class="g"></span>創作／版權所有者：苗栗社 梁群儒／張廖欣儀</div>';
  $('#sh').innerHTML=h;
  $('#bk').onclick=()=>history.back();
  $('#sh').querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{SI=+b.dataset.s;FULL=false;draw();});
  const fl=$('#fl');if(fl)fl.onclick=()=>{FULL=!FULL;draw();};
  $('#sh').querySelectorAll('.mate,.rc').forEach(b=>b.onclick=()=>{CUR=+b.dataset.j;draw();$('#sheet').scrollTop=0;});}
-</script><script src="who.js?v=1"></script><script src="seat-me.js?v=3"></script><script src="tabbar.js?v=3"></script></body></html>
+</script><script src="who.js?v=2"></script><script src="seat-me.js?v=4"></script><script src="tabbar.js?v=3"></script></body></html>

@@ -80,7 +80,7 @@
     var id=getMe();
     if(!id){box.innerHTML='';box.style.display='none';return;}
     var i=id-1,p=D.ps[i];
-    box.innerHTML='<div class="mebox"><div class="mh"><span>您好，'+esc(p.n)+'</span><button type="button" id="notme">不是您？換人</button></div>'
+    box.innerHTML='<div class="mebox"><div class="mh"><span>您好，'+esc(p.n)+LV(p)+'</span><button type="button" id="notme">不是您？換人</button></div>'
       +card(i).replace('class="card"','class="card" id="mycardbtn"')+statHtml()+'</div>';
     $('#notme').onclick=swOut;
     $('#mycardbtn').onclick=function(){openP(i);};
@@ -96,7 +96,7 @@
     var me=getMe(),b=document.createElement('div');b.id='meblk';
     if(!me){
       b.className='mebox';
-      b.innerHTML='<button type="button" class="mes-iam" id="iam">我就是 '+esc(D.ps[CUR].n)+'，記住我的身分</button><div class="mes-note">按一下，我的活動頁、商務許願、商品館就不用再輸入姓名，也能看到有幾位夥伴想和您交流。</div>';
+      b.innerHTML='<button type="button" class="mes-iam" id="iam">我就是 '+esc(D.ps[CUR].n)+LVT(D.ps[CUR])+'，記住我的身分</button><div class="mes-note">按一下，我的活動頁、商務許願、商品館就不用再輸入姓名，也能看到有幾位夥伴想和您交流。</div>';
       tabs.parentNode.insertBefore(b,tabs);
       $('#iam').onclick=function(){setMe(CUR+1);renderMy();decorate();load(true);};
     }else if(me===CUR+1){

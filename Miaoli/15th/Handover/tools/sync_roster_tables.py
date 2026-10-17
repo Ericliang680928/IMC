@@ -32,5 +32,8 @@ for i,p in enumerate(D['ps']):
     x['lunch'],x['dinner']=a,b
     if any(sn): x['stn']=sn
     else: x.pop('stn',None)
+    # 請假＝兩場都「不參加」（排座專案檔標為請假者；資訊控台等特設席位算有出席）。各頁在姓名後面加「請假」標示
+    if p['s'][0][0]==0 and p['s'][1][0]==0: x['leave']=1
+    else: x.pop('leave',None)
 json.dump(r,open(rp,'w',encoding='utf-8'),ensure_ascii=False,separators=(',',':'))
 print('roster.json 桌號已與 seat.html 同步，更動',n,'人')
