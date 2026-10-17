@@ -38,7 +38,7 @@ body.memb #hdr,body.memb .kpi,body.memb .tabs,body.memb #p-orders,body.memb #p-p
   <div class="banner" id="topBanner">此頁含訂購者電話與地址，僅承辦團隊使用，請勿對外分享連結。</div>
   <div id="hdr" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px">
     <div><h1 class="serif" style="margin:0;font-size:30px;color:var(--dark)">社友商品館・訂單與登錄管理</h1><div class="note">資料即時讀取自資料庫；<button type="button" class="btn btn-ghost sm" onclick="loadAll()">重新整理</button></div></div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn btn-gold" onclick="show('new')">＋ 登錄商品／EDM</button><button type="button" class="btn btn-line" disabled>匯出訂單 Excel</button></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn btn-gold" onclick="show('new')">＋ 登錄商品／EDM</button><button type="button" class="btn btn-line" id="expBtn" onclick="exportOrders()">匯出訂單 Excel</button></div>
   </div>
   <div class="kpi">
     <div class="card"><div class="lbl" style="font-size:13px">訂單數</div><div class="v" id="kOrders">0</div></div>
@@ -131,6 +131,65 @@ async function delOrder(id){
 }
 async function toggle(id,on){if(IS_MEMBER)return;try{await dbPatch('h15_products','id=eq.'+id,{on_shelf:on});}catch(e){alert('更新失敗');}loadAll();}
 async function del(id){if(IS_MEMBER)return;if(confirm('確定刪除這筆登錄？')){try{await dbDelete('h15_products','id=eq.'+id);}catch(e){alert('刪除失敗');}loadAll();}}
+/* 匯出訂單 Excel：三張工作表（訂單／明細／賣家彙總）。小計與彙總用公式連動，狀態為「取消」的訂單不計入彙總。
+   試算表函式庫放在 assets/xlsx.full.min.js，按下按鈕才載入；載入失敗時改下載 CSV（Excel 可直接開啟）。 */
+function loadXlsx(){return window.XLSX?Promise.resolve():new Promise((ok,no)=>{const s=document.createElement('script');s.src='assets/xlsx.full.min.js?v=1';s.onload=ok;s.onerror=()=>no(new Error('xlsx'));document.head.appendChild(s);});}
+function fullTime(t){const d=new Date(t),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'/'+p(d.getMonth()+1)+'/'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());}
+function buildExport(){
+  const see=IS_ADMIN||LISTER_SEE_PII,HIDE='（僅管理者可見）',n=v=>Number(v)||0;
+  const subOf=i=>i.bundle?n(i.bundle.sets)*n(i.bundle.price)+(n(i.qty)-n(i.bundle.sets)*n(i.bundle.n))*n(i.price):n(i.qty)*n(i.price);
+  const noteOf=i=>[i.cold?'❄'+i.cold:'',i.quote?'價格洽詢':'',i.free?'贈 '+n(i.free)+(i.unit||''):'',i.perk||'',(i.promo&&!i.free&&!i.bundle)?i.promo:'',i.bundle?'會場活動價 '+n(i.bundle.n)+(i.unit||'')+' NT$ '+n(i.bundle.price)+' × '+n(i.bundle.sets)+' 組':''].filter(Boolean).join('；');
+  const textOf=i=>i.ship?i.name+'（'+(i.seller||'')+'）':i.name+' ×'+n(i.qty)+(i.free?' 贈'+n(i.free):'')+'（'+(i.seller||'')+'）';
+  const list=orders.slice().sort((a,b)=>String(a.created_at).localeCompare(String(b.created_at)));
+  const head1=['訂單編號','時間','社別／單位','姓名','電話','地址','商品明細','金額','狀態'];
+  const head2=['訂單編號','時間','社別／單位','姓名','電話','地址','賣家','類別','商品','數量','單價','小計','備註','狀態'];
+  const A1=[head1],A2=[head2],sellers=[],bun=[false];
+  list.forEach(o=>{const tel=see?String(o.tel||''):HIDE,adr=see?String(o.addr||''):HIDE,t=fullTime(o.created_at),u=unitShow(o.unit);
+    A1.push([o.order_no,t,u,o.name,tel,adr,(o.items||[]).map(textOf).join('；'),n(o.total),o.status||'']);
+    (o.items||[]).forEach(i=>{const sl=i.seller||'';if(sl&&sellers.indexOf(sl)<0)sellers.push(sl);
+      A2.push([o.order_no,t,u,o.name,tel,adr,sl,i.ship?'運費':'商品',i.name,n(i.qty),n(i.price),subOf(i),noteOf(i),o.status||'']);bun.push(!!i.bundle);});});
+  return {A1,A2,sellers,bun,list};
+}
+function csvOf(A){return '﻿'+A.map(r=>r.map(v=>{v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(',')).join('\r\n');}
+function saveBlob(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);}
+async function exportOrders(){
+  if(IS_MEMBER){alert('社友上架身分無法匯出訂單');return;}
+  if(!orders.length){alert('目前沒有訂單可匯出');return;}
+  const btn=document.getElementById('expBtn');btn.disabled=true;
+  const d=new Date(),p=x=>String(x).padStart(2,'0'),stamp=d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'_'+p(d.getHours())+p(d.getMinutes());
+  try{
+    const B=buildExport();
+    try{await loadXlsx();}catch(e){saveBlob('IMC15_訂單明細_'+stamp+'.csv',new Blob([csvOf(B.A2)],{type:'text/csv;charset=utf-8'}));alert('Excel 元件載入失敗，已改下載 CSV（明細）檔，可直接用 Excel 開啟。');return;}
+    const X=window.XLSX,wb=X.utils.book_new();
+    /* 工作表 1：訂單（每張訂單一列；最後一列用公式加總，不含取消） */
+    const ws1=X.utils.aoa_to_sheet(B.A1),last1=B.A1.length;
+    const total1=B.list.filter(o=>o.status!=='取消').reduce((a,o)=>a+(Number(o.total)||0),0);
+    ws1['G'+(last1+1)]={t:'s',v:'合計（不含取消）'};ws1['H'+(last1+1)]={t:'n',f:'SUMIFS(H2:H'+last1+',I2:I'+last1+',"<>取消")',v:total1};
+    ws1['!ref']='A1:I'+(last1+1);
+    ws1['!cols']=[{wch:16},{wch:17},{wch:18},{wch:10},{wch:13},{wch:34},{wch:60},{wch:10},{wch:9}];
+    /* 工作表 2：明細（每個品項一列；小計＝數量×單價，會場活動價組合的列直接填算好的金額） */
+    const ws2=X.utils.aoa_to_sheet(B.A2),last2=B.A2.length;
+    B.A2.forEach((r,k)=>{if(!k||B.bun[k])return;const row=k+1;ws2['L'+row]={t:'n',f:'J'+row+'*K'+row,v:r[11]};});
+    ws2['!cols']=[{wch:16},{wch:17},{wch:18},{wch:10},{wch:13},{wch:34},{wch:26},{wch:7},{wch:34},{wch:7},{wch:8},{wch:9},{wch:36},{wch:9}];
+    /* 工作表 3：賣家彙總（出貨與運費依賣家分開處理，用公式從「明細」加總） */
+    const A3=[['賣家','商品金額','運費','合計']];
+    const sumBy=(sl,cat)=>B.A2.slice(1).reduce((a,r)=>a+((r[6]===sl&&r[7]===cat&&r[13]!=='取消')?(Number(r[11])||0):0),0);
+    B.sellers.forEach(sl=>A3.push([sl,0,0,0]));
+    const ws3=X.utils.aoa_to_sheet(A3),ns=B.sellers.length;
+    B.sellers.forEach((sl,k)=>{const row=k+2,g=sumBy(sl,'商品'),f=sumBy(sl,'運費'),rng=c=>"'明細'!$"+c+'$2:$'+c+'$'+last2;
+      ws3['B'+row]={t:'n',f:'SUMIFS('+rng('L')+','+rng('G')+',A'+row+','+rng('H')+',"商品",'+rng('N')+',"<>取消")',v:g};
+      ws3['C'+row]={t:'n',f:'SUMIFS('+rng('L')+','+rng('G')+',A'+row+','+rng('H')+',"運費",'+rng('N')+',"<>取消")',v:f};
+      ws3['D'+row]={t:'n',f:'B'+row+'+C'+row,v:g+f};});
+    const tr=ns+2,tg=B.sellers.reduce((a,sl)=>a+sumBy(sl,'商品'),0),tf=B.sellers.reduce((a,sl)=>a+sumBy(sl,'運費'),0);
+    ws3['A'+tr]={t:'s',v:'總計（不含取消）'};
+    [['B',tg],['C',tf],['D',tg+tf]].forEach(([c,v])=>{ws3[c+tr]={t:'n',f:'SUM('+c+'2:'+c+(tr-1)+')',v:v};});
+    ws3['A'+(tr+2)]={t:'s',v:'※ 運費「0」可能是免運，也可能是尚待賣家確認，請對照「明細」的商品欄（運費：免運／運費：待賣家確認）。'};
+    ws3['!ref']='A1:D'+(tr+2);ws3['!cols']=[{wch:40},{wch:12},{wch:10},{wch:12}];
+    X.utils.book_append_sheet(wb,ws1,'訂單');X.utils.book_append_sheet(wb,ws2,'明細');X.utils.book_append_sheet(wb,ws3,'賣家彙總');
+    saveBlob('IMC15_訂單_'+stamp+'.xlsx',new Blob([X.write(wb,{bookType:'xlsx',type:'array'})],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+  }catch(e){alert('匯出失敗：'+(e&&e.message?e.message:e));}
+  finally{btn.disabled=false;}
+}
 function fmt(t){const d=new Date(t);return (d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
 function render(){
   document.getElementById('orders').innerHTML=orders.length?orders.map(o=>'<tr><td style="font-weight:700">'+esc(o.order_no)+'</td><td style="white-space:nowrap;color:var(--muted2)">'+fmt(o.created_at)+'</td><td>'+esc(unitShow(o.unit))+'</td><td style="font-weight:700">'+esc(o.name)+'</td><td style="white-space:nowrap">'+pii(o.tel)+'</td><td style="min-width:180px">'+pii(o.addr)+'</td><td style="min-width:200px">'+(o.items||[]).map(i=>esc(i.name)+' ×'+(Number(i.qty)||0)+(i.cold?' <b style="color:#14507F">❄'+esc(i.cold)+'</b>':'')+(i.quote?' <b style="color:var(--rose)">（價格洽詢）</b>':'')+(i.free?' <b style="color:var(--green)">＋贈 '+(Number(i.free)||0)+esc(i.unit||'')+'</b>':'')+(i.perk?' <b style="color:var(--green)">'+esc(i.perk)+'</b>':'')+(i.promo&&!i.free&&!i.bundle?' <b style="color:var(--green)">'+esc(i.promo)+'</b>':'')+(i.bundle?' <b style="color:var(--green)">會場活動價 '+(Number(i.bundle.n)||0)+esc(i.unit||'')+' NT$ '+(Number(i.bundle.price)||0)+' × '+(Number(i.bundle.sets)||0)+' 組</b>':'')+'<span class="note">（'+esc(i.seller)+'）</span>').join('<br>')+'</td><td style="white-space:nowrap;font-weight:700;color:var(--rose)">NT$ '+(Number(o.total)||0)+'</td><td>'+(IS_ADMIN?'<select class="sel" onchange="setStatus('+(Number(o.id)||0)+',this.value)">'+['待確認','待出貨','已出貨','已完成','取消'].map(s=>'<option'+(s===o.status?' selected':'')+'>'+s+'</option>').join('')+'</select>':'<span class="st" style="background:#F4EFE3;color:#6B5424">'+esc(o.status)+'</span>')+'</td><td>'+(IS_ADMIN?'<button type="button" class="btn btn-ghost sm" style="color:var(--rose);border-color:#E3B9C8" onclick="delOrder('+(Number(o.id)||0)+')">刪除</button>':'<span class="note">—</span>')+'</td></tr>').join(''):'<tr><td colspan="10" class="note">尚無訂單</td></tr>';
