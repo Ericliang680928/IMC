@@ -25,6 +25,7 @@
   +'@media (max-width:720px){'
   +'#imcTabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:18}'
   +'body.has-imc-tabbar{padding-bottom:calc(82px + env(safe-area-inset-bottom))!important}'
+  +'#sheet.sheet{bottom:calc(74px + env(safe-area-inset-bottom))}'
   +'.fab{bottom:calc(94px + env(safe-area-inset-bottom))!important}.toast{bottom:calc(168px + env(safe-area-inset-bottom))!important}'
   +'}';
   document.head.appendChild(css);

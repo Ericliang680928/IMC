@@ -250,6 +250,6 @@ function tick(){const d=now();document.getElementById('clock').textContent=pad(d
   document.getElementById('nowTitle').textContent=day?(mins>=915&&mins<940?'茶敘交流中，15:40 回座':(mins<780?'今天 13:00 開始報到':mins>=1230?'活動圓滿結束':'活動進行中')):(()=>{const dd=Math.round((new Date(2026,9,17)-new Date(d.getFullYear(),d.getMonth(),d.getDate()))/86400000);return dd>=2?'距離活動還有 '+dd+' 天':'明天就是交接典禮';})();
   document.getElementById('nowdot').className=(day&&mins>=915&&mins<940)?'pulse':'';if(d.getSeconds()%30===0)renderMeetMode();}
 </script>
-<script src="tabbar.js?v=3"></script>
+<script src="tabbar.js?v=4"></script>
 </body>
 </html>
