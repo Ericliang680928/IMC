@@ -100,7 +100,7 @@ main{padding:14px 14px 100px;display:flex;flex-direction:column;gap:14px;flex:1}
   </main>
   <div id="sheetBg" style="position:fixed;inset:0;background:rgba(43,29,10,.55);display:none;z-index:90" onclick="closeDetail()"></div>
   <div id="sheet" style="position:fixed;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;background:#fff;border-radius:22px 22px 0 0;padding:18px 20px 28px;box-shadow:0 -8px 30px rgba(43,29,10,.25);display:none;z-index:95;max-height:88vh;overflow:auto"></div>
-  <nav class="imc-tabbar" id="tabbar" style="display:none">
+  <nav class="imc-tabbar" id="tabbar">
     <a class="imc-tab" data-ic="home" href="index.html" aria-label="回活動主頁">主頁</a><button type="button" class="imc-tab on" data-ic="me" onclick="go('me')">我的</button><button type="button" class="imc-tab" data-ic="find" onclick="go('find')">找人</button><a class="imc-tab" data-ic="seat" href="seat.html" aria-label="座位查詢">找座位</a><button type="button" class="imc-tab" data-ic="meet" onclick="go('meet')">交流</button><button type="button" class="imc-tab" data-ic="shop" onclick="go('shop')">商品</button>
   </nav>
 </div>
@@ -155,7 +155,7 @@ function init(){
 }
 function renderId(){document.getElementById('idbox').innerHTML=me?'<div class="av" style="border-color:'+(COLORS[me.grp]||['#fff'])[0]+'">'+esc(me.name.slice(0,1))+'</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:18px;color:#fff">'+esc(me.name)+LV(me)+' <span style="font-size:13px;font-weight:400;color:#E2BD63">'+esc(me.unit)+(me.ind?'・'+esc(me.ind)+'<span title="'+'由 AI 依公司名稱判斷，可能有誤，請見諒。'+'">＊</span>':'')+'</span></div><div style="font-size:13px;color:#D9C9A5">'+(me.ind?'＊產業別'+'由 AI 依公司名稱判斷，可能有誤，請見諒。'+'<br>':'')+(me.lunch?'午場 '+me.lunch+' 桌':(me.pend[0]?'午場座位安排中':'午場不參加'))+'・'+(me.dinner?'晚宴 '+me.dinner+' 桌':(me.pend[1]?'晚宴座位安排中':'晚宴不參加'))+'</div></div><button type="button" class="btn sm" style="background:rgba(255,255,255,.14);color:#F8E7B8" onclick="askLogout()">不是我？換人</button>'
  :'<div class="av">？</div><div style="flex:1"><div style="font-weight:700;color:#fff">歡迎蒞臨</div><div style="font-size:13px;color:#D9C9A5">請先在下方輸入您的姓名</div></div>';}
-function enter(id){resetState();me=R.find(p=>p.id===id);renderId();document.getElementById('login').style.display='none';document.getElementById('tabs').style.display='flex';document.getElementById('tabbar').style.display='flex';renderMe();renderFind();renderMeet();loadMyWish();loadSocial();{const h=location.hash.slice(1);if(['me','find','meet','shop'].indexOf(h)>=0)go(h);}}
+function enter(id){resetState();me=R.find(p=>p.id===id);renderId();document.getElementById('login').style.display='none';document.getElementById('tabs').style.display='flex';renderMe();renderFind();renderMeet();loadMyWish();loadSocial();{const h=location.hash.slice(1);if(['me','find','meet','shop'].indexOf(h)>=0)go(h);}}
 let known=0;
 /* 換人：已有許願／交流紀錄時，先問要不要一併撤回（選錯人時用） */
 function askLogout(){WHO.switchOut(me,()=>{known=0;logout();});}
@@ -163,8 +163,11 @@ function askLogout(){WHO.switchOut(me,()=>{known=0;logout();});}
 function syncWho(){if(!R.length)return;const cur=WHO.get();if(cur===known)return;known=cur;
   if(cur&&R.find(p=>p.id===cur)){if(!me||me.id!==cur)enter(cur);}else if(me){logout();}}
 window.addEventListener('pageshow',syncWho);window.addEventListener('storage',e=>{if(e.key==='imc15_me')syncWho();});document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncWho();});
-function logout(){me=null;resetState();try{localStorage.removeItem('imc15_me');}catch(e){}renderId();document.getElementById('login').style.display='flex';document.getElementById('l-q').value='';renderLogin();document.getElementById('tabs').style.display='none';document.getElementById('tabbar').style.display='none';}
-function go(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.id==='t-'+t));document.querySelectorAll('#tabbar button').forEach((b,i)=>b.classList.toggle('on',['me','find','meet','shop'][i]===t));window.scrollTo({top:0});}
+function logout(){me=null;resetState();try{localStorage.removeItem('imc15_me');}catch(e){}renderId();document.getElementById('login').style.display='flex';document.getElementById('l-q').value='';renderLogin();document.getElementById('tabs').style.display='none';}
+function go(t){
+  /* 還沒選姓名時，底部那一排也看得到：商品→商品館；其他提示先輸入姓名 */
+  if(!me){if(t==='shop'){location.href='shop.html';return;}if(t!=='me')flash('請先輸入您的姓名，才能使用這個功能');window.scrollTo({top:0});const q=document.getElementById('l-q');if(q)q.focus();return;}
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.id==='t-'+t));document.querySelectorAll('#tabbar button').forEach((b,i)=>b.classList.toggle('on',['me','find','meet','shop'][i]===t));window.scrollTo({top:0});}
 function setSess(s){sess=s;document.getElementById('bLunch').classList.toggle('on',s==='lunch');document.getElementById('bDinner').classList.toggle('on',s==='dinner');renderMe();}
 function renderMe(){if(me===null)return;const t=tableName(me,sess);document.getElementById('seatLink').href='seat.html?p='+(me.id-1);
   document.getElementById('sessLbl').textContent=sess==='lunch'?'午場 13:00・千八會館':'晚宴 18:00・濕婆神之夜';
@@ -250,6 +253,6 @@ function tick(){const d=now();document.getElementById('clock').textContent=pad(d
   document.getElementById('nowTitle').textContent=day?(mins>=915&&mins<940?'茶敘交流中，15:40 回座':(mins<780?'今天 13:00 開始報到':mins>=1230?'活動圓滿結束':'活動進行中')):(()=>{const dd=Math.round((new Date(2026,9,17)-new Date(d.getFullYear(),d.getMonth(),d.getDate()))/86400000);return dd>=2?'距離活動還有 '+dd+' 天':'明天就是交接典禮';})();
   document.getElementById('nowdot').className=(day&&mins>=915&&mins<940)?'pulse':'';if(d.getSeconds()%30===0)renderMeetMode();}
 </script>
-<script src="tabbar.js?v=4"></script>
+<script src="tabbar.js?v=5"></script>
 </body>
 </html>

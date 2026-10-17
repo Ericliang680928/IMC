@@ -25,7 +25,11 @@
   +'@media (max-width:720px){'
   +'#imcTabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:18}'
   +'body.has-imc-tabbar{padding-bottom:calc(82px + env(safe-area-inset-bottom))!important}'
-  +'#sheet.sheet{bottom:calc(74px + env(safe-area-inset-bottom))}'
+  /* 各種彈出視窗／面板（贊助商詳情、接送名單、換人詢問、個人資料面板、座位個人頁）一律停在底部分頁列上方，不蓋住那一排 */
+  +'.ov,#shuttleModal,.who-modal,#sheetBg,#sheet{bottom:calc(74px + env(safe-area-inset-bottom))!important}'
+  +'.ov .box,#shuttleBox{max-height:calc(100vh - 74px - env(safe-area-inset-bottom) - 32px)!important}'
+  +'.who-card{max-height:calc(100vh - 74px - env(safe-area-inset-bottom) - 40px);overflow:auto}'
+  +'#sheet:not(.sheet){max-height:calc(100vh - 74px - env(safe-area-inset-bottom) - 24px)!important}'
   +'.fab{bottom:calc(94px + env(safe-area-inset-bottom))!important}.toast{bottom:calc(168px + env(safe-area-inset-bottom))!important}'
   +'}';
   document.head.appendChild(css);
