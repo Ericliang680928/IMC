@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light"><meta name="theme-color" content="#F1EFEB">
 <title>座位查詢｜苗栗IMC 第15屆</title>
-<script src="i18n.js?v=30"></script>
+<script src="i18n.js?v=31"></script>
 <style>
 :root{--pearl1:#F6F4F1;--pearl2:#ECEAE5;--gold:#C5A366;--gold2:#DCB481;--gold3:#F8E2B9;--ink:#3D3D3D;--ink2:#535353;--blue:#1C2C60;--line:#DDD6C8;--card:#FFFFFFcc;--pearl3:#F0E9D9;--sb1:#F7F3E8f2;--sb2:#F2EBDBd9;--line2:#E3D9C0}
 body.p0{--pearl1:#F9F5EB;--pearl2:#F3ECDD;--pearl3:#F0E9D9}
@@ -136,7 +136,7 @@ h3{margin:20px 0 8px;font-size:14px;letter-spacing:.3em;color:var(--gold);font-w
  </div>
  <div class="hint" id="hint">輸入姓名的任一個字即可查詢；也可直接輸入桌號（例如 10）。</div>
  <div class="list" id="list"></div>
- <div class="foot"><span class="g"></span>座位資料更新：<span id="upd"></span><br>如座位有疑問，請洽現場服務台<br>創作／版權所有者：苗栗社 梁群儒／張廖欣儀</div>
+ <div class="foot"><span class="g"></span>座位資料更新：<span id="upd"></span><br>如座位有疑問，請洽現場服務台<br>創作／版權所有者：苗栗社 梁群儒／張廖欣儀<br><a href="https://lin.ee/yguWy7c" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">米樂家數位資訊 LINE：lin.ee/yguWy7c</a></div>
 </div>
 <div class="sheet" id="sheet"><div class="sh" id="sh"></div></div>
 <script src="shuttle.js?v=5"></script>
@@ -211,7 +211,7 @@ function draw(){const p=D.ps[CUR],sc=SC[SI][0],s=p.s[SI];
   h+='<div class="big b'+SI+'"><div class="no">'+esc(tl(SI,t))+'</div>'+(t.no!=null&&t.k?'<div class="nm">'+esc(t.k)+'</div>':'')+'</div>';
   h+='<div class="map">'+mapSvg(sc,t)+'<button id="fl">'+(FULL?'放大到座位':'看整個會場')+'</button></div>';
   h+='<h3>同桌賓客</h3><div class="mates">'+t.m.map(j=>{const q=D.ps[j];return '<button class="mate'+(j===CUR?' me':'')+'" data-j="'+j+'"><span>'+esc(q.n)+LV(q)+'</span><small>'+esc(q.u||'')+'</small></button>';}).join('')+'</div>'+recHtml(p,SI);}
- h+='<div class="foot"><span class="g"></span>創作／版權所有者：苗栗社 梁群儒／張廖欣儀</div>';
+ h+='<div class="foot"><span class="g"></span>創作／版權所有者：苗栗社 梁群儒／張廖欣儀<br><a href="https://lin.ee/yguWy7c" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">米樂家數位資訊 LINE：lin.ee/yguWy7c</a></div>';
  $('#sh').innerHTML=h;
  $('#bk').onclick=()=>history.back();
  $('#sh').querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{SI=+b.dataset.s;FULL=false;draw();});
