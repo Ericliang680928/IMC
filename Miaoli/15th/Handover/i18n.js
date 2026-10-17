@@ -11,7 +11,7 @@
   var CJK=/[　-〿㐀-鿿＀-￯]/;
   var D={ex:Object.create(null),rx:[],fns:[],gx:[]};
   var lang='zh',obs=null,T=new WeakMap(),A=new WeakMap(),cache=Object.create(null),filesLoaded=false,btn=null;
-  var FILES=['i18n-ja.js?v=7','i18n-ja-ui.js?v=13','i18n-ja-sponsors.js?v=2','i18n-ja-data.js?v=4','i18n-ja-intro.js?v=6'];
+  var FILES=['i18n-ja.js?v=8','i18n-ja-ui.js?v=13','i18n-ja-sponsors.js?v=2','i18n-ja-data.js?v=4','i18n-ja-intro.js?v=6'];
 
   function detect(){
     var q='';try{q=new URLSearchParams(location.search).get('lang')||'';}catch(e){}
