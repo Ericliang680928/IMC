@@ -52,7 +52,7 @@ if WHY_NEW not in s: rep(WHY_OLD,WHY_NEW,'建議名單自訂理由',True)
 # 3) 高鐵接駁提醒 -----------------------------------------------------
 if 'SHUTTLE.find' not in s:
     rep('<div class="sheet" id="sheet"><div class="sh" id="sh"></div></div>\n<script>\nconst D=',
-        '<div class="sheet" id="sheet"><div class="sh" id="sh"></div></div>\n<script src="shuttle.js?v=3"></script>\n<script>\nconst D=','接駁：載入 shuttle.js')
+        '<div class="sheet" id="sheet"><div class="sh" id="sh"></div></div>\n<script src="shuttle.js?v=4"></script>\n<script>\nconst D=','接駁：載入 shuttle.js')
     rep("""+'</div><div class="seats">'+seatBox(p,0)+seatBox(p,1)+'</div></button>';}""",
         """+((window.SHUTTLE&&SHUTTLE.find(p.n,p.u))?'<span style="color:#8A4B00;font-weight:700;font-size:12.5px">🚌 有登記高鐵接駁</span>':'')+'</div><div class="seats">'+seatBox(p,0)+seatBox(p,1)+'</div></button>';}""",'接駁：卡片標籤')
     rep("""h+='<div class="tabs">'""","""h+=(window.SHUTTLE?SHUTTLE.note(SHUTTLE.find(p.n,p.u)):'');
@@ -60,7 +60,7 @@ if 'SHUTTLE.find' not in s:
 
 # 4) 日文切換 ---------------------------------------------------------
 if 'i18n.js' not in s:
-    rep('<title>座位查詢｜苗栗IMC 第15屆</title>\n','<title>座位查詢｜苗栗IMC 第15屆</title>\n<script src="i18n.js?v=24"></script>\n','日文切換：載入 i18n.js')
+    rep('<title>座位查詢｜苗栗IMC 第15屆</title>\n','<title>座位查詢｜苗栗IMC 第15屆</title>\n<script src="i18n.js?v=25"></script>\n','日文切換：載入 i18n.js')
 
 # 4b) 手機版橫向溢出修正：標題光暈（.hero::before 寬 520px）會把頁面撐寬，手機上整頁被縮小 ---------
 WRAP_OLD=".wrap{max-width:720px;margin:0 auto;padding:max(18px,env(safe-area-inset-top)) 16px 40px}"
@@ -86,7 +86,7 @@ if 'tabbar.js' not in s:
 #    搜尋列下方出現「我的座位」卡；個人頁可按「這是我」；本人頁／我的座位卡顯示「有 N 位夥伴想和您交流」並導引到商務許願 ---------
 if 'seat-me.js' not in s:
     if 'src="db.js' not in s:
-        rep('<script src="shuttle.js?v=3"></script>\n<script>\nconst D=','<script src="shuttle.js?v=3"></script>\n<script src="db.js?v=1"></script>\n<script>\nconst D=','身分連動：載入 db.js')
+        rep('<script src="shuttle.js?v=4"></script>\n<script>\nconst D=','<script src="shuttle.js?v=4"></script>\n<script src="db.js?v=1"></script>\n<script>\nconst D=','身分連動：載入 db.js')
     rep('<script src="tabbar.js?v=2"></script></body></html>','<script src="who.js?v=1"></script><script src="seat-me.js?v=3"></script><script src="tabbar.js?v=2"></script></body></html>','身分連動：載入 who.js、seat-me.js')
 # 已套用舊版（無 who.js／seat-me.js?v=1）的 seat.html 補齊
 if 'who.js' not in s:
