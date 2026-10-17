@@ -141,14 +141,17 @@ function buildExport(){
   const noteOf=i=>[i.cold?'❄'+i.cold:'',i.quote?'價格洽詢':'',i.free?'贈 '+n(i.free)+(i.unit||''):'',i.perk||'',(i.promo&&!i.free&&!i.bundle)?i.promo:'',i.bundle?'會場活動價 '+n(i.bundle.n)+(i.unit||'')+' NT$ '+n(i.bundle.price)+' × '+n(i.bundle.sets)+' 組':''].filter(Boolean).join('；');
   const textOf=i=>i.ship?i.name+'（'+(i.seller||'')+'）':i.name+' ×'+n(i.qty)+(i.free?' 贈'+n(i.free):'')+'（'+(i.seller||'')+'）';
   const list=orders.slice().sort((a,b)=>String(a.created_at).localeCompare(String(b.created_at)));
-  const head1=['訂單編號','時間','社別／單位','姓名','電話','地址','商品明細','金額','狀態'];
-  const head2=['訂單編號','時間','社別／單位','姓名','電話','地址','賣家','類別','商品','數量','單價','小計','備註','狀態'];
-  const A1=[head1],A2=[head2],sellers=[],bun=[false];
-  list.forEach(o=>{const tel=see?String(o.tel||''):HIDE,adr=see?String(o.addr||''):HIDE,t=fullTime(o.created_at),u=unitShow(o.unit);
-    A1.push([o.order_no,t,u,o.name,tel,adr,(o.items||[]).map(textOf).join('；'),n(o.total),o.status||'']);
-    (o.items||[]).forEach(i=>{const sl=i.seller||'';if(sl&&sellers.indexOf(sl)<0)sellers.push(sl);
-      A2.push([o.order_no,t,u,o.name,tel,adr,sl,i.ship?'運費':'商品',i.name,n(i.qty),n(i.price),subOf(i),noteOf(i),o.status||'']);bun.push(!!i.bundle);});});
-  return {A1,A2,sellers,bun,list};
+  const H1=['訂單編號','時間','社別／單位','姓名','電話','地址','商品明細','金額','狀態'];
+  const HS=['訂單編號','時間','社別／單位','姓名','電話','地址','商品明細','數量','金額','狀態','備註','運費（NT$）'];
+  const A1=[H1],G={},order=[];
+  list.forEach(o=>{const tel=see?String(o.tel||''):HIDE,adr=see?String(o.addr||''):HIDE,t=fullTime(o.created_at),u=unitShow(o.unit),items=o.items||[],st=o.status||'';
+    A1.push([o.order_no,t,u,o.name,tel,adr,items.map(textOf).join('；'),n(o.total),st]);
+    const ships={},used={};items.forEach(i=>{if(i.ship)ships[i.seller||'']=i;});
+    items.forEach(i=>{if(i.ship)return;const sl=i.seller||'',sp=used[sl]?null:ships[sl];used[sl]=true;
+      const pend=!!sp&&/待/.test(sp.name),fee=(sp&&!pend)?n(sp.price):null;
+      if(!G[sl]){G[sl]={sl:sl,rows:[]};order.push(sl);}
+      G[sl].rows.push({row:[o.order_no,t,u,o.name,tel,adr,i.name,n(i.qty),subOf(i),st,[sp?sp.name:'',noteOf(i)].filter(Boolean).join('；'),fee],amt:subOf(i),fee:fee,pend:pend,st:st});});});
+  return {A1:A1,HS:HS,groups:order.map(s=>G[s]),list:list};
 }
 function csvOf(A){return '﻿'+A.map(r=>r.map(v=>{v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(',')).join('\r\n');}
 function saveBlob(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);}
@@ -159,33 +162,50 @@ async function exportOrders(){
   const d=new Date(),p=x=>String(x).padStart(2,'0'),stamp=d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'_'+p(d.getHours())+p(d.getMinutes());
   try{
     const B=buildExport();
-    try{await loadXlsx();}catch(e){saveBlob('IMC15_訂單明細_'+stamp+'.csv',new Blob([csvOf(B.A2)],{type:'text/csv;charset=utf-8'}));alert('Excel 元件載入失敗，已改下載 CSV（明細）檔，可直接用 Excel 開啟。');return;}
-    const X=window.XLSX,wb=X.utils.book_new();
-    /* 工作表 1：訂單（每張訂單一列；最後一列用公式加總，不含取消） */
+    try{await loadXlsx();}catch(e){
+      const flat=[['賣家'].concat(B.HS)];B.groups.forEach(g=>g.rows.forEach(r=>flat.push([g.sl||'（未註明賣家）'].concat(r.row))));
+      saveBlob('IMC15_訂單明細_'+stamp+'.csv',new Blob([csvOf(flat)],{type:'text/csv;charset=utf-8'}));alert('Excel 元件載入失敗，已改下載 CSV（依賣家排列的明細）檔，可直接用 Excel 開啟。');return;}
+    const X=window.XLSX,wb=X.utils.book_new(),sum=a=>a.reduce((x,y)=>x+y,0);
+    const fmtNum=(ws,cols,r1,r2)=>{for(let r=r1;r<=r2;r++)cols.forEach(c=>{const c0=ws[c+r];if(c0&&c0.t==='n')c0.z='#,##0';});};
+    const used={'賣家彙總':1,'全部訂單':1};
+    B.groups.forEach(g=>{let base=((g.sl||'未註明賣家').replace(/股份有限公司|有限公司|社友/g,'').replace(/[\\\/?*\[\]:']/g,'').replace(/^・+|・+$/g,'')||'賣家').slice(0,28),nm=base,k=2;
+      while(used[nm.toLowerCase()])nm=base+'_'+(k++);used[nm.toLowerCase()]=1;g.sheet=nm;});
+    /* 各賣家工作表：只放該賣家的商品列；運費說明寫在「備註」，最後一列用公式小計（不含取消） */
+    B.groups.forEach(g=>{
+      const ws=X.utils.aoa_to_sheet([B.HS].concat(g.rows.map(r=>r.row))),last=g.rows.length+1,tr=last+1,live=g.rows.filter(r=>r.st!=='取消');
+      g.last=last;g.tr=tr;g.gs=sum(live.map(r=>r.amt));g.fs=sum(live.map(r=>r.fee||0));g.pend=live.filter(r=>r.pend).length;
+      ws['G'+tr]={t:'s',v:'小計（不含取消）'};
+      ws['I'+tr]={t:'n',f:'SUMIFS(I2:I'+last+',J2:J'+last+',"<>取消")',v:g.gs};
+      ws['L'+tr]={t:'n',f:'SUMIFS(L2:L'+last+',J2:J'+last+',"<>取消")',v:g.fs};
+      fmtNum(ws,['H','I','L'],2,tr);
+      ws['!ref']='A1:L'+tr;
+      ws['!cols']=[{wch:16},{wch:17},{wch:18},{wch:10},{wch:13},{wch:34},{wch:30},{wch:7},{wch:10},{wch:9},{wch:44},{wch:11}];
+      g.ws=ws;});
+    /* 全部訂單：每張訂單一列（整張合計＝商品＋已確認運費） */
     const ws1=X.utils.aoa_to_sheet(B.A1),last1=B.A1.length;
-    const total1=B.list.filter(o=>o.status!=='取消').reduce((a,o)=>a+(Number(o.total)||0),0);
+    const total1=sum(B.list.filter(o=>o.status!=='取消').map(o=>Number(o.total)||0));
     ws1['G'+(last1+1)]={t:'s',v:'合計（不含取消）'};ws1['H'+(last1+1)]={t:'n',f:'SUMIFS(H2:H'+last1+',I2:I'+last1+',"<>取消")',v:total1};
-    ws1['!ref']='A1:I'+(last1+1);
+    fmtNum(ws1,['H'],2,last1+1);ws1['!ref']='A1:I'+(last1+1);
     ws1['!cols']=[{wch:16},{wch:17},{wch:18},{wch:10},{wch:13},{wch:34},{wch:60},{wch:10},{wch:9}];
-    /* 工作表 2：明細（每個品項一列；小計＝數量×單價，會場活動價組合的列直接填算好的金額） */
-    const ws2=X.utils.aoa_to_sheet(B.A2),last2=B.A2.length;
-    B.A2.forEach((r,k)=>{if(!k||B.bun[k])return;const row=k+1;ws2['L'+row]={t:'n',f:'J'+row+'*K'+row,v:r[11]};});
-    ws2['!cols']=[{wch:16},{wch:17},{wch:18},{wch:10},{wch:13},{wch:34},{wch:26},{wch:7},{wch:34},{wch:7},{wch:8},{wch:9},{wch:36},{wch:9}];
-    /* 工作表 3：賣家彙總（出貨與運費依賣家分開處理，用公式從「明細」加總） */
-    const A3=[['賣家','商品金額','運費','合計']];
-    const sumBy=(sl,cat)=>B.A2.slice(1).reduce((a,r)=>a+((r[6]===sl&&r[7]===cat&&r[13]!=='取消')?(Number(r[11])||0):0),0);
-    B.sellers.forEach(sl=>A3.push([sl,0,0,0]));
-    const ws3=X.utils.aoa_to_sheet(A3),ns=B.sellers.length;
-    B.sellers.forEach((sl,k)=>{const row=k+2,g=sumBy(sl,'商品'),f=sumBy(sl,'運費'),rng=c=>"'明細'!$"+c+'$2:$'+c+'$'+last2;
-      ws3['B'+row]={t:'n',f:'SUMIFS('+rng('L')+','+rng('G')+',A'+row+','+rng('H')+',"商品",'+rng('N')+',"<>取消")',v:g};
-      ws3['C'+row]={t:'n',f:'SUMIFS('+rng('L')+','+rng('G')+',A'+row+','+rng('H')+',"運費",'+rng('N')+',"<>取消")',v:f};
-      ws3['D'+row]={t:'n',f:'B'+row+'+C'+row,v:g+f};});
-    const tr=ns+2,tg=B.sellers.reduce((a,sl)=>a+sumBy(sl,'商品'),0),tf=B.sellers.reduce((a,sl)=>a+sumBy(sl,'運費'),0);
+    /* 賣家彙總：直接引用各賣家工作表的小計列 */
+    const q=g=>"'"+g.sheet+"'!",A3=[['賣家','商品金額','運費','合計','運費待確認（單）','工作表']];
+    B.groups.forEach(g=>A3.push([g.sl||'（未註明賣家）',0,0,0,0,g.sheet]));
+    const ws3=X.utils.aoa_to_sheet(A3),tr=B.groups.length+2;
+    B.groups.forEach((g,k)=>{const row=k+2;
+      ws3['B'+row]={t:'n',f:q(g)+'I'+g.tr,v:g.gs};
+      ws3['C'+row]={t:'n',f:q(g)+'L'+g.tr,v:g.fs};
+      ws3['D'+row]={t:'n',f:'B'+row+'+C'+row,v:g.gs+g.fs};
+      ws3['E'+row]={t:'n',f:'COUNTIFS('+q(g)+'$K$2:$K$'+g.last+',"*待賣家確認*",'+q(g)+'$J$2:$J$'+g.last+',"<>取消")',v:g.pend};});
+    const tg=sum(B.groups.map(g=>g.gs)),tf=sum(B.groups.map(g=>g.fs)),tp=sum(B.groups.map(g=>g.pend));
     ws3['A'+tr]={t:'s',v:'總計（不含取消）'};
-    [['B',tg],['C',tf],['D',tg+tf]].forEach(([c,v])=>{ws3[c+tr]={t:'n',f:'SUM('+c+'2:'+c+(tr-1)+')',v:v};});
-    ws3['A'+(tr+2)]={t:'s',v:'※ 運費「0」可能是免運，也可能是尚待賣家確認，請對照「明細」的商品欄（運費：免運／運費：待賣家確認）。'};
-    ws3['!ref']='A1:D'+(tr+2);ws3['!cols']=[{wch:40},{wch:12},{wch:10},{wch:12}];
-    X.utils.book_append_sheet(wb,ws1,'訂單');X.utils.book_append_sheet(wb,ws2,'明細');X.utils.book_append_sheet(wb,ws3,'賣家彙總');
+    [['B',tg],['C',tf],['D',tg+tf],['E',tp]].forEach(([c,v])=>{ws3[c+tr]={t:'n',f:'SUM('+c+'2:'+c+(tr-1)+')',v:v};});
+    ws3['A'+(tr+1)]={t:'s',v:'核對：「全部訂單」合計'};ws3['D'+(tr+1)]={t:'n',f:"'全部訂單'!H"+(last1+1),v:total1};
+    ws3['A'+(tr+2)]={t:'s',v:'差異（應為 0）'};ws3['D'+(tr+2)]={t:'n',f:'D'+tr+'-D'+(tr+1),v:tg+tf-total1};
+    ws3['A'+(tr+4)]={t:'s',v:'※ 各賣家的出貨明細在各自的工作表（見「工作表」欄）；運費說明寫在各列「備註」。'};
+    ws3['A'+(tr+5)]={t:'s',v:'※ 「運費」只加總已確認的金額；備註為「運費：待賣家確認」的單未計入，請與該賣家確認後另計。'};
+    fmtNum(ws3,['B','C','D','E'],2,tr+2);ws3['!ref']='A1:F'+(tr+5);ws3['!cols']=[{wch:40},{wch:12},{wch:10},{wch:12},{wch:16},{wch:24}];
+    X.utils.book_append_sheet(wb,ws3,'賣家彙總');X.utils.book_append_sheet(wb,ws1,'全部訂單');
+    B.groups.forEach(g=>X.utils.book_append_sheet(wb,g.ws,g.sheet));
     saveBlob('IMC15_訂單_'+stamp+'.xlsx',new Blob([X.write(wb,{bookType:'xlsx',type:'array'})],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
   }catch(e){alert('匯出失敗：'+(e&&e.message?e.message:e));}
   finally{btn.disabled=false;}
