@@ -60,7 +60,7 @@ if 'SHUTTLE.find' not in s:
 
 # 4) 日文切換 ---------------------------------------------------------
 if 'i18n.js' not in s:
-    rep('<title>座位查詢｜苗栗IMC 第15屆</title>\n','<title>座位查詢｜苗栗IMC 第15屆</title>\n<script src="i18n.js?v=26"></script>\n','日文切換：載入 i18n.js')
+    rep('<title>座位查詢｜苗栗IMC 第15屆</title>\n','<title>座位查詢｜苗栗IMC 第15屆</title>\n<script src="i18n.js?v=27"></script>\n','日文切換：載入 i18n.js')
 
 # 4b) 手機版橫向溢出修正：標題光暈（.hero::before 寬 520px）會把頁面撐寬，手機上整頁被縮小 ---------
 WRAP_OLD=".wrap{max-width:720px;margin:0 auto;padding:max(18px,env(safe-area-inset-top)) 16px 40px}"
@@ -80,14 +80,14 @@ if NOW_NEW not in s: rep(NOW_OLD,NOW_NEW,'目前時段改用台灣時間＋活�
 
 # 5) 手機版底部分頁列（tabbar.js） ------------------------------------
 if 'tabbar.js' not in s:
-    rep('</script></body></html>','</script><script src="tabbar.js?v=2"></script></body></html>','手機底部分頁列')
+    rep('</script></body></html>','</script><script src="tabbar.js?v=3"></script></body></html>','手機底部分頁列')
 
 # 6) 全站只輸入一次姓名：座位查詢讀同一個已記住的身分（localStorage imc15_me），
 #    搜尋列下方出現「我的座位」卡；個人頁可按「這是我」；本人頁／我的座位卡顯示「有 N 位夥伴想和您交流」並導引到商務許願 ---------
 if 'seat-me.js' not in s:
     if 'src="db.js' not in s:
         rep('<script src="shuttle.js?v=5"></script>\n<script>\nconst D=','<script src="shuttle.js?v=5"></script>\n<script src="db.js?v=1"></script>\n<script>\nconst D=','身分連動：載入 db.js')
-    rep('<script src="tabbar.js?v=2"></script></body></html>','<script src="who.js?v=1"></script><script src="seat-me.js?v=3"></script><script src="tabbar.js?v=2"></script></body></html>','身分連動：載入 who.js、seat-me.js')
+    rep('<script src="tabbar.js?v=3"></script></body></html>','<script src="who.js?v=1"></script><script src="seat-me.js?v=3"></script><script src="tabbar.js?v=3"></script></body></html>','身分連動：載入 who.js、seat-me.js')
 # 已套用舊版（無 who.js／seat-me.js?v=1）的 seat.html 補齊
 if 'who.js' not in s:
     rep('<script src="seat-me.js?v=','<script src="who.js?v=1"></script><script src="seat-me.js?v=','身分連動：補載入 who.js')

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>我的活動頁｜苗栗IMC 第15屆</title>
-<script src="i18n.js?v=26"></script>
+<script src="i18n.js?v=27"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="style.css?v=5">
 <script src="db.js?v=1"></script>
@@ -101,7 +101,7 @@ main{padding:14px 14px 100px;display:flex;flex-direction:column;gap:14px;flex:1}
   <div id="sheetBg" style="position:fixed;inset:0;background:rgba(43,29,10,.55);display:none;z-index:90" onclick="closeDetail()"></div>
   <div id="sheet" style="position:fixed;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;background:#fff;border-radius:22px 22px 0 0;padding:18px 20px 28px;box-shadow:0 -8px 30px rgba(43,29,10,.25);display:none;z-index:95;max-height:88vh;overflow:auto"></div>
   <nav class="imc-tabbar" id="tabbar" style="display:none">
-    <a class="imc-tab" data-ic="home" href="index.html" aria-label="回活動主頁">主頁</a><button type="button" class="imc-tab on" data-ic="me" onclick="go('me')">我的</button><button type="button" class="imc-tab" data-ic="find" onclick="go('find')">找人</button><button type="button" class="imc-tab" data-ic="meet" onclick="go('meet')">交流</button><button type="button" class="imc-tab" data-ic="shop" onclick="go('shop')">商品</button>
+    <a class="imc-tab" data-ic="home" href="index.html" aria-label="回活動主頁">主頁</a><button type="button" class="imc-tab on" data-ic="me" onclick="go('me')">我的</button><button type="button" class="imc-tab" data-ic="find" onclick="go('find')">找人</button><a class="imc-tab" data-ic="seat" href="seat.html" aria-label="座位查詢">找座位</a><button type="button" class="imc-tab" data-ic="meet" onclick="go('meet')">交流</button><button type="button" class="imc-tab" data-ic="shop" onclick="go('shop')">商品</button>
   </nav>
 </div>
 <script>
@@ -250,6 +250,6 @@ function tick(){const d=now();document.getElementById('clock').textContent=pad(d
   document.getElementById('nowTitle').textContent=day?(mins>=915&&mins<940?'茶敘交流中，15:40 回座':(mins<780?'今天 13:00 開始報到':mins>=1230?'活動圓滿結束':'活動進行中')):(()=>{const dd=Math.round((new Date(2026,9,17)-new Date(d.getFullYear(),d.getMonth(),d.getDate()))/86400000);return dd>=2?'距離活動還有 '+dd+' 天':'明天就是交接典禮';})();
   document.getElementById('nowdot').className=(day&&mins>=915&&mins<940)?'pulse':'';if(d.getSeconds()%30===0)renderMeetMode();}
 </script>
-<script src="tabbar.js?v=2"></script>
+<script src="tabbar.js?v=3"></script>
 </body>
 </html>
