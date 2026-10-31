@@ -24,6 +24,21 @@ td.act button{margin-right:4px}
 .lnk{background:none;border:0;color:var(--blue);text-decoration:underline;cursor:pointer;font:inherit;padding:0}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .lnk{color:var(--gold)}}
 #tBud input{width:100%}
+@media (max-width:700px){
+#tBud thead{display:none}
+#tBud,#tBud tbody{display:block}
+#tBud tr.kindrow,#tBud tr.catrow{display:block}
+#tBud tr.kindrow td,#tBud tr.catrow td{display:block;padding:10px 12px}
+#tBud tr[data-id]{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;padding:12px;border-bottom:1px solid var(--line)}
+#tBud tr[data-id] td{display:block;border:0;padding:0;min-width:0}
+#tBud tr[data-id] td::before{content:attr(data-l);display:block;font-size:12px;opacity:.7;margin-bottom:2px}
+#tBud tr[data-id] td.c-i,#tBud tr[data-id] td.c-n{grid-column:1/-1}
+#tBud tr[data-id] td.n{text-align:left;font-weight:700;color:var(--ink-strong);align-self:end;padding-bottom:10px}
+#tBud tr[data-id] td.c-d{grid-column:1/-1}
+#tBud tr[data-id] td.c-d::before{display:none}
+#tBud tr[data-id] td.c-d button{width:100%}
+}
+
 .nowrap td,.nowrap th{white-space:nowrap}
 </style>
 </head>
@@ -243,7 +258,7 @@ function renderBd(){
     for(const c of [...new Set(OV.filter(o=>o.kind===kind).map(o=>o.category))]){
       const it=OV.filter(o=>o.kind===kind&&o.category===c);
       h+=`<tr class="catrow"><td colspan="7">${esc(c)}　小計 ${N(it.reduce((s,o)=>s+Number(o.amount),0))}</td></tr>`;
-      h+=it.map(o=>`<tr data-id="${o.id}" data-k="${kind}" data-c="${esc(c)}"><td><input class="si b-i" value="${esc(o.item)}"></td><td><input class="si b-q" inputmode="decimal" value="${o.qty}"></td><td><input class="si b-u" value="${esc(o.unit)}"></td><td><input class="si b-p" inputmode="decimal" value="${o.unit_price}"></td><td class="n b-a">${N(o.amount)}</td><td><input class="si b-n" value="${esc(o.note)}"></td><td><button class="sm bad" onclick="delBd(${o.id})">刪除</button></td></tr>`).join('');
+      h+=it.map(o=>`<tr data-id="${o.id}" data-k="${kind}" data-c="${esc(c)}"><td class="c-i" data-l="項目"><input class="si b-i" value="${esc(o.item)}"></td><td data-l="數量"><input class="si b-q" inputmode="decimal" value="${o.qty}"></td><td data-l="單位"><input class="si b-u" value="${esc(o.unit)}"></td><td data-l="單價"><input class="si b-p" inputmode="decimal" value="${o.unit_price}"></td><td class="n b-a" data-l="預算金額">${N(o.amount)}</td><td class="c-n" data-l="備註"><input class="si b-n" value="${esc(o.note)}"></td><td class="c-d"><button class="sm bad" onclick="delBd(${o.id})">刪除</button></td></tr>`).join('');
     }
   }
   $('tBud').innerHTML=h+'</tbody>';
