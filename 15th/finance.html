@@ -6,6 +6,7 @@
 <title>財務長審核 | 苗栗IMC 第15屆</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="assets/style.css">
+<style>input.si{padding:8px 10px;min-height:40px;font-size:15px}#tSet td{white-space:nowrap;vertical-align:middle}#tSet select{min-width:190px;padding:8px 10px;min-height:40px}#tSet input.sg+input.sn{margin-left:6px}</style>
 </head>
 <body>
 <header class="top"><div class="wrap wide">
@@ -234,8 +235,8 @@ function renderSet(){
   const rows=MEM.filter(m=>(!q||m.name.includes(q))&&(!off||!m.active));
   $('tSet').innerHTML=`<thead><tr><th>社友</th><th>類別</th><th>同公司群組／第幾位</th><th>年費調整</th><th>在籍</th></tr></thead><tbody>`+rows.map((m,i)=>`<tr data-n="${esc(m.name)}"><td>${esc(m.name)}</td>
    <td><select class="sc">${['A','B','C','D','E','F'].map(c=>`<option value="${c}" ${catOf(m)===c?'selected':''}>${CATN[c]}</option>`).join('')}</select></td>
-   <td><input type="text" class="sg" style="width:120px;min-height:40px" value="${esc(m.company_group||'')}" placeholder="公司名" ${isCoC(catOf(m))?'':'disabled'}> <input type="text" class="sn" inputmode="numeric" style="width:56px;min-height:40px" value="${m.company_seq||''}" placeholder="第N位" ${isCoC(catOf(m))?'':'disabled'}></td>
-   <td><input type="text" class="so" inputmode="numeric" style="width:96px;min-height:40px" value="${m.annual_override||''}" placeholder="預設"></td>
+   <td><input type="text" class="sg si" style="width:150px" value="${esc(m.company_group||'')}" placeholder="公司名" ${isCoC(catOf(m))?'':'disabled'}> <input type="text" class="sn si" inputmode="numeric" style="width:84px" value="${m.company_seq||''}" placeholder="第幾位" ${isCoC(catOf(m))?'':'disabled'}></td>
+   <td><input type="text" class="so si" inputmode="numeric" style="width:104px" value="${m.annual_override||''}" placeholder="預設"></td>
    <td><input type="checkbox" class="sa" ${m.active?'checked':''} style="width:22px;height:22px;accent-color:var(--gold-deep)"></td></tr>`).join('')+'</tbody>';
 }
 $('sq').addEventListener('input',renderSet);$('sact').addEventListener('change',renderSet);
