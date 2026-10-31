@@ -71,7 +71,7 @@ const $=id=>document.getElementById(id);
 let PW='';try{PW=sessionStorage.getItem('imc_fin')||''}catch(e){}
 let G='f',T={f:'pending',w:'ov'},loaded=false;
 const frames={f:$('pf'),w:$('pw2')};
-const srcs={f:'finance.html?embed=1',w:'workbench.html?embed=1'};
+const V=Date.now();const srcs={f:'finance.html?embed=1&v='+V,w:'workbench.html?embed=1&v='+V};
 async function enter(){
   await rpc('imc_dues_list',{p:PW});          /* 驗證密碼 */
   try{sessionStorage.setItem('imc_fin',PW)}catch(e){}
