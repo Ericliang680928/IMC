@@ -64,7 +64,7 @@
       <form class="card" id="addf" style="max-width:560px">
         <h2>代登收款（現場收現、或已查帳直接入帳）</h2>
         <label class="f" for="an">社友</label><input type="text" id="an" list="anl" placeholder="輸入姓名關鍵字" autocomplete="off" required><datalist id="anl"></datalist>
-        <label class="f">項目</label><div class="opts" id="aitems"></div>
+        <label class="f">項目</label><div class="opts" id="aitems"><div class="muted">先選社友，系統會依其類別列出項目與金額。</div></div>
         <div class="total"><span>合計</span><b id="asum">NT$ 0</b></div>
         <label class="f">方式</label>
         <div class="seg"><label><input type="radio" name="am" value="現金" checked><span>現金</span></label><label><input type="radio" name="am" value="匯款"><span>匯款</span></label><label><input type="radio" name="am" value="其他"><span>其他</span></label></div>
@@ -82,12 +82,19 @@
         <textarea id="payinfo" rows="4" maxlength="500"></textarea>
         <button class="btn" id="savepay">儲存匯款資訊</button><div id="pout"></div>
       </div>
+      <div class="card">
+        <h2>社友類別與年費設定</h2>
+        <div class="muted">A 原社友 12,000｜B 原社友直系寶眷 6,000｜C 新社友 12,000＋入社費 5,000｜D 新社友直系寶眷 6,000＋入社費 5,000（另加社館基金 1,000）。未足一年或同公司多人入社有優惠者，在「年費調整」填實收年費。變更後立即生效。</div>
+        <div class="row" style="margin:10px 0"><input type="search" id="sq" class="grow" placeholder="搜尋姓名"><label class="opt" style="min-height:42px"><input type="checkbox" id="sact"><span class="l">只看停用</span></label></div>
+        <div class="tw"><table class="t" id="tSet"></table></div>
+        <div id="sout"></div>
+      </div>
       <form class="card" id="mf2" style="max-width:560px">
-        <h2>新增／停用社友</h2>
+        <h2>新增社友</h2>
         <label class="f" for="mn">姓名</label><input type="text" id="mn" required>
-        <label class="opt" style="margin-top:10px"><input type="checkbox" id="mnew"><span class="l">本屆新社友（可回報入社費）</span></label>
-        <label class="opt" style="margin-top:8px"><input type="checkbox" id="mact" checked><span class="l">在籍（取消勾選＝停用，不計入應收、不出現在回報名單）</span></label>
-        <button class="btn" type="submit">儲存社友</button><div id="mout"></div>
+        <label class="f" for="mt">類別</label>
+        <select id="mt"><option value="A">A 原社友</option><option value="B">B 原社友直系寶眷</option><option value="C">C 新社友</option><option value="D">D 新社友直系寶眷</option></select>
+        <button class="btn" type="submit">新增</button><div id="mout"></div>
       </form>
       <form class="card" id="pf" style="max-width:560px">
         <h2>更改財務長密碼</h2>
@@ -101,7 +108,7 @@
 <script src="assets/api.js"></script>
 <script>
 const $=id=>document.getElementById(id);
-let PW='',FEES=[],LABEL={},DUES=[],MEM=[],TAB='pending';
+let PW='',FEES=[],LABEL={},KIND={},AMT={},DUES=[],MEM=[],TAB='pending';
 try{PW=sessionStorage.getItem('imc_fin')||''}catch(e){}
 
 $('login').addEventListener('submit',async e=>{
@@ -112,13 +119,11 @@ $('login').addEventListener('submit',async e=>{
 $('logout').addEventListener('click',()=>{PW='';try{sessionStorage.removeItem('imc_fin')}catch(e){}location.reload()});
 
 async function boot(){
-  FEES=await rpc('imc_fees');FEES.forEach(f=>LABEL[f.code]=f.label);
+  FEES=await rpc('imc_fees');FEES.forEach(f=>{LABEL[f.code]=f.label;KIND[f.code]=f.kind;AMT[f.code]=f.amount});
   await reload();
   $('login').classList.add('hide');$('app').classList.remove('hide');$('logout').classList.remove('hide');
   $('payinfo').value=await rpc('imc_pay_info');
   $('ad').value=todayTW();
-  $('aitems').innerHTML=FEES.map(f=>`<label class="opt"><input type="checkbox" value="${f.code}"><span class="l">${esc(f.label)}</span><span class="a">${money(f.amount)}</span></label>`).join('');
-  $('aitems').addEventListener('change',()=>{let s=0;document.querySelectorAll('#aitems input').forEach(i=>{i.closest('.opt').classList.toggle('on',i.checked);if(i.checked)s+=FEES.find(f=>f.code===i.value).amount});$('asum').textContent=money(s)});
   show(TAB);
 }
 async function reload(){
@@ -126,30 +131,35 @@ async function reload(){
   $('anl').innerHTML=MEM.filter(m=>m.active).map(m=>`<option value="${esc(m.name)}">`).join('');
   tiles();show(TAB);
 }
-function expected(m){return FEES.filter(f=>!f.new_only||m.is_new).reduce((s,f)=>s+f.amount,0)}
+const needSum=m=>m.need.reduce((s,x)=>s+x.amount,0);
+const catOf=m=>(m.is_new?(m.is_family?'D':'C'):(m.is_family?'B':'A'));
+const CATN={A:'A 原社友',B:'B 原社友直系寶眷',C:'C 新社友',D:'D 新社友直系寶眷'};
 function tiles(){
   const act=MEM.filter(m=>m.active);
-  const exp=act.reduce((s,m)=>s+expected(m),0);
-  const conf=DUES.filter(d=>d.status==='已確認').reduce((s,d)=>s+d.amount,0);
+  const exp=act.reduce((s,m)=>s+needSum(m),0);
+  const conf=DUES.filter(d=>d.status==='已確認');
+  const adOf=d=>d.items.filter(c=>KIND[c]==='ad').reduce((s,c)=>s+AMT[c],0);
+  const confAll=conf.reduce((s,d)=>s+d.amount,0),confAd=conf.reduce((s,d)=>s+adOf(d),0),confDues=confAll-confAd;
   const pend=DUES.filter(d=>d.status==='待審核');
   const pendAmt=pend.reduce((s,d)=>s+d.amount,0);
-  const full=act.filter(m=>FEES.filter(f=>!f.new_only||m.is_new).every(f=>m.paid_items.includes(f.code))).length;
-  const pct=exp?Math.min(100,Math.round(conf/exp*100)):0;
+  const full=act.filter(m=>m.need.every(x=>m.paid_items.includes(x.code))).length;
+  const pct=exp?Math.min(100,Math.round(confDues/exp*100)):0;
   $('tiles').innerHTML=[
     ['待審核',pend.length+' 筆',money(pendAmt)],
-    ['已確認收款',money(conf),'佔應收 '+pct+'%'],
-    ['應收總額',money(exp),'在籍 '+act.length+' 人'],
-    ['已繳齊',full+' 人','尚未繳齊 '+(act.length-full)+' 人']
+    ['社費已確認',money(confDues),'佔應收 '+pct+'%'],
+    ['應收社費',money(exp),'在籍 '+act.length+' 人'],
+    ['已繳齊',full+' 人','尚未繳齊 '+(act.length-full)+' 人'],
+    ['廣告費已確認',money(confAd),'選填贊助']
   ].map(([k,v,s])=>`<div class="tile"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
   $('barfill').style.width=pct+'%';
-  $('barlab').textContent=`已確認 ${money(conf)} ／ 應收 ${money(exp)}（${pct}%）。待審核 ${money(pendAmt)} 不計入。`;
+  $('barlab').textContent=`社費已確認 ${money(confDues)} ／ 應收 ${money(exp)}（${pct}%）。待審核 ${money(pendAmt)}、廣告費 ${money(confAd)} 另計，不在此比例內。`;
 }
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b)show(b.dataset.t)});
 function show(t){
   TAB=t;
   document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));
   ['pending','all','matrix','add','set'].forEach(x=>$('v-'+x).classList.toggle('hide',x!==t));
-  if(t==='pending')renderPending();if(t==='all')renderAll();if(t==='matrix')renderMx();
+  if(t==='pending')renderPending();if(t==='all')renderAll();if(t==='matrix')renderMx();if(t==='set')renderSet();
 }
 const items=d=>d.items.map(c=>LABEL[c]||c).join('、');
 function renderPending(){
@@ -179,20 +189,21 @@ async function reopen(id){
   try{await rpc('imc_dues_review',{p:PW,i:id,s:'待審核',rn:''});await reload()}catch(e){alert(e.message)}
 }
 $('fs').addEventListener('change',renderAll);$('fq').addEventListener('input',renderAll);
+const DUESCODES=()=>FEES.filter(f=>f.kind==='dues');
 function mrows(){
   const f=$('mf').value,q=$('mq').value.trim();
   return MEM.filter(m=>m.active&&(!q||m.name.includes(q))).map(m=>{
-    const need=FEES.filter(x=>!x.new_only||m.is_new);
-    const cells=need.map(x=>m.paid_items.includes(x.code)?'已確認':m.pending_items.includes(x.code)?'待審核':'未繳');
-    return {m,need,cells,done:cells.every(c=>c==='已確認'),pend:cells.includes('待審核'),unpaid:cells.includes('未繳')};
+    const cells=m.need.map(x=>m.paid_items.includes(x.code)?'已確認':m.pending_items.includes(x.code)?'待審核':'未繳');
+    const owe=m.need.reduce((s,x,i)=>s+(cells[i]==='已確認'?0:x.amount),0);
+    const ad=m.paid_items.filter(c=>KIND[c]==='ad').reduce((s,c)=>s+AMT[c],0);
+    return {m,cells,owe,ad,done:cells.every(c=>c==='已確認'),pend:cells.includes('待審核'),unpaid:cells.includes('未繳')};
   }).filter(r=>!f||(f==='unpaid'&&r.unpaid)||(f==='done'&&r.done)||(f==='pend'&&r.pend));
 }
+function cellOf(r,code){const i=r.m.need.findIndex(x=>x.code===code);return i<0?null:r.cells[i]}
 function renderMx(){
-  const r=mrows();
-  $('tMx').innerHTML=`<thead><tr><th>社友</th>${FEES.map(f=>`<th>${esc(f.label)}</th>`).join('')}<th class="n">尚欠</th></tr></thead><tbody>`+
-  r.map(x=>{
-    const owe=x.need.reduce((s,f,i)=>s+(x.cells[i]==='已確認'?0:f.amount),0);
-    return `<tr><td>${esc(x.m.name)}${x.m.is_new?' <small class="muted">新</small>':''}</td>${FEES.map(f=>{const i=x.need.findIndex(n=>n.code===f.code);return `<td>${i<0?'<span class="muted">—</span>':`<span class="pill ${x.cells[i]}">${x.cells[i]}</span>`}</td>`}).join('')}<td class="n">${owe?owe.toLocaleString('en-US'):'0'}</td></tr>`}).join('')+'</tbody>';
+  const r=mrows(),dc=DUESCODES();
+  $('tMx').innerHTML=`<thead><tr><th>社友</th><th>類別</th>${dc.map(f=>`<th>${esc(f.label.replace(/（.*/,''))}</th>`).join('')}<th class="n">尚欠</th><th class="n">廣告費</th></tr></thead><tbody>`+
+  r.map(x=>`<tr><td>${esc(x.m.name)}</td><td>${catOf(x.m)}${x.m.annual_override?' <small class="muted">調整</small>':''}</td>${dc.map(f=>{const c=cellOf(x,f.code);return `<td>${c?`<span class="pill ${c}">${c}</span>`:'<span class="muted">—</span>'}</td>`}).join('')}<td class="n">${x.owe.toLocaleString('en-US')}</td><td class="n">${x.ad?x.ad.toLocaleString('en-US'):''}</td></tr>`).join('')+'</tbody>';
 }
 $('mf').addEventListener('change',renderMx);$('mq').addEventListener('input',renderMx);
 function csvDl(name,rows){
@@ -200,16 +211,47 @@ function csvDl(name,rows){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+c],{type:'text/csv'}));a.download=name;a.click();
 }
 $('csv').addEventListener('click',()=>csvDl('社費回報紀錄.csv',[['狀態','社友','項目','金額','方式','後5碼','繳費日','回報時間','來源','收據編號','備註','審核備註']].concat(DUES.map(d=>[d.status,d.member_name,items(d),d.amount,d.method,d.last5,d.paid_date,d.submitted_at,d.entered_by,d.receipt_no,d.note,d.review_note]))));
-$('mcsv').addEventListener('click',()=>{const r=mrows();csvDl('社費繳費總表.csv',[['社友',...FEES.map(f=>f.label),'尚欠']].concat(r.map(x=>{const owe=x.need.reduce((s,f,i)=>s+(x.cells[i]==='已確認'?0:f.amount),0);return [x.m.name,...FEES.map(f=>{const i=x.need.findIndex(n=>n.code===f.code);return i<0?'—':x.cells[i]}),owe]})))});
+$('mcsv').addEventListener('click',()=>{const r=mrows(),dc=DUESCODES();csvDl('社費繳費總表.csv',[['社友','類別',...dc.map(f=>f.label),'尚欠','廣告費已收']].concat(r.map(x=>[x.m.name,CATN[catOf(x.m)],...dc.map(f=>cellOf(x,f.code)||'—'),x.owe,x.ad])))});
+/* 代登 */
+let AF=[];
+$('an').addEventListener('input',async()=>{
+  const n=$('an').value.trim();
+  if(!MEM.some(m=>m.name===n&&m.active)){AF=[];$('aitems').innerHTML='<div class="muted">先選社友，系統會依其類別列出項目與金額。</div>';asum();return}
+  try{AF=await rpc('imc_fees_for',{n});
+    $('aitems').innerHTML=`<div class="muted">類別：<b>${esc(AF[0]?AF[0].cat:'')}</b></div>`+AF.map(f=>`<label class="opt"><input type="checkbox" value="${f.code}"><span class="l">${esc(f.label)}</span><span class="a">${money(f.amount)}</span></label>`).join('');asum()}
+  catch(e){$('aitems').innerHTML=`<div class="msg err">${esc(e.message)}</div>`}
+});
+function asum(){let s=0;document.querySelectorAll('#aitems input').forEach(i=>{i.closest('.opt').classList.toggle('on',i.checked);if(i.checked)s+=AF.find(f=>f.code===i.value).amount});$('asum').textContent=money(s)}
+$('aitems').addEventListener('change',asum);
 $('addf').addEventListener('submit',async e=>{
   e.preventDefault();const it=[...document.querySelectorAll('#aitems input:checked')].map(i=>i.value);const o=$('aout');
   if(!$('an').value||!it.length){o.innerHTML='<div class="msg err">請選社友並勾選項目</div>';return}
   try{await rpc('imc_dues_add',{p:PW,n:$('an').value.trim(),m:document.querySelector('input[name=am]:checked').value,it,l5:$('al5').value.trim(),d:$('ad').value,nt:$('ant').value});
-    o.innerHTML='<div class="msg ok">已登錄並確認。</div>';document.querySelectorAll('#aitems input').forEach(i=>{i.checked=false;i.closest('.opt').classList.remove('on')});$('asum').textContent='NT$ 0';$('ant').value='';$('al5').value='';await reload()}
+    o.innerHTML='<div class="msg ok">已登錄並確認。</div>';$('an').value='';$('an').dispatchEvent(new Event('input'));$('ant').value='';$('al5').value='';await reload()}
   catch(err){o.innerHTML=`<div class="msg err">${esc(err.message)}</div>`}
 });
+/* 設定 */
+function renderSet(){
+  const q=$('sq').value.trim(),off=$('sact').checked;
+  const rows=MEM.filter(m=>(!q||m.name.includes(q))&&(!off||!m.active));
+  $('tSet').innerHTML=`<thead><tr><th>社友</th><th>類別</th><th>年費調整</th><th>在籍</th></tr></thead><tbody>`+rows.map((m,i)=>`<tr data-n="${esc(m.name)}"><td>${esc(m.name)}</td>
+   <td><select class="sc">${['A','B','C','D'].map(c=>`<option value="${c}" ${catOf(m)===c?'selected':''}>${CATN[c]}</option>`).join('')}</select></td>
+   <td><input type="text" class="so" inputmode="numeric" style="width:96px;min-height:40px" value="${m.annual_override||''}" placeholder="預設"></td>
+   <td><input type="checkbox" class="sa" ${m.active?'checked':''} style="width:22px;height:22px;accent-color:var(--gold-deep)"></td></tr>`).join('')+'</tbody>';
+}
+$('sq').addEventListener('input',renderSet);$('sact').addEventListener('change',renderSet);
+async function saveRow(tr){
+  const n=tr.dataset.n,c=tr.querySelector('.sc').value,ov=tr.querySelector('.so').value.trim(),act=tr.querySelector('.sa').checked;
+  if(ov&&!/^[1-9][0-9]{0,5}$/.test(ov)){$('sout').innerHTML='<div class="msg err">年費調整請填數字，或留空用預設</div>';return}
+  try{await rpc('imc_member_save',{p:PW,n,newm:c==='C'||c==='D',fam:c==='B'||c==='D',ovr:ov?+ov:null,act});
+    $('sout').innerHTML=`<div class="msg ok">已儲存 ${esc(n)}</div>`;
+    [DUES,MEM]=await Promise.all([rpc('imc_dues_list',{p:PW}),rpc('imc_admin_members',{p:PW})]);tiles();
+    $('anl').innerHTML=MEM.filter(m=>m.active).map(m=>`<option value="${esc(m.name)}">`).join('');}
+  catch(err){$('sout').innerHTML=`<div class="msg err">${esc(err.message)}</div>`}
+}
+$('tSet').addEventListener('change',e=>{const tr=e.target.closest('tr[data-n]');if(tr)saveRow(tr)});
 $('savepay').addEventListener('click',async()=>{try{await rpc('imc_set_pay_info',{p:PW,v:$('payinfo').value});$('pout').innerHTML='<div class="msg ok">已儲存。</div>'}catch(e){$('pout').innerHTML=`<div class="msg err">${esc(e.message)}</div>`}});
-$('mf2').addEventListener('submit',async e=>{e.preventDefault();try{await rpc('imc_member_save',{p:PW,n:$('mn').value,newm:$('mnew').checked,act:$('mact').checked});$('mout').innerHTML='<div class="msg ok">已儲存。</div>';$('mn').value='';await reload()}catch(err){$('mout').innerHTML=`<div class="msg err">${esc(err.message)}</div>`}});
+$('mf2').addEventListener('submit',async e=>{e.preventDefault();const c=$('mt').value;try{await rpc('imc_member_save',{p:PW,n:$('mn').value,newm:c==='C'||c==='D',fam:c==='B'||c==='D',ovr:null,act:true});$('mout').innerHTML='<div class="msg ok">已新增。</div>';$('mn').value='';await reload()}catch(err){$('mout').innerHTML=`<div class="msg err">${esc(err.message)}</div>`}});
 $('pf').addEventListener('submit',async e=>{e.preventDefault();try{await rpc('imc_change_pass',{p:PW,np:$('np').value});PW=$('np').value;try{sessionStorage.setItem('imc_fin',PW)}catch(_){}$('np').value='';$('cout').innerHTML='<div class="msg ok">密碼已更改。</div>'}catch(err){$('cout').innerHTML=`<div class="msg err">${esc(err.message)}</div>`}});
 if(PW){boot().catch(()=>{PW='';try{sessionStorage.removeItem('imc_fin')}catch(e){}})}
 </script>
