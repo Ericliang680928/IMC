@@ -449,7 +449,7 @@ async function buildXlsx(){
   ws.getCell(r,10).value='預算結餘應為 0；實際結餘＝已收入－已支出';
   for(let k=1;k<=11;k++)sty(ws.getCell(r,k),{b:1,sz:12,col:'FFFFFFFF',fill:NAVY,h:k===1?'right':(k<=7?'right':'left'),nf:k>=6&&k<=7?'#,##0;-#,##0':undefined});
   ws.getRow(r).height=24;r+=2;
-  ws.mergeCells(`A${r}:K${r}`);ws.getCell('A'+r).value='社長：林浿安　　常務監事：梁群儒　　秘書長：趙震謙　　祕書：黃榆汝　　財務長：鄧瑞珍';sty(ws.getCell('A'+r),{sz:12,h:'center',box:false});ws.getRow(r).height=30;r++;
+  ws.mergeCells(`A${r}:K${r}`);ws.getCell('A'+r).value='社長：林浿安　　　常務監事：梁群儒　　　財務長：鄧瑞珍　　　祕書：黃榆汝';sty(ws.getCell('A'+r),{sz:12,h:'center',box:false});ws.getRow(r).height=30;r++;
   ws.mergeCells(`A${r}:K${r}`);ws.getCell('A'+r).value='說明：預算依苗栗IMC第15屆預算表；實際金額由「收入明細」「支出明細」兩分頁依科目編號自動加總，改明細即自動重算。';sty(ws.getCell('A'+r),{sz:9,col:SUB,h:'center',box:false});
   const buf=await wb.xlsx.writeBuffer();
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));a.download=`苗栗IMC第15屆_預算與執行對照表_${today.replace(/-/g,'')}.xlsx`;a.click();
