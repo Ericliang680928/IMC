@@ -78,11 +78,6 @@
     </div>
 
     <div id="v-set" class="hide">
-      <div class="card" style="max-width:560px">
-        <h2>匯款資訊（社友回報頁會顯示）</h2>
-        <textarea id="payinfo" rows="4" maxlength="500"></textarea>
-        <button class="btn" id="savepay">儲存匯款資訊</button><div id="pout"></div>
-      </div>
       <div class="card">
         <h2>社友類別與年費設定</h2>
         <div class="muted">A 原社友 12,000｜B 原社友直系寶眷 6,000｜C 新社友 12,000＋入社費 5,000｜D 新社友直系寶眷 6,000＋入社費 5,000｜E／F 同公司多人入社（原／新社友，F 另加入社費 5,000）（皆另加社館基金 1,000）。<br>依章程第十三條之二，<b>E／F 同公司多人入社</b>：類別選 E 或 F，填公司名稱（同公司社友填相同名稱）與這位是同公司的<b>第幾位</b>，系統自動減免常年社費——第 1 位照原價 12,000；第 2 位減 3,000（9,000）、第 3 位減 4,000（8,000）、第 4 位減 5,000（7,000）、第 5 位起減 6,000（6,000，最多減 6,000）；入社費 5,000 仍須繳。直系寶眷固定 6,000，以類別為準。未足一年按比例、保留社籍（1/4 年費）等其他情形，在「年費調整」填實收年費，優先於上述規則。變更後立即生效。</div>
@@ -98,6 +93,10 @@
         <div id="mgbox" class="hide"><label class="f" for="mg">公司名稱（同公司社友填相同名稱）</label><input type="text" id="mg"><label class="f" for="mq2">這位是同公司的第幾位（1、2、3…）</label><input type="text" id="mq2" inputmode="numeric"></div>
         <button class="btn" type="submit">新增</button><div id="mout"></div>
       </form>
+      <details class="card" style="max-width:560px"><summary style="cursor:pointer;font-weight:700;color:var(--ink-strong)">匯款資訊（社友回報頁會顯示）　<span class="muted" style="font-weight:400">點開修改</span></summary>
+        <textarea id="payinfo" rows="6" maxlength="500" style="margin-top:12px"></textarea>
+        <button class="btn" id="savepay">儲存匯款資訊</button><div id="pout"></div>
+      </details>
       
     </div>
   </section>
