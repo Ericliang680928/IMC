@@ -58,6 +58,12 @@
     <label class="f" for="v">憑證</label>
     <select id="v"><option>統一發票</option><option>收據</option><option>其他單據</option><option>尚無憑證（稍後補）</option></select>
 
+    <label class="f">發票／收據照片（選填，最多 3 張）</label>
+    <input type="file" id="ph" accept="image/*" multiple style="display:none">
+    <button type="button" class="sm" id="phbtn">＋ 拍照或選擇照片</button>
+    <div id="thumbs" class="row" style="margin-top:8px"></div>
+    <div class="hint">照片會自動縮小，只有財務長看得到。正本請仍交財務長留存。</div>
+
     <label class="f" for="nt">備註（選填）</label>
     <input type="text" id="nt" maxlength="200">
 
@@ -74,7 +80,7 @@
 <script src="assets/api.js"></script>
 <script>
 const $=id=>document.getElementById(id);
-let NAMES=[],ITEMS=[];
+let NAMES=[],ITEMS=[],PICS=[];
 async function init(){
   $('d').value=todayTW();
   try{
@@ -109,6 +115,12 @@ async function loadMine(){
 }
 $('mineList').addEventListener('click',async e=>{const b=e.target.closest('button[data-c]');if(!b||!confirm('確定撤回這筆報帳？'))return;
   try{await rpc('imc_claim_cancel',{n:$('who').value.trim(),i:Number(b.dataset.c)});await loadMine()}catch(err){alert(err.message)}});
+
+function shrink(file){return new Promise((res,rej)=>{const img=new Image(),u=URL.createObjectURL(file);img.onload=()=>{const M=1280,k=Math.min(1,M/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);let q=.72,d=c.toDataURL('image/jpeg',q);while(d.length>520000&&q>.3){q-=.1;d=c.toDataURL('image/jpeg',q)}res(d)};img.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('無法讀取這張照片'))};img.src=u})}
+function drawThumbs(){$('thumbs').innerHTML=PICS.map((p,i)=>`<div style="position:relative"><img src="${p}" alt="照片${i+1}" style="width:84px;height:84px;object-fit:cover;border-radius:10px;border:1px solid var(--line)"><button type="button" data-x="${i}" class="sm" style="position:absolute;top:-6px;right:-6px;min-height:28px;padding:0 8px">✕</button></div>`).join('');$('phbtn').classList.toggle('hide',PICS.length>=3)}
+$('phbtn').addEventListener('click',()=>$('ph').click());
+$('ph').addEventListener('change',async e=>{const fs=[...e.target.files];e.target.value='';for(const f of fs){if(PICS.length>=3)break;try{PICS.push(await shrink(f))}catch(err){$('out').innerHTML=`<div class="msg err">${esc(err.message)}</div>`}}drawThumbs()});
+$('thumbs').addEventListener('click',e=>{const b=e.target.closest('button[data-x]');if(!b)return;PICS.splice(Number(b.dataset.x),1);drawThumbs()});
 $('f').addEventListener('submit',async ev=>{
   ev.preventDefault();const out=$('out');out.innerHTML='';
   const n=$('who').value.trim();
@@ -118,9 +130,9 @@ $('f').addEventListener('submit',async ev=>{
   if(!$('bud').value){out.innerHTML='<div class="msg err">請選擇預算科目</div>';return}
   $('go').disabled=true;$('go').textContent='送出中…';
   try{
-    await rpc('imc_claim_submit',{n,act:$('act').value.trim(),d:$('d').value,b:Number($('bud').value),ds:$('ds').value.trim(),a,how:document.querySelector('input[name=h]:checked').value,cp:$('cp').value.trim(),v:$('v').value,nt:$('nt').value.trim()});
+    await rpc('imc_claim_submit',{n,act:$('act').value.trim(),d:$('d').value,b:Number($('bud').value),ds:$('ds').value.trim(),a,how:document.querySelector('input[name=h]:checked').value,cp:$('cp').value.trim(),v:$('v').value,nt:$('nt').value.trim(),ph:PICS});
     out.innerHTML=`<div class="msg ok"><b>已送出報帳</b>（${money(a)}）。財務長會依預算科目入帳，您可以在下方「我的報帳紀錄」查看進度。同一活動有多筆支出，請分筆登記。</div>`;
-    ['ds','amt','cp','nt'].forEach(k=>$(k).value='');
+    ['ds','amt','cp','nt'].forEach(k=>$(k).value='');PICS=[];drawThumbs();
     await loadMine();
   }catch(e){out.innerHTML=`<div class="msg err">${esc(e.message)}</div>`}
   finally{$('go').disabled=false;$('go').textContent='送出報帳'}
