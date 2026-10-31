@@ -17,13 +17,12 @@ iframe.pane{display:block;width:100%;border:0;min-height:320px;background:transp
 .gsw{display:none;gap:8px;padding:8px 0 0}
 .gsw button{flex:1;padding:12px 8px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink-strong);font:inherit;font-weight:700;font-size:17px;cursor:pointer}
 .gsw button[aria-selected="true"]{background:var(--blue);color:#fff;border-color:var(--blue)}
-@media (max-width:700px){
-  .gsw{display:flex}
-  .stick .tabs{flex-wrap:wrap;overflow:visible;gap:6px;padding:8px 0}
-  .stick .tabs .grp,.stick .tabs .sep{display:none}
-  .stick .tabs[data-g="f"] button[data-g="w"],.stick .tabs[data-g="w"] button[data-g="f"]{display:none}
-  .stick .tabs button{padding:8px 10px;min-height:40px;font-size:15px}.stick .tabs{gap:5px}
-}
+.gsw{display:flex}
+.stick .tabs{flex-wrap:wrap;overflow:visible;gap:6px;padding:8px 0}
+.stick .tabs .grp,.stick .tabs .sep{display:none}
+.stick .tabs[data-g="f"] button[data-g="w"],.stick .tabs[data-g="w"] button[data-g="f"]{display:none}
+@media (min-width:701px){.gsw button{flex:none;min-width:150px;padding:10px 24px;font-size:16px}}
+@media (max-width:700px){.stick .tabs button{padding:8px 10px;min-height:40px;font-size:15px}.stick .tabs{gap:5px}}
 </style>
 </head>
 <body>
