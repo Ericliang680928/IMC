@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="assets/style.css">
 <script>if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed')</script>
-<style>html.embed header.top,html.embed .tabs,html.embed #logout,html.embed #login{display:none !important}html.embed body{background:transparent}html.embed .tw{max-height:640px}html.embed .wrap{padding-bottom:16px}</style>
+<style>.pill.待處理{background:var(--warn-bg);color:var(--warn)}.pill.已入帳{background:var(--ok-bg);color:var(--ok)}html.embed header.top,html.embed .tabs,html.embed #logout,html.embed #login{display:none !important}html.embed body{background:transparent}html.embed .tw{max-height:640px}html.embed .wrap{padding-bottom:16px}</style>
 
 <style>input.si{padding:8px 10px;min-height:40px;font-size:15px}#tSet td{white-space:nowrap;vertical-align:middle}#tSet select{min-width:190px;padding:8px 10px;min-height:40px}#tSet input.sg+input.sn{margin-left:6px}</style>
 </head>
@@ -40,6 +40,7 @@
       <button role="tab" data-t="all" aria-selected="false">全部紀錄</button>
       <button role="tab" data-t="matrix" aria-selected="false">繳費總表</button>
       <button role="tab" data-t="add" aria-selected="false">代登收款</button>
+      <button role="tab" data-t="claims" aria-selected="false" id="tabClaims">報帳審核</button>
       <button role="tab" data-t="set" aria-selected="false">設定</button>
     </div>
 
@@ -65,6 +66,7 @@
       <p class="muted noprint">「已確認」才算收到；「待審核」是社友已回報、財務長尚未確認。名單中停用的社友不計入應收。</p>
     </div>
 
+    <div id="v-claims" class="hide"></div>
     <div id="v-add" class="hide">
       <form class="card" id="addf" style="max-width:560px">
         <h2>代登收款（現場收現、或已查帳直接入帳）</h2>
@@ -109,7 +111,7 @@
 <script src="assets/api.js"></script>
 <script>
 const $=id=>document.getElementById(id);
-let PW='',FEES=[],LABEL={},KIND={},AMT={},DUES=[],MEM=[],TAB='pending';
+let CL=[],CI=[];let PW='',FEES=[],LABEL={},KIND={},AMT={},DUES=[],MEM=[],TAB='pending';
 try{PW=sessionStorage.getItem('imc_fin')||''}catch(e){}
 
 $('login').addEventListener('submit',async e=>{
@@ -128,7 +130,8 @@ async function boot(){
   show(TAB);
 }
 async function reload(){
-  [DUES,MEM]=await Promise.all([rpc('imc_dues_list',{p:PW}),rpc('imc_admin_members',{p:PW})]);
+  [DUES,MEM,CL]=await Promise.all([rpc('imc_dues_list',{p:PW}),rpc('imc_admin_members',{p:PW}),rpc('imc_claim_list',{p:PW})]);
+  if(!CI.length)CI=await rpc('imc_claim_items');
   $('anl').innerHTML=MEM.filter(m=>m.active).map(m=>`<option value="${esc(m.name)}">`).join('');
   tiles();show(TAB);
 }
@@ -160,9 +163,29 @@ $('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b)s
 function show(t){
   TAB=t;
   document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));
-  ['pending','all','matrix','add','set'].forEach(x=>$('v-'+x).classList.toggle('hide',x!==t));
-  if(t==='pending')renderPending();if(t==='all')renderAll();if(t==='matrix')renderMx();if(t==='set')renderSet();
+  ['pending','all','matrix','add','claims','set'].forEach(x=>$('v-'+x).classList.toggle('hide',x!==t));
+  if(t==='pending')renderPending();if(t==='all')renderAll();if(t==='matrix')renderMx();if(t==='set')renderSet();if(t==='claims')renderClaims();
 }
+
+function budOpts(sel){const by={};CI.forEach(i=>{(by[i.category]=by[i.category]||[]).push(i)});return '<option value="">— 選擇入帳科目 —</option>'+Object.keys(by).map(c=>`<optgroup label="${esc(c)}">`+by[c].map(i=>`<option value="${i.id}"${String(i.id)===String(sel)?' selected':''}>${esc(i.item)}</option>`).join('')+'</optgroup>').join('')}
+function renderClaims(){
+  const np=CL.filter(c=>c.status==='待處理').length;
+  $('tabClaims').textContent=np?`報帳審核（${np}）`:'報帳審核';
+  const tot=CL.filter(c=>c.status==='待處理').reduce((s,c)=>s+Number(c.amount),0);
+  $('v-claims').innerHTML=`<div class="card"><h2>理監事活動報帳</h2><div class="muted">理監事辦完活動後在報帳頁登記支出，這裡可先看到有哪些支出。按「入帳」會自動記入收支帳（支出），可在入帳前調整預算科目。待處理 ${np} 筆，合計 ${money(tot)}。</div></div>`+
+  (CL.length?CL.map(c=>`<div class="rv" data-c="${c.id}"><div class="h"><div><span class="pill ${esc(c.status)}">${esc(c.status)}</span> <span class="nm">${esc(c.claimant)}</span></div><div class="amt">${money(c.amount)}</div></div>
+  <dl class="kv"><dt>活動</dt><dd>${esc(c.activity)}</dd><dt>內容</dt><dd>${esc(c.description)}</dd><dt>支出日期</dt><dd>${esc(c.spend_date)}</dd><dt>付款情形</dt><dd>${esc(c.pay_how)}</dd>${c.payee?`<dt>對象</dt><dd>${esc(c.payee)}</dd>`:''}<dt>憑證</dt><dd>${esc(c.voucher)}</dd>${c.note?`<dt>備註</dt><dd>${esc(c.note)}</dd>`:''}<dt>登記時間</dt><dd>${esc(fmtTime(c.created_at))}</dd></dl>
+  ${c.status==='已入帳'?`<div class="muted">已記入收支帳。${esc(c.review_note||'')}</div><div class="row" style="margin-top:8px"><button class="sm" data-a="undo">撤銷入帳</button></div>`:`<div class="row" style="margin-top:8px"><select class="si grow" data-f="bud">${budOpts(c.budget_id)}</select></div><div class="row" style="margin-top:8px"><input class="si grow" data-f="rn" placeholder="給報帳人的備註（選填，退回請寫原因）" value="${esc(c.review_note||'')}"></div><div class="row" style="margin-top:8px"><button class="btn" style="width:auto;padding:0 22px" data-a="ok">入帳</button><button class="sm bad" data-a="no">退回</button></div>`}
+  <div class="cout"></div></div>`).join(''):'<div class="card muted">目前沒有報帳紀錄。</div>');
+}
+$('v-claims').addEventListener('click',async e=>{const b=e.target.closest('button[data-a]');if(!b)return;const box=b.closest('.rv'),id=Number(box.dataset.c),a=b.dataset.a,out=box.querySelector('.cout');
+  const bud=box.querySelector('[data-f=bud]'),rn=box.querySelector('[data-f=rn]');
+  try{
+    if(a==='ok'){if(!bud.value){out.innerHTML='<div class="msg err">請先選擇入帳科目</div>';return}await rpc('imc_claim_review',{p:PW,i:id,s:'已入帳',rn:rn.value,b:Number(bud.value)})}
+    if(a==='no'){if(!confirm('確定退回這筆報帳？'))return;await rpc('imc_claim_review',{p:PW,i:id,s:'退回',rn:rn.value,b:bud.value?Number(bud.value):null})}
+    if(a==='undo'){if(!confirm('撤銷後會把收支帳中的這筆作廢，確定？'))return;await rpc('imc_claim_review',{p:PW,i:id,s:'待處理',rn:'',b:null})}
+    await reload();
+  }catch(err){out.innerHTML=`<div class="msg err">${esc(err.message)}</div>`}});
 const items=d=>d.items.map(c=>LABEL[c]||c).join('、');
 function renderPending(){
   const p=DUES.filter(d=>d.status==='待審核').sort((a,b)=>a.submitted_at<b.submitted_at?-1:1);
@@ -251,7 +274,7 @@ async function saveRow(tr){
   if(ov&&!/^[1-9][0-9]{0,5}$/.test(ov)){$('sout').innerHTML='<div class="msg err">年費調整請填數字，或留空用預設</div>';return}
   try{await rpc('imc_member_save',{p:PW,n,newm:isNewC(c),fam:isFamC(c),ovr:ov?+ov:null,act,grp,seq:sq?+sq:null});
     $('sout').innerHTML=`<div class="msg ok">已儲存 ${esc(n)}</div>`;
-    [DUES,MEM]=await Promise.all([rpc('imc_dues_list',{p:PW}),rpc('imc_admin_members',{p:PW})]);tiles();
+    [DUES,MEM,CL]=await Promise.all([rpc('imc_dues_list',{p:PW}),rpc('imc_admin_members',{p:PW}),rpc('imc_claim_list',{p:PW})]);tiles();
     $('anl').innerHTML=MEM.filter(m=>m.active).map(m=>`<option value="${esc(m.name)}">`).join('');}
   catch(err){$('sout').innerHTML=`<div class="msg err">${esc(err.message)}</div>`}
 }
