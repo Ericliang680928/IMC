@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>財務工作台 | 苗栗IMC 第15屆</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+input.si,select.si{padding:8px 10px;min-height:40px;font-size:15px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.catrow td{background:var(--gold-soft);font-weight:700;color:var(--ink-strong)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .catrow td{background:#2a2518}}
+.kindrow td{background:var(--blue);color:#fff;font-weight:700;font-size:15px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .kindrow td{background:#3a3322;color:var(--gold)}}
+.over{color:var(--bad);font-weight:700}
+.mini{display:inline-block;width:70px;height:8px;border-radius:9px;background:var(--line);overflow:hidden;vertical-align:middle;margin-right:6px}
+.mini i{display:block;height:100%;background:var(--gold-deep)}
+.mini.o i{background:var(--bad)}
+td.act button{margin-right:4px}
+.lnk{background:none;border:0;color:var(--blue);text-decoration:underline;cursor:pointer;font:inherit;padding:0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .lnk{color:var(--gold)}}
+#tBud input{width:100%}
+.nowrap td,.nowrap th{white-space:nowrap}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap wide">
+  <div class="brand">
+    <img src="assets/imc-logo.png" alt="苗栗IMC 社徽" onerror="this.style.display='none'">
+    <div class="t"><div class="org">社團法人苗栗縣國際工商經營研究社</div><h1>財務工作台・第15屆</h1><div class="muted">期間 115/10/1 – 116/9/30</div></div>
+    <a class="sm" href="finance.html" style="text-decoration:none;display:inline-flex;align-items:center;padding:0 14px;border:1px solid var(--line);border-radius:8px;color:var(--ink-strong);min-height:40px">社費審核</a>
+    <button class="sm hide" id="logout">登出</button>
+  </div>
+</div><hr class="rule"></header>
+
+<main class="wrap wide">
+  <form class="card" id="login" style="max-width:420px;margin-inline:auto">
+    <h2>財務長登入</h2>
+    <label class="f" for="pw">密碼</label>
+    <input type="password" id="pw" autocomplete="current-password" required>
+    <button class="btn" type="submit">登入</button><div id="lerr"></div>
+  </form>
+
+  <section id="app" class="hide">
+    <div id="syncmsg"></div>
+    <div class="tabs" role="tablist" id="tabs">
+      <button role="tab" data-t="ov" aria-selected="true">預算執行</button>
+      <button role="tab" data-t="lg" aria-selected="false">收支帳</button>
+      <button role="tab" data-t="bd" aria-selected="false">預算編列</button>
+      <button role="tab" data-t="ex" aria-selected="false">匯出報表</button>
+    </div>
+
+    <div id="v-ov">
+      <div class="tiles" id="tiles"></div>
+      <div class="card row noprint" style="margin-top:12px">
+        <select id="ovk" class="grow si"><option value="">收入＋支出</option><option>收入</option><option>支出</option></select>
+        <label class="opt" style="min-height:40px"><input type="checkbox" id="ovo"><span class="l">只看超支／有帳的項目</span></label>
+        <button class="sm" onclick="window.print()">列印</button>
+      </div>
+      <div class="tw" style="margin-top:12px;max-height:none"><table class="t nowrap" id="tOv"></table></div>
+    </div>
+
+    <div id="v-lg" class="hide">
+      <form class="card" id="lf">
+        <h2 id="lfT">新增收支</h2>
+        <div class="grid2">
+          <div><label class="f" for="ld">日期</label><input type="date" id="ld" class="si" required></div>
+          <div><label class="f">類別</label><div class="seg"><label><input type="radio" name="lk" value="支出" checked><span>支出</span></label><label><input type="radio" name="lk" value="收入"><span>收入</span></label></div></div>
+          <div style="grid-column:span 2;min-width:240px"><label class="f" for="lb">預算科目</label><select id="lb" class="si" required></select></div>
+          <div><label class="f" for="la">金額（元）</label><input type="text" id="la" class="si" inputmode="decimal" required></div>
+          <div><label class="f" for="lm">方式</label><select id="lm" class="si"><option>匯款</option><option>現金</option><option>轉帳</option><option>其他</option></select></div>
+          <div><label class="f" for="lc">對象（付給／收自）</label><input type="text" id="lc" class="si" maxlength="100"></div>
+          <div><label class="f" for="lv">憑證（發票／收據號）</label><input type="text" id="lv" class="si" maxlength="100"></div>
+        </div>
+        <label class="f" for="ls">摘要</label><input type="text" id="ls" class="si" maxlength="200" required>
+        <label class="f" for="ln">備註</label><input type="text" id="ln" class="si" maxlength="300">
+        <div class="row"><button class="btn grow" type="submit" style="width:auto">儲存</button><button class="sm hide" type="button" id="lcancel">取消編輯</button></div>
+        <div id="lout"></div>
+      </form>
+      <div class="card row">
+        <select id="fk" class="si"><option value="">收入＋支出</option><option>收入</option><option>支出</option></select>
+        <select id="fb" class="si grow"><option value="">全部科目</option></select>
+        <input type="month" id="fm" class="si">
+        <input type="search" id="fq" class="si grow" placeholder="搜尋摘要、對象、憑證">
+        <label class="opt" style="min-height:40px"><input type="checkbox" id="fv"><span class="l">顯示作廢</span></label>
+      </div>
+      <div class="row" style="margin:8px 0"><button class="sm gold" id="sync">同步繳費入帳</button><span class="muted">把審核頁「已確認」的社費、廣告費自動記為收入（已入帳的不會重複）</span></div>
+      <div class="tw"><table class="t nowrap" id="tLg"></table></div>
+    </div>
+
+    <div id="v-bd" class="hide">
+      <div class="card">
+        <h2>預算編列（第15屆）</h2>
+        <div class="muted">金額＝數量×單價，由系統自動計算。已有收支帳的項目不能刪除，可把數量改為 0。修改後自動儲存。</div>
+      </div>
+      <div class="tw" style="margin-top:12px;max-height:none"><table class="t" id="tBud"></table></div>
+      <form class="card" id="bf" style="margin-top:14px">
+        <h2>新增預算項目</h2>
+        <div class="grid2">
+          <div><label class="f">類別</label><div class="seg"><label><input type="radio" name="bk" value="支出" checked><span>支出</span></label><label><input type="radio" name="bk" value="收入"><span>收入</span></label></div></div>
+          <div><label class="f" for="bc">大項科目</label><input type="text" id="bc" class="si" list="bcl" required><datalist id="bcl"></datalist></div>
+          <div><label class="f" for="bi">項目</label><input type="text" id="bi" class="si" required></div>
+          <div><label class="f" for="bq">數量</label><input type="text" id="bq" class="si" inputmode="decimal" value="1"></div>
+          <div><label class="f" for="bu">單位</label><input type="text" id="bu" class="si" value="式"></div>
+          <div><label class="f" for="bp">單價</label><input type="text" id="bp" class="si" inputmode="decimal" required></div>
+        </div>
+        <button class="btn" type="submit">新增</button><div id="bout"></div>
+      </form>
+    </div>
+
+    <div id="v-ex" class="hide">
+      <div class="card" style="max-width:640px">
+        <h2>匯出財務執行報表</h2>
+        <div class="muted">Excel 檔含兩張表：<b>預算執行表</b>（各項預算、實際收支、差異、執行率；金額與合計皆為公式，實際金額自動從「收支明細」加總）與<b>收支明細</b>。改了明細，執行表會自動重算。</div>
+        <div class="row" style="margin-top:14px"><button class="btn" id="xl" style="width:auto;padding:0 22px">下載 Excel 報表</button></div>
+        <div class="row" style="margin-top:10px"><button class="sm" id="csvL">收支明細 CSV</button><button class="sm" id="csvB">預算執行表 CSV</button><button class="sm" id="prt">列印預算執行表</button></div>
+        <div id="xout"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="assets/api.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+let PW='',OV=[],LG=[],TAB='ov',EDIT=null,FILT=null;
+try{PW=sessionStorage.getItem('imc_fin')||''}catch(e){}
+const N=n=>Number(n||0).toLocaleString('en-US',{maximumFractionDigits:0});
+const pct=(a,b)=>b>0?Math.round(a/b*1000)/10:null;
+
+$('login').addEventListener('submit',async e=>{e.preventDefault();PW=$('pw').value;$('lerr').innerHTML='';
+  try{await boot();try{sessionStorage.setItem('imc_fin',PW)}catch(_){}}catch(err){PW='';$('lerr').innerHTML=`<div class="msg err">${esc(err.message)}</div>`}});
+$('logout').addEventListener('click',()=>{PW='';try{sessionStorage.removeItem('imc_fin')}catch(e){}location.reload()});
+
+async function boot(){
+  const n=await rpc('imc_ledger_import_dues',{p:PW});
+  $('login').classList.add('hide');$('app').classList.remove('hide');$('logout').classList.remove('hide');
+  if(n>0)$('syncmsg').innerHTML=`<div class="msg ok">已把 ${n} 筆「已確認」的繳費自動記入收入帳。</div>`;
+  $('ld').value=todayTW();
+  await reload();
+}
+async function reload(){
+  [OV,LG]=await Promise.all([rpc('imc_fin_overview',{p:PW}),rpc('imc_ledger_list',{p:PW})]);
+  fillBud();show(TAB);
+}
+function fillBud(){
+  const fb=$('fb'),v=fb.value;
+  fb.innerHTML='<option value="">全部科目</option>'+['收入','支出'].map(k=>`<optgroup label="${k}">`+OV.filter(o=>o.kind===k).map(o=>`<option value="${o.id}">${esc(o.category)}｜${esc(o.item)}</option>`).join('')+'</optgroup>').join('');
+  fb.value=v;
+  fillLb();
+  $('bcl').innerHTML=[...new Set(OV.map(o=>o.category))].map(c=>`<option value="${esc(c)}">`).join('');
+}
+function fillLb(sel){
+  const k=document.querySelector('input[name=lk]:checked').value;
+  const groups={};OV.filter(o=>o.kind===k).forEach(o=>(groups[o.category]=groups[o.category]||[]).push(o));
+  $('lb').innerHTML='<option value="">— 選擇預算科目 —</option>'+Object.entries(groups).map(([c,l])=>`<optgroup label="${esc(c)}">`+l.map(o=>`<option value="${o.id}">${esc(o.item)}（預算 ${N(o.amount)}）</option>`).join('')+'</optgroup>').join('');
+  if(sel)$('lb').value=sel;
+}
+document.querySelectorAll('input[name=lk]').forEach(r=>r.addEventListener('change',()=>fillLb()));
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b)show(b.dataset.t)});
+function show(t){TAB=t;
+  document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));
+  ['ov','lg','bd','ex'].forEach(x=>$('v-'+x).classList.toggle('hide',x!==t));
+  if(t==='ov')renderOv();if(t==='lg')renderLg();if(t==='bd')renderBd();}
+
+/* ---- 預算執行 ---- */
+function sums(kind){const r=OV.filter(o=>o.kind===kind);return{b:r.reduce((s,o)=>s+Number(o.amount),0),a:r.reduce((s,o)=>s+Number(o.actual),0)}}
+function renderOv(){
+  const I=sums('收入'),E=sums('支出');
+  $('tiles').innerHTML=[['預算收入',N(I.b),'實收 '+N(I.a)+'（'+(pct(I.a,I.b)??0)+'%）'],['預算支出',N(E.b),'實支 '+N(E.a)+'（'+(pct(E.a,E.b)??0)+'%）'],['實際結餘（實收−實支）',N(I.a-E.a),I.a-E.a<0?'目前支出大於收入':'目前收入大於支出'],['預算結餘（收入−支出）',N(I.b-E.b),'預算書為收支平衡']]
+   .map(([k,v,s])=>`<div class="tile"><div class="k">${k}</div><div class="v">NT$ ${v}</div><div class="s">${s}</div></div>`).join('');
+  const k=$('ovk').value,only=$('ovo').checked;
+  let h='<thead><tr><th>科目／項目</th><th class="n">數量×單價</th><th class="n">預算</th><th class="n">實際</th><th class="n">差異（預算−實際）</th><th>執行率</th><th class="noprint"></th></tr></thead><tbody>';
+  for(const kind of ['收入','支出']){
+    if(k&&k!==kind)continue;
+    const rows=OV.filter(o=>o.kind===kind);const t=sums(kind);
+    h+=`<tr class="kindrow"><td>${kind}合計</td><td></td><td class="n">${N(t.b)}</td><td class="n">${N(t.a)}</td><td class="n">${N(t.b-t.a)}</td><td>${pct(t.a,t.b)??'—'}%</td><td class="noprint"></td></tr>`;
+    const cats=[...new Set(rows.map(o=>o.category))];
+    for(const c of cats){
+      let items=rows.filter(o=>o.category===c);
+      const cb=items.reduce((s,o)=>s+Number(o.amount),0),ca=items.reduce((s,o)=>s+Number(o.actual),0);
+      if(only)items=items.filter(o=>Number(o.actual)>0||(kind==='支出'&&Number(o.actual)>Number(o.amount)));
+      if(only&&!items.length)continue;
+      h+=`<tr class="catrow"><td>${esc(c)}</td><td></td><td class="n">${N(cb)}</td><td class="n">${N(ca)}</td><td class="n">${N(cb-ca)}</td><td>${pct(ca,cb)??'—'}%</td><td class="noprint"></td></tr>`;
+      for(const o of items){
+        const a=Number(o.actual),b=Number(o.amount),r=pct(a,b),ov=kind==='支出'&&a>b;
+        h+=`<tr><td style="padding-left:22px">${esc(o.item)}</td><td class="n">${N(o.qty)}${esc(o.unit)} × ${N(o.unit_price)}</td><td class="n">${N(b)}</td><td class="n ${ov?'over':''}">${N(a)}</td><td class="n ${ov?'over':''}">${N(b-a)}</td><td><span class="mini ${ov?'o':''}"><i style="width:${Math.min(100,r||0)}%"></i></span>${r==null?'—':r+'%'}</td><td class="noprint">${o.cnt>0?`<button class="lnk" onclick="gotoLg(${o.id})">查帳(${o.cnt})</button>`:''}</td></tr>`;
+      }
+    }
+  }
+  $('tOv').innerHTML=h+'</tbody>';
+}
+$('ovk').addEventListener('change',renderOv);$('ovo').addEventListener('change',renderOv);
+function gotoLg(id){$('fb').value=id;show('lg')}
+
+/* ---- 收支帳 ---- */
+function renderLg(){
+  const k=$('fk').value,b=$('fb').value,m=$('fm').value,q=$('fq').value.trim(),v=$('fv').checked;
+  const bm={};OV.forEach(o=>bm[o.id]=o);
+  const rows=LG.filter(l=>(v||!l.voided)&&(!k||l.kind===k)&&(!b||String(l.budget_id)===b)&&(!m||l.entry_date.startsWith(m))&&(!q||(l.description+l.counterparty+l.voucher+l.note).includes(q)));
+  const inc=rows.filter(l=>!l.voided&&l.kind==='收入').reduce((s,l)=>s+Number(l.amount),0),exp=rows.filter(l=>!l.voided&&l.kind==='支出').reduce((s,l)=>s+Number(l.amount),0);
+  $('tLg').innerHTML='<thead><tr><th>日期</th><th>類別</th><th>科目</th><th>摘要</th><th class="n">金額</th><th>方式</th><th>對象</th><th>憑證</th><th>狀態</th><th></th></tr></thead><tbody>'+
+   rows.map(l=>{const o=bm[l.budget_id]||{};return `<tr style="${l.voided?'opacity:.5;text-decoration:line-through':''}"><td>${esc(l.entry_date)}</td><td>${esc(l.kind)}</td><td>${esc(o.category||'')}｜${esc(o.item||'')}</td><td style="white-space:normal;min-width:160px">${esc(l.description)}${l.note?`<br><small class="muted">${esc(l.note)}</small>`:''}</td><td class="n">${N(l.amount)}</td><td>${esc(l.method)}</td><td>${esc(l.counterparty)}</td><td>${esc(l.voucher)}</td><td>${l.voided?'作廢':(l.dues_id?'繳費匯入':'手動')}</td><td class="act"><button class="sm" onclick="editLg(${l.id})">編輯</button><button class="sm" onclick="voidLg(${l.id},${!l.voided})">${l.voided?'恢復':'作廢'}</button></td></tr>`}).join('')+
+   `</tbody><tfoot><tr><th colspan="4">篩選結果合計（不含作廢）</th><th class="n" colspan="2">收入 ${N(inc)}　支出 ${N(exp)}</th><th colspan="4"></th></tr></tfoot>`;
+}
+['fk','fb','fm','fv'].forEach(i=>$(i).addEventListener('change',renderLg));$('fq').addEventListener('input',renderLg);
+function editLg(id){const l=LG.find(x=>x.id===id);EDIT=id;
+  document.querySelector(`input[name=lk][value=${l.kind}]`).checked=true;fillLb(String(l.budget_id));
+  $('ld').value=l.entry_date;$('la').value=l.amount;$('lm').value=l.method||'其他';$('lc').value=l.counterparty;$('lv').value=l.voucher;$('ls').value=l.description;$('ln').value=l.note;
+  $('lfT').textContent='編輯收支';$('lcancel').classList.remove('hide');$('lf').scrollIntoView({behavior:'smooth'})}
+function resetLf(){EDIT=null;$('lf').reset();$('ld').value=todayTW();fillLb();$('lfT').textContent='新增收支';$('lcancel').classList.add('hide')}
+$('lcancel').addEventListener('click',resetLf);
+async function voidLg(id,v){if(v&&!confirm('作廢這筆帳？（可再恢復）'))return;try{await rpc('imc_ledger_void',{p:PW,i:id,v});await reload()}catch(e){alert(e.message)}}
+$('lf').addEventListener('submit',async e=>{e.preventDefault();const o=$('lout');o.innerHTML='';
+  const a=parseFloat($('la').value.replace(/,/g,''));
+  if(!$('lb').value){o.innerHTML='<div class="msg err">請選預算科目</div>';return}
+  if(!(a>0)){o.innerHTML='<div class="msg err">金額請填大於 0 的數字</div>';return}
+  try{await rpc('imc_ledger_save',{p:PW,i:EDIT,d:$('ld').value,k:document.querySelector('input[name=lk]:checked').value,b:+$('lb').value,ds:$('ls').value,a,m:$('lm').value,cp:$('lc').value,v:$('lv').value,nt:$('ln').value});
+    o.innerHTML='<div class="msg ok">已儲存。</div>';resetLf();await reload()}catch(err){o.innerHTML=`<div class="msg err">${esc(err.message)}</div>`}});
+$('sync').addEventListener('click',async()=>{try{const n=await rpc('imc_ledger_import_dues',{p:PW});$('syncmsg').innerHTML=`<div class="msg ok">${n?`已匯入 ${n} 筆新確認的繳費。`:'沒有新的繳費需要匯入（已同步）。'}</div>`;await reload()}catch(e){$('syncmsg').innerHTML=`<div class="msg err">${esc(e.message)}</div>`}});
+
+/* ---- 預算編列 ---- */
+function renderBd(){
+  let h='<thead><tr><th>項目</th><th style="width:90px">數量</th><th style="width:70px">單位</th><th style="width:110px">單價</th><th class="n" style="width:110px">預算金額</th><th>備註</th><th></th></tr></thead><tbody>';
+  for(const kind of ['收入','支出']){
+    h+=`<tr class="kindrow"><td colspan="7">${kind}　合計 ${N(sums(kind).b)}</td></tr>`;
+    for(const c of [...new Set(OV.filter(o=>o.kind===kind).map(o=>o.category))]){
+      const it=OV.filter(o=>o.kind===kind&&o.category===c);
+      h+=`<tr class="catrow"><td colspan="7">${esc(c)}　小計 ${N(it.reduce((s,o)=>s+Number(o.amount),0))}</td></tr>`;
+      h+=it.map(o=>`<tr data-id="${o.id}" data-k="${kind}" data-c="${esc(c)}"><td><input class="si b-i" value="${esc(o.item)}"></td><td><input class="si b-q" inputmode="decimal" value="${o.qty}"></td><td><input class="si b-u" value="${esc(o.unit)}"></td><td><input class="si b-p" inputmode="decimal" value="${o.unit_price}"></td><td class="n b-a">${N(o.amount)}</td><td><input class="si b-n" value="${esc(o.note)}"></td><td><button class="sm bad" onclick="delBd(${o.id})">刪除</button></td></tr>`).join('');
+    }
+  }
+  $('tBud').innerHTML=h+'</tbody>';
+}
+$('tBud').addEventListener('input',e=>{const tr=e.target.closest('tr[data-id]');if(!tr)return;const q=parseFloat(tr.querySelector('.b-q').value),p=parseFloat(tr.querySelector('.b-p').value);tr.querySelector('.b-a').textContent=(q>=0&&p>=0)?N(q*p):'—'});
+$('tBud').addEventListener('change',async e=>{const tr=e.target.closest('tr[data-id]');if(!tr)return;
+  const q=parseFloat(tr.querySelector('.b-q').value),p=parseFloat(tr.querySelector('.b-p').value);
+  try{await rpc('imc_budget_save',{p:PW,i:+tr.dataset.id,k:tr.dataset.k,cat:tr.dataset.c,it:tr.querySelector('.b-i').value,q,u:tr.querySelector('.b-u').value,up:p,nt:tr.querySelector('.b-n').value});
+    [OV,LG]=await Promise.all([rpc('imc_fin_overview',{p:PW}),rpc('imc_ledger_list',{p:PW})]);fillBud();$('bout').innerHTML='<div class="msg ok">已儲存</div>';
+    document.querySelectorAll('#v-bd .kindrow td').forEach((td,i)=>{const kind=i?'支出':'收入';td.textContent=`${kind}　合計 ${N(sums(kind).b)}`})}
+  catch(err){$('bout').innerHTML=`<div class="msg err">${esc(err.message)}</div>`}});
+async function delBd(id){if(!confirm('刪除這個預算項目？'))return;try{await rpc('imc_budget_delete',{p:PW,i:id});await reload()}catch(e){$('bout').innerHTML=`<div class="msg err">${esc(e.message)}</div>`;alert(e.message)}}
+$('bf').addEventListener('submit',async e=>{e.preventDefault();const q=parseFloat($('bq').value),p=parseFloat($('bp').value);
+  try{await rpc('imc_budget_save',{p:PW,i:null,k:document.querySelector('input[name=bk]:checked').value,cat:$('bc').value,it:$('bi').value,q,u:$('bu').value,up:p,nt:''});
+    $('bout').innerHTML='<div class="msg ok">已新增</div>';$('bi').value='';$('bp').value='';await reload()}catch(err){$('bout').innerHTML=`<div class="msg err">${esc(err.message)}</div>`}});
+
+/* ---- 匯出 ---- */
+const today=()=>todayTW().replace(/-/g,'/');
+function csvDl(name,rows){const c=rows.map(r=>r.map(v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"').join(',')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+c],{type:'text/csv'}));a.download=name;a.click()}
+const bmap=()=>{const m={};OV.forEach(o=>m[o.id]=o);return m};
+$('csvL').addEventListener('click',()=>{const m=bmap();csvDl('收支明細.csv',[['日期','科目編號','類別','科目','項目','金額','摘要','方式','對象','憑證','狀態','備註','來源']].concat(LG.slice().reverse().map(l=>{const o=m[l.budget_id]||{};return [l.entry_date,l.budget_id,l.kind,o.category,o.item,l.amount,l.description,l.method,l.counterparty,l.voucher,l.voided?'作廢':'正常',l.note,l.dues_id?'繳費匯入':'手動']})))});
+$('csvB').addEventListener('click',()=>csvDl('預算執行表.csv',[['類別','科目','項目','數量','單位','單價','預算金額','實際金額','差異','執行率%']].concat(OV.map(o=>[o.kind,o.category,o.item,o.qty,o.unit,o.unit_price,o.amount,o.actual,o.amount-o.actual,pct(Number(o.actual),Number(o.amount))??''])))) ;
+$('prt').addEventListener('click',()=>{show('ov');$('ovk').value='';renderOv();setTimeout(()=>window.print(),200)});
+function loadXlsx(){return new Promise((res,rej)=>{if(window.XLSX)return res();const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=res;s.onerror=()=>rej(new Error('無法載入 Excel 元件，請檢查網路後重試（或先用 CSV 匯出）'));document.head.appendChild(s)})}
+$('xl').addEventListener('click',async()=>{const o=$('xout');o.innerHTML='';
+  try{await loadXlsx();buildXlsx();o.innerHTML='<div class="msg ok">已下載。用 Excel 或 WPS 開啟即可（公式會自動計算）。</div>'}catch(e){o.innerHTML=`<div class="msg err">${esc(e.message)}</div>`}});
+function buildXlsx(){
+  const X=XLSX,m=bmap();
+  /* 收支明細（先建，因執行表要引用）*/
+  const H2=['日期','科目編號','類別','科目','項目','金額','摘要','方式','對象','憑證','狀態','備註','來源'];
+  const L=LG.slice().reverse();
+  const ws2=X.utils.aoa_to_sheet([H2].concat(L.map(l=>{const o=m[l.budget_id]||{};return [l.entry_date,l.budget_id,l.kind,o.category||'',o.item||'',Number(l.amount),l.description,l.method,l.counterparty,l.voucher,l.voided?'作廢':'正常',l.note,l.dues_id?'繳費匯入':'手動']})));
+  ws2['!cols']=[12,9,7,22,24,12,30,8,14,18,7,24,9].map(w=>({wch:w}));
+  for(let r=2;r<=L.length+1;r++){const c=ws2['F'+r];if(c)c.z='#,##0'}
+  const last=Math.max(L.length+1,2);
+  /* 預算執行表 */
+  const rows=[];const put=(r,c,v,f,z)=>{rows.push({r,c,v,f,z})};
+  const title=['苗栗IMC 第15屆 預算執行表'],per=['社團法人苗栗縣國際工商經營研究社　期間 115/10/1–116/9/30　製表日 '+today()];
+  const head=['編號','類別','科目','項目','數量','單位','單價','預算金額','實際金額','差異（預算−實際）','執行率','備註'];
+  const aoa=[title,per,[],head];const ws1=X.utils.aoa_to_sheet(aoa);
+  let r=5;const kindTot={};
+  const setN=(col,row,v,f,z)=>{ws1[col+row]={t:'n',v:Number(v)||0,z:z||'#,##0'};if(f)ws1[col+row].f=f};
+  const setS=(col,row,v)=>{ws1[col+row]={t:'s',v:String(v)}};
+  const act=(id)=>L.filter(l=>String(l.budget_id)===String(id)&&!l.voided).reduce((s,l)=>s+Number(l.amount),0);
+  for(const kind of ['收入','支出']){
+    const subRows=[];
+    for(const c of [...new Set(OV.filter(o=>o.kind===kind).map(o=>o.category))]){
+      const it=OV.filter(o=>o.kind===kind&&o.category===c);const a=r;
+      for(const o of it){
+        setN('A',r,o.id,null,'0');setS('B',r,kind);setS('C',r,c);setS('D',r,o.item);setN('E',r,o.qty,null,'#,##0.##');setS('F',r,o.unit);setN('G',r,o.unit_price);
+        setN('H',r,o.amount,`E${r}*G${r}`);
+        const av=act(o.id);setN('I',r,av,`SUMIFS('收支明細'!$F$2:$F$${last},'收支明細'!$B$2:$B$${last},A${r},'收支明細'!$K$2:$K$${last},"正常")`);
+        setN('J',r,Number(o.amount)-av,`H${r}-I${r}`);
+        ws1['K'+r]={t:'n',v:Number(o.amount)?av/Number(o.amount):0,f:`IF(H${r}=0,0,I${r}/H${r})`,z:'0.0%'};
+        setS('L',r,o.note||'');r++;
+      }
+      const b=r-1;
+      setS('C',r,c);setS('D',r,'小計');
+      const sb=it.reduce((s,o)=>s+Number(o.amount),0),sa=it.reduce((s,o)=>s+act(o.id),0);
+      setN('H',r,sb,`SUM(H${a}:H${b})`);setN('I',r,sa,`SUM(I${a}:I${b})`);setN('J',r,sb-sa,`H${r}-I${r}`);
+      ws1['K'+r]={t:'n',v:sb?sa/sb:0,f:`IF(H${r}=0,0,I${r}/H${r})`,z:'0.0%'};subRows.push(r);r++;
+    }
+    setS('B',r,kind);setS('D',r,kind+'合計');
+    const tb=OV.filter(o=>o.kind===kind).reduce((s,o)=>s+Number(o.amount),0),ta=OV.filter(o=>o.kind===kind).reduce((s,o)=>s+act(o.id),0);
+    setN('H',r,tb,subRows.map(x=>'H'+x).join('+'));setN('I',r,ta,subRows.map(x=>'I'+x).join('+'));setN('J',r,tb-ta,`H${r}-I${r}`);
+    ws1['K'+r]={t:'n',v:tb?ta/tb:0,f:`IF(H${r}=0,0,I${r}/H${r})`,z:'0.0%'};kindTot[kind]={r,tb,ta};r+=2;
+  }
+  const I=kindTot['收入'],E=kindTot['支出'];
+  setS('D',r,'結餘（收入合計−支出合計）');setN('H',r,I.tb-E.tb,`H${I.r}-H${E.r}`);setN('I',r,I.ta-E.ta,`I${I.r}-I${E.r}`);
+  ws1['!ref']=`A1:L${r}`;ws1['!cols']=[7,7,22,26,8,6,10,13,13,16,9,24].map(w=>({wch:w}));
+  const wb=X.utils.book_new();X.utils.book_append_sheet(wb,ws1,'預算執行表');X.utils.book_append_sheet(wb,ws2,'收支明細');
+  X.writeFile(wb,`苗栗IMC第15屆_預算執行表_${todayTW().replace(/-/g,'')}.xlsx`);
+}
+if(PW){boot().catch(()=>{PW='';try{sessionStorage.removeItem('imc_fin')}catch(e){}})}
+</script>
+</body>
+</html>
