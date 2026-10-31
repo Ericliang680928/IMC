@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="assets/style.css">
 <script>if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed')</script>
-<style>.pill.待處理{background:var(--warn-bg);color:var(--warn)}.pill.已入帳{background:var(--ok-bg);color:var(--ok)}html.embed header.top,html.embed .tabs,html.embed #logout,html.embed #login{display:none !important}html.embed body{background:transparent}html.embed .tw{max-height:640px}html.embed .wrap{padding-bottom:16px}.tiles.s3{grid-template-columns:repeat(3,1fr)}.tiles.s3 .v{font-size:20px}.tiles.s3 .tile{padding:10px 12px}@media(max-width:700px){.tiles.s3{gap:8px}.tiles.s3 .tile{padding:8px 10px}.tiles.s3 .v{font-size:17px}.tiles.s3 .s{font-size:11.5px}}
+<style>.pill.待處理{background:var(--warn-bg);color:var(--warn)}.pill.已入帳{background:var(--ok-bg);color:var(--ok)}html.embed header.top,html.embed .tabs,html.embed #logout,html.embed #login{display:none !important}html.embed body{background:transparent}html.embed .tw{max-height:640px}html.embed .wrap{padding:0 0 16px}html.embed #app>.tiles{margin-top:12px}.tile .v{white-space:nowrap}@media(max-width:700px){#app>.tiles .v{font-size:18px}}@media(min-width:701px){#app>.tiles{grid-template-columns:repeat(auto-fit,minmax(172px,1fr))}.tile .v{font-size:22px}.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 32px;align-items:start}}.tiles.s3{grid-template-columns:repeat(3,1fr)}.tiles.s3 .v{font-size:20px}.tiles.s3 .tile{padding:10px 12px}@media(max-width:700px){.tiles.s3{gap:8px}.tiles.s3 .tile{padding:8px 10px}.tiles.s3 .v{font-size:17px}.tiles.s3 .s{font-size:11.5px}}
 </style>
 
 <style>input.si{padding:8px 10px;min-height:40px;font-size:15px}#tSet td{white-space:nowrap;vertical-align:middle}#tSet select{min-width:190px;padding:8px 10px;min-height:40px}#tSet input.sg+input.sn{margin-left:6px}</style>
@@ -71,11 +71,13 @@
 
     <div id="v-claims" class="hide"></div>
     <div id="v-add" class="hide">
-      <form class="card" id="addf" style="max-width:560px">
+      <form class="card" id="addf" style="max-width:960px">
         <h2>代登收款（現場收現、或已查帳直接入帳）</h2>
+        <div class="g2"><div>
         <label class="f" for="an">社友</label><input type="text" id="an" list="anl" placeholder="輸入姓名關鍵字" autocomplete="off" required><datalist id="anl"></datalist>
         <label class="f">項目</label><div class="opts" id="aitems"><div class="muted">先選社友，系統會依其類別列出項目與金額。</div></div>
         <div class="total"><span>合計</span><b id="asum">NT$ 0</b></div>
+        </div><div>
         <label class="f">方式</label>
         <div class="seg"><label><input type="radio" name="am" value="現金" checked><span>現金</span></label><label><input type="radio" name="am" value="匯款"><span>匯款</span></label><label><input type="radio" name="am" value="其他"><span>其他</span></label></div>
         <label class="f" for="al5">匯出帳號後5碼（匯款才填）</label><input type="text" id="al5" maxlength="5" inputmode="numeric">
@@ -83,6 +85,7 @@
         <label class="f" for="ant">備註</label><input type="text" id="ant" maxlength="200">
         <button class="btn" type="submit">登錄並直接確認</button>
         <div id="aout"></div>
+        </div></div>
       </form>
     </div>
 
@@ -171,7 +174,7 @@ function show(t){
   document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));
   ['pending','all','matrix','add','set'].forEach(x=>$('v-'+x).classList.toggle('hide',x!==t));
   $('v-claims').classList.toggle('hide',!ex);
-  document.querySelectorAll('.incomeOnly').forEach(el=>el.classList.toggle('hide',ex));
+  document.querySelectorAll('.incomeOnly').forEach(el=>el.classList.toggle('hide',ex||t==='add'||t==='set'));
   if(t==='pending')renderPending();if(t==='all')renderAll();if(t==='matrix')renderMx();if(t==='set')renderSet();if(ex)renderClaims(t);
   postCounts();
 }
