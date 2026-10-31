@@ -7,7 +7,8 @@
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="assets/style.css">
 <script>if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed')</script>
-<style>.pill.待處理{background:var(--warn-bg);color:var(--warn)}.pill.已入帳{background:var(--ok-bg);color:var(--ok)}html.embed header.top,html.embed .tabs,html.embed #logout,html.embed #login{display:none !important}html.embed body{background:transparent}html.embed .tw{max-height:640px}html.embed .wrap{padding-bottom:16px}</style>
+<style>.pill.待處理{background:var(--warn-bg);color:var(--warn)}.pill.已入帳{background:var(--ok-bg);color:var(--ok)}html.embed header.top,html.embed .tabs,html.embed #logout,html.embed #login{display:none !important}html.embed body{background:transparent}html.embed .tw{max-height:640px}html.embed .wrap{padding-bottom:16px}.tiles.s3{grid-template-columns:repeat(3,1fr)}.tiles.s3 .v{font-size:20px}.tiles.s3 .tile{padding:10px 12px}@media(max-width:700px){.tiles.s3{gap:8px}.tiles.s3 .tile{padding:8px 10px}.tiles.s3 .v{font-size:17px}.tiles.s3 .s{font-size:11.5px}}
+</style>
 
 <style>input.si{padding:8px 10px;min-height:40px;font-size:15px}#tSet td{white-space:nowrap;vertical-align:middle}#tSet select{min-width:190px;padding:8px 10px;min-height:40px}#tSet input.sg+input.sn{margin-left:6px}</style>
 </head>
@@ -31,17 +32,19 @@
   </form>
 
   <section id="app" class="hide">
-    <div class="tiles" id="tiles"></div>
-    <div class="bar" title="已確認金額 / 應收金額"><i id="barfill" style="width:0"></i></div>
-    <div class="muted" id="barlab" style="margin-top:6px"></div>
+    <div class="tiles incomeOnly" id="tiles"></div>
+    <div class="bar incomeOnly" title="已確認金額 / 應收金額"><i id="barfill" style="width:0"></i></div>
+    <div class="muted incomeOnly" id="barlab" style="margin-top:6px"></div>
 
     <div class="tabs" role="tablist" id="tabs">
       <button role="tab" data-t="pending" aria-selected="true">待審核</button>
-      <button role="tab" data-t="all" aria-selected="false">全部紀錄</button>
+      <button role="tab" data-t="all" aria-selected="false">全部收款</button>
       <button role="tab" data-t="matrix" aria-selected="false">繳費總表</button>
       <button role="tab" data-t="add" aria-selected="false">代登收款</button>
-      <button role="tab" data-t="claims" aria-selected="false" id="tabClaims">報帳審核</button>
-      <button role="tab" data-t="set" aria-selected="false">設定</button>
+      <button role="tab" data-t="set" aria-selected="false">收費設定</button>
+      <button role="tab" data-t="cpend" aria-selected="false" id="tabClaims">待入帳</button>
+      <button role="tab" data-t="call" aria-selected="false">全部報帳</button>
+      <button role="tab" data-t="cset" aria-selected="false">名單與維護</button>
     </div>
 
     <div id="v-pending"></div>
@@ -160,26 +163,44 @@ function tiles(){
   $('barlab').textContent=`社費已確認 ${money(confDues)} ／ 應收 ${money(exp)}（${pct}%）。待審核 ${money(pendAmt)}、廣告費 ${money(confAd)} 另計，不在此比例內。`;
 }
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b)show(b.dataset.t)});
+const CT=['cpend','call','cset'];let CF='';
+function postCounts(){if(document.documentElement.classList.contains('embed')){try{parent.postMessage({counts:{inc:DUES.filter(d=>d.status==='待審核').length,exp:CL.filter(c=>c.status==='待處理').length}},location.origin)}catch(e){}}}
 function show(t){
-  TAB=t;
+  if(t==='claims')t='cpend';
+  TAB=t;const ex=CT.includes(t);
   document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));
-  ['pending','all','matrix','add','claims','set'].forEach(x=>$('v-'+x).classList.toggle('hide',x!==t));
-  if(t==='pending')renderPending();if(t==='all')renderAll();if(t==='matrix')renderMx();if(t==='set')renderSet();if(t==='claims')renderClaims();
+  ['pending','all','matrix','add','set'].forEach(x=>$('v-'+x).classList.toggle('hide',x!==t));
+  $('v-claims').classList.toggle('hide',!ex);
+  document.querySelectorAll('.incomeOnly').forEach(el=>el.classList.toggle('hide',ex));
+  if(t==='pending')renderPending();if(t==='all')renderAll();if(t==='matrix')renderMx();if(t==='set')renderSet();if(ex)renderClaims(t);
+  postCounts();
 }
 
 function budOpts(sel){const by={};CI.forEach(i=>{(by[i.category]=by[i.category]||[]).push(i)});return '<option value="">— 選擇入帳科目 —</option>'+Object.keys(by).map(c=>`<optgroup label="${esc(c)}">`+by[c].map(i=>`<option value="${i.id}"${String(i.id)===String(sel)?' selected':''}>${esc(i.item)}</option>`).join('')+'</optgroup>').join('')}
-function renderClaims(){
+function renderClaims(mode){
+  mode=mode||'cpend';
   const np=CL.filter(c=>c.status==='待處理').length;
-  $('tabClaims').textContent=np?`報帳審核（${np}）`:'報帳審核';
-  const tot=CL.filter(c=>c.status==='待處理').reduce((s,c)=>s+Number(c.amount),0);
-  $('v-claims').innerHTML=`<div class="card" id="boardBox"><h2>可報帳的理監事名單</h2><div class="muted">只有名單內的人能在報帳頁登記。</div><div id="boardList" class="row" style="margin-top:10px"></div><div class="row" style="margin-top:10px"><input class="si grow" id="bn" list="bnl" placeholder="輸入姓名後按加入（名冊以外的人也可加）"><datalist id="bnl">${MEM.filter(m=>m.active).map(m=>`<option value="${esc(m.name)}">`).join('')}</datalist><select class="si" id="bg"><option>理事</option><option>監事</option><option>社長</option><option>秘書長</option><option>財務長</option><option>秘書</option></select><input class="si" id="bt" placeholder="職稱（選填）" style="width:120px"><button class="sm" id="bAdd">加入名單</button></div><div id="bout"></div></div>`+`<div class="card"><h2>理監事活動報帳</h2><div class="muted">理監事辦完活動後在報帳頁登記支出，這裡可先看到有哪些支出。按「入帳」會自動記入收支帳（支出），可在入帳前調整預算科目。待處理 ${np} 筆，合計 ${money(tot)}。</div></div>`+
-  `<div class="card"><h2>清除已入帳報帳的照片</h2><div class="muted">帳目與金額都會保留，只刪除憑證照片以節省空間。建議每屆結算、正本已核對留存後再清。</div><div class="row" style="margin-top:10px"><button class="sm" id="pgChk">先看會清多少</button></div><div id="pgOut"></div></div>`+
-  (CL.length?CL.map(c=>`<div class="rv" data-c="${c.id}"><div class="h"><div><span class="pill ${esc(c.status)}">${esc(c.status)}</span> <span class="nm">${esc(c.claimant)}</span></div><div class="amt">${money(c.amount)}</div></div>
+  $('tabClaims').textContent=np?`待入帳（${np}）`:'待入帳';
+  const sum=s=>CL.filter(c=>c.status===s).reduce((a,c)=>a+Number(c.amount),0),cnt=s=>CL.filter(c=>c.status===s).length;
+  const card=c=>`<div class="rv" data-c="${c.id}"><div class="h"><div><span class="pill ${esc(c.status)}">${esc(c.status)}</span> <span class="nm">${esc(c.claimant)}</span></div><div class="amt">${money(c.amount)}</div></div>
   <dl class="kv"><dt>活動</dt><dd>${esc(c.activity)}</dd><dt>內容</dt><dd>${esc(c.description)}</dd><dt>支出日期</dt><dd>${esc(c.spend_date)}</dd><dt>付款情形</dt><dd>${esc(c.pay_how)}</dd>${c.payee?`<dt>對象</dt><dd>${esc(c.payee)}</dd>`:''}<dt>憑證</dt><dd>${esc(c.voucher)}</dd>${c.note?`<dt>備註</dt><dd>${esc(c.note)}</dd>`:''}${c.nphoto?`<dt>憑證照片</dt><dd><button class="sm" data-a="ph">查看 ${c.nphoto} 張</button></dd>`:''}<dt>登記時間</dt><dd>${esc(fmtTime(c.created_at))}</dd></dl>
   ${c.status==='已入帳'?`<div class="muted">已記入收支帳。${esc(c.review_note||'')}</div><div class="row" style="margin-top:8px"><button class="sm" data-a="undo">撤銷入帳</button></div>`:`<div class="row" style="margin-top:8px"><select class="si grow" data-f="bud">${budOpts(c.budget_id)}</select></div><div class="row" style="margin-top:8px"><input class="si grow" data-f="rn" placeholder="給報帳人的備註（選填，退回請寫原因）" value="${esc(c.review_note||'')}"></div><div class="row" style="margin-top:8px"><button class="btn" style="width:auto;padding:0 22px" data-a="ok">入帳</button><button class="sm bad" data-a="no">退回</button></div>`}
-  <div class="cout"></div></div>`).join(''):'<div class="card muted">目前沒有報帳紀錄。</div>');
-  loadBoard();
+  <div class="cout"></div></div>`;
+  const stat=`<div class="tiles s3">${[['待入帳',np+' 筆',money(sum('待處理'))],['已入帳',cnt('已入帳')+' 筆',money(sum('已入帳'))],['退回',cnt('退回')+' 筆',money(sum('退回'))]].map(([k,v,s])=>`<div class="tile"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('')}</div>`;
+  let h='';
+  if(mode==='cpend'){
+    const L=CL.filter(c=>c.status==='待處理');
+    h=stat+`<div class="muted" style="margin:10px 0">理監事辦完活動後在報帳頁登記支出。按「入帳」會自動記入收支帳（支出），入帳前可調整預算科目。</div>`+(L.length?L.map(card).join(''):'<div class="card muted">目前沒有待入帳的報帳。</div>');
+  }else if(mode==='call'){
+    const L=CL.filter(c=>!CF||c.status===CF);
+    h=stat+`<div class="card row" style="margin-top:12px"><select id="cfs" class="grow"><option value="">全部狀態</option><option value="待處理"${CF==='待處理'?' selected':''}>待入帳</option><option value="已入帳"${CF==='已入帳'?' selected':''}>已入帳</option><option value="退回"${CF==='退回'?' selected':''}>退回</option></select></div>`+(L.length?L.map(card).join(''):'<div class="card muted">沒有符合的報帳紀錄。</div>');
+  }else{
+    h=`<div class="card" id="boardBox"><h2>可報帳的理監事名單</h2><div class="muted">只有名單內的人能在報帳頁登記。</div><div id="boardList" class="row" style="margin-top:10px"></div><div class="row" style="margin-top:10px"><input class="si grow" id="bn" list="bnl" placeholder="輸入姓名後按加入（名冊以外的人也可加）"><datalist id="bnl">${MEM.filter(m=>m.active).map(m=>`<option value="${esc(m.name)}">`).join('')}</datalist><select class="si" id="bg"><option>理事</option><option>監事</option><option>社長</option><option>秘書長</option><option>財務長</option><option>秘書</option></select><input class="si" id="bt" placeholder="職稱（選填）" style="width:120px"><button class="sm" id="bAdd">加入名單</button></div><div id="bout"></div></div>`+`<div class="card"><h2>清除已入帳報帳的照片</h2><div class="muted">帳目與金額都會保留，只刪除憑證照片以節省空間。建議每屆結算、正本已核對留存後再清。</div><div class="row" style="margin-top:10px"><button class="sm" id="pgChk">先看會清多少</button></div><div id="pgOut"></div></div>`;
+  }
+  $('v-claims').innerHTML=h;
+  if($('boardList'))loadBoard();
 }
+$('v-claims').addEventListener('change',e=>{if(e.target.id==='cfs'){CF=e.target.value;renderClaims('call')}});
 $('v-claims').addEventListener('click',async e=>{const b=e.target.closest('button[data-a]');if(!b)return;const box=b.closest('.rv'),id=Number(box.dataset.c),a=b.dataset.a,out=box.querySelector('.cout');
   const bud=box.querySelector('[data-f=bud]'),rn=box.querySelector('[data-f=rn]');
   try{
