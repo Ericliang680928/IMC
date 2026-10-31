@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>社費繳費回報 | 苗栗IMC 第15屆</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand">
+    <img src="assets/imc-logo.png" alt="苗栗IMC 社徽" onerror="this.style.display='none'">
+    <div class="t"><div class="org">社團法人苗栗縣國際工商經營研究社</div><h1>社費繳費回報</h1></div>
+    <img src="assets/15th-logo.png" alt="第15屆" onerror="this.style.display='none'">
+  </div>
+</div><hr class="rule"></header>
+
+<main class="wrap">
+  <div class="card">
+    <h2>繳完社費後，請在這裡回報</h2>
+    <div class="muted">匯款或繳現金之後填一次，財務長核對入帳後會確認，您可隨時回來查詢進度。</div>
+    <div class="pay" id="pay">載入匯款資訊中…</div>
+  </div>
+
+  <form class="card" id="f" autocomplete="off">
+    <h2>回報繳費</h2>
+
+    <label class="f" for="who">1. 您的姓名</label>
+    <select id="who" required><option value="">載入名單中…</option></select>
+    <div class="hint">請從名單選擇；名單只用來比對，頁面不會列出其他社友的繳費情形。</div>
+
+    <label class="f">2. 繳了哪些項目</label>
+    <div class="opts" id="items"></div>
+    <div class="total"><span>應繳金額（自動合計）</span><b id="sum">NT$ 0</b></div>
+
+    <label class="f">3. 繳費方式</label>
+    <div class="seg" id="method">
+      <label><input type="radio" name="m" value="匯款" checked><span>匯款</span></label>
+      <label><input type="radio" name="m" value="現金"><span>現金（交給財務長）</span></label>
+      <label><input type="radio" name="m" value="其他"><span>其他</span></label>
+    </div>
+
+    <div id="l5box">
+      <label class="f" for="l5">4. 匯出帳號後 5 碼</label>
+      <input type="text" id="l5" inputmode="numeric" maxlength="5" placeholder="例如 12345">
+      <div class="hint">財務長用這 5 碼核對入帳，請填您匯款的那個帳號的最後 5 碼。</div>
+    </div>
+
+    <label class="f" for="d">繳費日期</label>
+    <input type="date" id="d" required>
+
+    <label class="f" for="nt">備註（選填）</label>
+    <input type="text" id="nt" maxlength="200" placeholder="例如：幫某某社友一起匯">
+
+    <button class="btn" id="go" type="submit">送出回報</button>
+    <div id="out" role="status" aria-live="polite"></div>
+  </form>
+
+  <div class="card hide" id="mine">
+    <h2>我的回報紀錄</h2>
+    <div id="mineList"></div>
+  </div>
+
+  <footer>苗栗IMC 第15屆　用心生活．共創美好<br>有問題請洽財務長</footer>
+</main>
+
+<script src="assets/api.js"></script>
+<script>
+let FEES=[],LABEL={};
+const $=id=>document.getElementById(id);
+async function init(){
+  $('d').value=todayTW();
+  try{
+    const [names,fees,pay]=await Promise.all([rpc('imc_names'),rpc('imc_fees'),rpc('imc_pay_info')]);
+    $('who').innerHTML='<option value="">— 請選擇姓名 —</option>'+names.map(x=>`<option>${esc(x.name)}</option>`).join('');
+    FEES=fees;fees.forEach(f=>LABEL[f.code]=f.label);
+    $('items').innerHTML=fees.map(f=>`<label class="opt" data-c="${f.code}"><input type="checkbox" value="${f.code}"><span class="l">${esc(f.label)}${f.new_only?'<br><small class="muted">只有本屆新入社的社友才勾選</small>':''}</span><span class="a">${money(f.amount)}</span></label>`).join('');
+    $('pay').textContent=pay||'請洽財務長取得匯款資訊';
+    $('items').addEventListener('change',calc);
+  }catch(e){$('out').innerHTML=`<div class="msg err">${esc(e.message)}</div>`;$('pay').textContent='無法載入'}
+}
+function calc(){
+  let s=0;
+  document.querySelectorAll('#items input').forEach(i=>{
+    const f=FEES.find(x=>x.code===i.value);
+    i.closest('.opt').classList.toggle('on',i.checked);
+    if(i.checked)s+=f.amount;
+  });
+  $('sum').textContent=money(s);return s;
+}
+document.querySelectorAll('input[name=m]').forEach(r=>r.addEventListener('change',()=>{
+  $('l5box').classList.toggle('hide',document.querySelector('input[name=m]:checked').value!=='匯款');
+}));
+$('who').addEventListener('change',loadMine);
+async function loadMine(){
+  const n=$('who').value;
+  if(!n){$('mine').classList.add('hide');return}
+  try{
+    const rows=await rpc('imc_dues_my',{n});
+    $('mine').classList.remove('hide');
+    $('mineList').innerHTML=rows.length?rows.map(r=>`<div class="rec"><div class="row"><span class="pill ${esc(r.status)}">${esc(r.status)}</span><b>${money(r.amount)}</b><span class="muted">${esc(r.method)}・${esc(fmtTime(r.submitted_at))}</span></div><div class="muted">${r.items.map(c=>esc(LABEL[c]||c)).join('、')}</div>${r.status==='退回'?`<div class="msg err">財務長退回：${esc(r.review_note)}（請更正後重新回報）</div>`:''}${r.status==='已確認'&&r.receipt_no?`<div class="muted">收據編號 ${esc(r.receipt_no)}</div>`:''}${r.status==='已確認'&&r.review_note?`<div class="muted">${esc(r.review_note)}</div>`:''}</div>`).join(''):'<div class="muted">還沒有回報紀錄。</div>';
+  }catch(e){$('mineList').innerHTML=`<div class="msg err">${esc(e.message)}</div>`;$('mine').classList.remove('hide')}
+}
+$('f').addEventListener('submit',async ev=>{
+  ev.preventDefault();
+  const out=$('out');out.innerHTML='';
+  const items=[...document.querySelectorAll('#items input:checked')].map(i=>i.value);
+  const m=document.querySelector('input[name=m]:checked').value;
+  if(!$('who').value){out.innerHTML='<div class="msg err">請先選擇姓名</div>';return}
+  if(!items.length){out.innerHTML='<div class="msg err">請至少勾選一個繳費項目</div>';return}
+  $('go').disabled=true;$('go').textContent='送出中…';
+  try{
+    await rpc('imc_dues_submit',{n:$('who').value,m,it:items,l5:m==='匯款'?$('l5').value.trim():'',d:$('d').value,nt:$('nt').value});
+    out.innerHTML=`<div class="msg ok"><b>已送出回報</b>（${money(calc())}）。財務長核對後會確認，您可以在下方「我的回報紀錄」查看進度。</div>`;
+    document.querySelectorAll('#items input').forEach(i=>i.checked=false);calc();$('l5').value='';$('nt').value='';
+    loadMine();
+  }catch(e){out.innerHTML=`<div class="msg err">${esc(e.message)}</div>`}
+  finally{$('go').disabled=false;$('go').textContent='送出回報'}
+});
+init();
+</script>
+</body>
+</html>

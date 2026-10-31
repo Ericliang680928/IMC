@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>財務長審核 | 苗栗IMC 第15屆</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="top"><div class="wrap wide">
+  <div class="brand">
+    <img src="assets/imc-logo.png" alt="苗栗IMC 社徽" onerror="this.style.display='none'">
+    <div class="t"><div class="org">社團法人苗栗縣國際工商經營研究社</div><h1>財務長・社費審核</h1></div>
+    <button class="sm hide" id="logout">登出</button>
+  </div>
+</div><hr class="rule"></header>
+
+<main class="wrap wide">
+  <form class="card" id="login" style="max-width:420px;margin-inline:auto">
+    <h2>財務長登入</h2>
+    <label class="f" for="pw">密碼</label>
+    <input type="password" id="pw" autocomplete="current-password" required>
+    <button class="btn" type="submit">登入</button>
+    <div id="lerr"></div>
+  </form>
+
+  <section id="app" class="hide">
+    <div class="tiles" id="tiles"></div>
+    <div class="bar" title="已確認金額 / 應收金額"><i id="barfill" style="width:0"></i></div>
+    <div class="muted" id="barlab" style="margin-top:6px"></div>
+
+    <div class="tabs" role="tablist" id="tabs">
+      <button role="tab" data-t="pending" aria-selected="true">待審核</button>
+      <button role="tab" data-t="all" aria-selected="false">全部紀錄</button>
+      <button role="tab" data-t="matrix" aria-selected="false">繳費總表</button>
+      <button role="tab" data-t="add" aria-selected="false">代登收款</button>
+      <button role="tab" data-t="set" aria-selected="false">設定</button>
+    </div>
+
+    <div id="v-pending"></div>
+
+    <div id="v-all" class="hide">
+      <div class="card row">
+        <select id="fs" class="grow"><option value="">全部狀態</option><option>待審核</option><option>已確認</option><option>退回</option></select>
+        <input type="search" id="fq" class="grow" placeholder="搜尋姓名、後5碼、備註">
+        <button class="sm" id="csv">匯出 CSV</button>
+      </div>
+      <div class="tw" style="margin-top:12px"><table class="t" id="tAll"></table></div>
+    </div>
+
+    <div id="v-matrix" class="hide">
+      <div class="card row">
+        <select id="mf" class="grow"><option value="">全部社友</option><option value="unpaid">尚有未繳</option><option value="done">已繳齊</option><option value="pend">有待審核</option></select>
+        <input type="search" id="mq" class="grow" placeholder="搜尋姓名">
+        <button class="sm" id="mcsv">匯出 CSV</button>
+        <button class="sm" onclick="window.print()">列印</button>
+      </div>
+      <div class="tw" style="margin-top:12px"><table class="t" id="tMx"></table></div>
+      <p class="muted noprint">「已確認」才算收到；「待審核」是社友已回報、財務長尚未確認。名單中停用的社友不計入應收。</p>
+    </div>
+
+    <div id="v-add" class="hide">
+      <form class="card" id="addf" style="max-width:560px">
+        <h2>代登收款（現場收現、或已查帳直接入帳）</h2>
+        <label class="f" for="an">社友</label><select id="an" required></select>
+        <label class="f">項目</label><div class="opts" id="aitems"></div>
+        <div class="total"><span>合計</span><b id="asum">NT$ 0</b></div>
+        <label class="f">方式</label>
+        <div class="seg"><label><input type="radio" name="am" value="現金" checked><span>現金</span></label><label><input type="radio" name="am" value="匯款"><span>匯款</span></label><label><input type="radio" name="am" value="其他"><span>其他</span></label></div>
+        <label class="f" for="al5">匯出帳號後5碼（匯款才填）</label><input type="text" id="al5" maxlength="5" inputmode="numeric">
+        <label class="f" for="ad">收款日期</label><input type="date" id="ad" required>
+        <label class="f" for="ant">備註</label><input type="text" id="ant" maxlength="200">
+        <button class="btn" type="submit">登錄並直接確認</button>
+        <div id="aout"></div>
+      </form>
+    </div>
+
+    <div id="v-set" class="hide">
+      <div class="card" style="max-width:560px">
+        <h2>匯款資訊（社友回報頁會顯示）</h2>
+        <textarea id="payinfo" rows="4" maxlength="500"></textarea>
+        <button class="btn" id="savepay">儲存匯款資訊</button><div id="pout"></div>
+      </div>
+      <form class="card" id="mf2" style="max-width:560px">
+        <h2>新增／停用社友</h2>
+        <label class="f" for="mn">姓名</label><input type="text" id="mn" required>
+        <label class="opt" style="margin-top:10px"><input type="checkbox" id="mnew"><span class="l">本屆新社友（可回報入社費）</span></label>
+        <label class="opt" style="margin-top:8px"><input type="checkbox" id="mact" checked><span class="l">在籍（取消勾選＝停用，不計入應收、不出現在回報名單）</span></label>
+        <button class="btn" type="submit">儲存社友</button><div id="mout"></div>
+      </form>
+      <form class="card" id="pf" style="max-width:560px">
+        <h2>更改財務長密碼</h2>
+        <label class="f" for="np">新密碼（至少 12 碼）</label><input type="password" id="np" minlength="12" autocomplete="new-password" required>
+        <button class="btn" type="submit">更改密碼</button><div id="cout"></div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<script src="assets/api.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+let PW='',FEES=[],LABEL={},DUES=[],MEM=[],TAB='pending';
+try{PW=sessionStorage.getItem('imc_fin')||''}catch(e){}
+
+$('login').addEventListener('submit',async e=>{
+  e.preventDefault();PW=$('pw').value;$('lerr').innerHTML='';
+  try{await boot();try{sessionStorage.setItem('imc_fin',PW)}catch(_){}}
+  catch(err){PW='';$('lerr').innerHTML=`<div class="msg err">${esc(err.message)}</div>`}
+});
+$('logout').addEventListener('click',()=>{PW='';try{sessionStorage.removeItem('imc_fin')}catch(e){}location.reload()});
+
+async function boot(){
+  FEES=await rpc('imc_fees');FEES.forEach(f=>LABEL[f.code]=f.label);
+  await reload();
+  $('login').classList.add('hide');$('app').classList.remove('hide');$('logout').classList.remove('hide');
+  $('payinfo').value=await rpc('imc_pay_info');
+  $('ad').value=todayTW();
+  $('aitems').innerHTML=FEES.map(f=>`<label class="opt"><input type="checkbox" value="${f.code}"><span class="l">${esc(f.label)}</span><span class="a">${money(f.amount)}</span></label>`).join('');
+  $('aitems').addEventListener('change',()=>{let s=0;document.querySelectorAll('#aitems input').forEach(i=>{i.closest('.opt').classList.toggle('on',i.checked);if(i.checked)s+=FEES.find(f=>f.code===i.value).amount});$('asum').textContent=money(s)});
+  show(TAB);
+}
+async function reload(){
+  [DUES,MEM]=await Promise.all([rpc('imc_dues_list',{p:PW}),rpc('imc_admin_members',{p:PW})]);
+  $('an').innerHTML='<option value="">— 選擇社友 —</option>'+MEM.filter(m=>m.active).map(m=>`<option>${esc(m.name)}</option>`).join('');
+  tiles();show(TAB);
+}
+function expected(m){return FEES.filter(f=>!f.new_only||m.is_new).reduce((s,f)=>s+f.amount,0)}
+function tiles(){
+  const act=MEM.filter(m=>m.active);
+  const exp=act.reduce((s,m)=>s+expected(m),0);
+  const conf=DUES.filter(d=>d.status==='已確認').reduce((s,d)=>s+d.amount,0);
+  const pend=DUES.filter(d=>d.status==='待審核');
+  const pendAmt=pend.reduce((s,d)=>s+d.amount,0);
+  const full=act.filter(m=>FEES.filter(f=>!f.new_only||m.is_new).every(f=>m.paid_items.includes(f.code))).length;
+  const pct=exp?Math.min(100,Math.round(conf/exp*100)):0;
+  $('tiles').innerHTML=[
+    ['待審核',pend.length+' 筆',money(pendAmt)],
+    ['已確認收款',money(conf),'佔應收 '+pct+'%'],
+    ['應收總額',money(exp),'在籍 '+act.length+' 人'],
+    ['已繳齊',full+' 人','尚未繳齊 '+(act.length-full)+' 人']
+  ].map(([k,v,s])=>`<div class="tile"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
+  $('barfill').style.width=pct+'%';
+  $('barlab').textContent=`已確認 ${money(conf)} ／ 應收 ${money(exp)}（${pct}%）。待審核 ${money(pendAmt)} 不計入。`;
+}
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b)show(b.dataset.t)});
+function show(t){
+  TAB=t;
+  document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));
+  ['pending','all','matrix','add','set'].forEach(x=>$('v-'+x).classList.toggle('hide',x!==t));
+  if(t==='pending')renderPending();if(t==='all')renderAll();if(t==='matrix')renderMx();
+}
+const items=d=>d.items.map(c=>LABEL[c]||c).join('、');
+function renderPending(){
+  const p=DUES.filter(d=>d.status==='待審核').sort((a,b)=>a.submitted_at<b.submitted_at?-1:1);
+  $('v-pending').innerHTML=p.length?p.map(d=>`<div class="rv" id="r${d.id}">
+    <div class="h"><span class="nm">${esc(d.member_name)}</span><span class="amt">${money(d.amount)}</span></div>
+    <dl class="kv"><dt>項目</dt><dd>${esc(items(d))}</dd><dt>方式</dt><dd>${esc(d.method)}${d.method==='匯款'?'　後5碼 <b>'+esc(d.last5)+'</b>':''}</dd><dt>繳費日</dt><dd>${esc(d.paid_date)}</dd><dt>回報時間</dt><dd>${esc(fmtTime(d.submitted_at))}</dd>${d.note?`<dt>備註</dt><dd>${esc(d.note)}</dd>`:''}</dl>
+    <div class="row"><input type="text" class="grow" id="n${d.id}" placeholder="備註／退回原因（退回必填）" maxlength="200">
+    <button class="sm ok" onclick="act(${d.id},'已確認')">確認收款</button><button class="sm bad" onclick="act(${d.id},'退回')">退回</button></div>
+    <div id="e${d.id}"></div></div>`).join(''):'<div class="card muted">目前沒有待審核的回報。</div>';
+}
+async function act(id,s){
+  const rn=$('n'+id).value.trim();
+  if(s==='退回'&&!rn){$('e'+id).innerHTML='<div class="msg err">退回請填寫原因</div>';return}
+  try{await rpc('imc_dues_review',{p:PW,i:id,s,rn});await reload()}
+  catch(e){$('e'+id).innerHTML=`<div class="msg err">${esc(e.message)}</div>`}
+}
+function renderAll(){
+  const st=$('fs').value,q=$('fq').value.trim();
+  const rows=DUES.filter(d=>(!st||d.status===st)&&(!q||(d.member_name+d.last5+d.note+d.receipt_no).includes(q)));
+  $('tAll').innerHTML=`<thead><tr><th>狀態</th><th>社友</th><th>項目</th><th class="n">金額</th><th>方式</th><th>後5碼</th><th>繳費日</th><th>回報</th><th>收據</th><th>備註</th><th></th></tr></thead><tbody>`+
+   rows.map(d=>`<tr><td><span class="pill ${esc(d.status)}">${esc(d.status)}</span></td><td>${esc(d.member_name)}</td><td>${esc(items(d))}</td><td class="n">${d.amount.toLocaleString('en-US')}</td><td>${esc(d.method)}</td><td>${esc(d.last5)}</td><td>${esc(d.paid_date)}</td><td>${esc(fmtTime(d.submitted_at))}<br><small class="muted">${esc(d.entered_by)}</small></td><td>${esc(d.receipt_no)}</td><td>${esc(d.review_note||d.note)}</td><td>${d.status!=='待審核'?`<button class="sm" onclick="reopen(${d.id})">改回待審</button>`:''}</td></tr>`).join('')+'</tbody>';
+  if(!rows.length)$('tAll').innerHTML+='<caption class="muted" style="padding:14px">沒有符合的紀錄</caption>';
+}
+async function reopen(id){
+  if(!confirm('把這筆改回「待審核」？'))return;
+  try{await rpc('imc_dues_review',{p:PW,i:id,s:'待審核',rn:''});await reload()}catch(e){alert(e.message)}
+}
+$('fs').addEventListener('change',renderAll);$('fq').addEventListener('input',renderAll);
+function mrows(){
+  const f=$('mf').value,q=$('mq').value.trim();
+  return MEM.filter(m=>m.active&&(!q||m.name.includes(q))).map(m=>{
+    const need=FEES.filter(x=>!x.new_only||m.is_new);
+    const cells=need.map(x=>m.paid_items.includes(x.code)?'已確認':m.pending_items.includes(x.code)?'待審核':'未繳');
+    return {m,need,cells,done:cells.every(c=>c==='已確認'),pend:cells.includes('待審核'),unpaid:cells.includes('未繳')};
+  }).filter(r=>!f||(f==='unpaid'&&r.unpaid)||(f==='done'&&r.done)||(f==='pend'&&r.pend));
+}
+function renderMx(){
+  const r=mrows();
+  $('tMx').innerHTML=`<thead><tr><th>社友</th>${FEES.map(f=>`<th>${esc(f.label)}</th>`).join('')}<th class="n">尚欠</th></tr></thead><tbody>`+
+  r.map(x=>{
+    const owe=x.need.reduce((s,f,i)=>s+(x.cells[i]==='已確認'?0:f.amount),0);
+    return `<tr><td>${esc(x.m.name)}${x.m.is_new?' <small class="muted">新</small>':''}</td>${FEES.map(f=>{const i=x.need.findIndex(n=>n.code===f.code);return `<td>${i<0?'<span class="muted">—</span>':`<span class="pill ${x.cells[i]}">${x.cells[i]}</span>`}</td>`}).join('')}<td class="n">${owe?owe.toLocaleString('en-US'):'0'}</td></tr>`}).join('')+'</tbody>';
+}
+$('mf').addEventListener('change',renderMx);$('mq').addEventListener('input',renderMx);
+function csvDl(name,rows){
+  const c=rows.map(r=>r.map(v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+c],{type:'text/csv'}));a.download=name;a.click();
+}
+$('csv').addEventListener('click',()=>csvDl('社費回報紀錄.csv',[['狀態','社友','項目','金額','方式','後5碼','繳費日','回報時間','來源','收據編號','備註','審核備註']].concat(DUES.map(d=>[d.status,d.member_name,items(d),d.amount,d.method,d.last5,d.paid_date,d.submitted_at,d.entered_by,d.receipt_no,d.note,d.review_note]))));
+$('mcsv').addEventListener('click',()=>{const r=mrows();csvDl('社費繳費總表.csv',[['社友',...FEES.map(f=>f.label),'尚欠']].concat(r.map(x=>{const owe=x.need.reduce((s,f,i)=>s+(x.cells[i]==='已確認'?0:f.amount),0);return [x.m.name,...FEES.map(f=>{const i=x.need.findIndex(n=>n.code===f.code);return i<0?'—':x.cells[i]}),owe]})))});
+$('addf').addEventListener('submit',async e=>{
+  e.preventDefault();const it=[...document.querySelectorAll('#aitems input:checked')].map(i=>i.value);const o=$('aout');
+  if(!$('an').value||!it.length){o.innerHTML='<div class="msg err">請選社友並勾選項目</div>';return}
+  try{await rpc('imc_dues_add',{p:PW,n:$('an').value,m:document.querySelector('input[name=am]:checked').value,it,l5:$('al5').value.trim(),d:$('ad').value,nt:$('ant').value});
+    o.innerHTML='<div class="msg ok">已登錄並確認。</div>';document.querySelectorAll('#aitems input').forEach(i=>{i.checked=false;i.closest('.opt').classList.remove('on')});$('asum').textContent='NT$ 0';$('ant').value='';$('al5').value='';await reload()}
+  catch(err){o.innerHTML=`<div class="msg err">${esc(err.message)}</div>`}
+});
+$('savepay').addEventListener('click',async()=>{try{await rpc('imc_set_pay_info',{p:PW,v:$('payinfo').value});$('pout').innerHTML='<div class="msg ok">已儲存。</div>'}catch(e){$('pout').innerHTML=`<div class="msg err">${esc(e.message)}</div>`}});
+$('mf2').addEventListener('submit',async e=>{e.preventDefault();try{await rpc('imc_member_save',{p:PW,n:$('mn').value,newm:$('mnew').checked,act:$('mact').checked});$('mout').innerHTML='<div class="msg ok">已儲存。</div>';$('mn').value='';await reload()}catch(err){$('mout').innerHTML=`<div class="msg err">${esc(err.message)}</div>`}});
+$('pf').addEventListener('submit',async e=>{e.preventDefault();try{await rpc('imc_change_pass',{p:PW,np:$('np').value});PW=$('np').value;try{sessionStorage.setItem('imc_fin',PW)}catch(_){}$('np').value='';$('cout').innerHTML='<div class="msg ok">密碼已更改。</div>'}catch(err){$('cout').innerHTML=`<div class="msg err">${esc(err.message)}</div>`}});
+if(PW){boot().catch(()=>{PW='';try{sessionStorage.removeItem('imc_fin')}catch(e){}})}
+</script>
+</body>
+</html>
