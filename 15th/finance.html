@@ -84,7 +84,7 @@
       </div>
       <div class="card">
         <h2>社友類別與年費設定</h2>
-        <div class="muted">A 原社友 12,000｜B 原社友直系寶眷 6,000｜C 新社友 12,000＋入社費 5,000｜D 新社友直系寶眷 6,000＋入社費 5,000｜E／F 同公司多人入社（原／新社友，F 另加入社費 5,000）（皆另加社館基金 1,000）。<br>依章程第十三條之二，<b>E／F 同公司多人入社</b>：類別選 E 或 F，並在「同公司群組」填公司名稱（同公司的社友填相同名稱），系統會依在籍人數自動減免每人常年社費——2 人各減 3,000、3 人各減 4,000、4 人各減 5,000、5 人以上各減 6,000（最多減 6,000）；入社費 5,000 仍須繳。直系寶眷固定 6,000，以類別為準。未足一年按比例、保留社籍（1/4 年費）等其他情形，在「年費調整」填實收年費，優先於上述規則。變更後立即生效。</div>
+        <div class="muted">A 原社友 12,000｜B 原社友直系寶眷 6,000｜C 新社友 12,000＋入社費 5,000｜D 新社友直系寶眷 6,000＋入社費 5,000｜E／F 同公司多人入社（原／新社友，F 另加入社費 5,000）（皆另加社館基金 1,000）。<br>依章程第十三條之二，<b>E／F 同公司多人入社</b>：類別選 E 或 F，填公司名稱（同公司社友填相同名稱）與這位是同公司的<b>第幾位</b>，系統自動減免常年社費——第 1 位照原價 12,000；第 2 位減 3,000（9,000）、第 3 位減 4,000（8,000）、第 4 位減 5,000（7,000）、第 5 位起減 6,000（6,000，最多減 6,000）；入社費 5,000 仍須繳。直系寶眷固定 6,000，以類別為準。未足一年按比例、保留社籍（1/4 年費）等其他情形，在「年費調整」填實收年費，優先於上述規則。變更後立即生效。</div>
         <div class="row" style="margin:10px 0"><input type="search" id="sq" class="grow" placeholder="搜尋姓名"><label class="opt" style="min-height:42px"><input type="checkbox" id="sact"><span class="l">只看停用</span></label></div>
         <div class="tw"><table class="t" id="tSet"></table></div>
         <div id="sout"></div>
@@ -94,7 +94,7 @@
         <label class="f" for="mn">姓名</label><input type="text" id="mn" required>
         <label class="f" for="mt">類別</label>
         <select id="mt"><option value="A">A 原社友</option><option value="B">B 原社友直系寶眷</option><option value="C">C 新社友</option><option value="D">D 新社友直系寶眷</option><option value="E">E 原社友（同公司）</option><option value="F">F 新社友（同公司）</option></select>
-        <div id="mgbox" class="hide"><label class="f" for="mg">同公司群組（公司名稱，同公司社友填相同名稱）</label><input type="text" id="mg"></div>
+        <div id="mgbox" class="hide"><label class="f" for="mg">公司名稱（同公司社友填相同名稱）</label><input type="text" id="mg"><label class="f" for="mq2">這位是同公司的第幾位（1、2、3…）</label><input type="text" id="mq2" inputmode="numeric"></div>
         <button class="btn" type="submit">新增</button><div id="mout"></div>
       </form>
       
@@ -232,30 +232,31 @@ $('addf').addEventListener('submit',async e=>{
 function renderSet(){
   const q=$('sq').value.trim(),off=$('sact').checked;
   const rows=MEM.filter(m=>(!q||m.name.includes(q))&&(!off||!m.active));
-  $('tSet').innerHTML=`<thead><tr><th>社友</th><th>類別</th><th>同公司群組</th><th>年費調整</th><th>在籍</th></tr></thead><tbody>`+rows.map((m,i)=>`<tr data-n="${esc(m.name)}"><td>${esc(m.name)}</td>
+  $('tSet').innerHTML=`<thead><tr><th>社友</th><th>類別</th><th>同公司群組／第幾位</th><th>年費調整</th><th>在籍</th></tr></thead><tbody>`+rows.map((m,i)=>`<tr data-n="${esc(m.name)}"><td>${esc(m.name)}</td>
    <td><select class="sc">${['A','B','C','D','E','F'].map(c=>`<option value="${c}" ${catOf(m)===c?'selected':''}>${CATN[c]}</option>`).join('')}</select></td>
-   <td><input type="text" class="sg" style="width:120px;min-height:40px" value="${esc(m.company_group||'')}" placeholder="公司名" ${isCoC(catOf(m))?'':'disabled'}></td>
+   <td><input type="text" class="sg" style="width:120px;min-height:40px" value="${esc(m.company_group||'')}" placeholder="公司名" ${isCoC(catOf(m))?'':'disabled'}> <input type="text" class="sn" inputmode="numeric" style="width:56px;min-height:40px" value="${m.company_seq||''}" placeholder="第N位" ${isCoC(catOf(m))?'':'disabled'}></td>
    <td><input type="text" class="so" inputmode="numeric" style="width:96px;min-height:40px" value="${m.annual_override||''}" placeholder="預設"></td>
    <td><input type="checkbox" class="sa" ${m.active?'checked':''} style="width:22px;height:22px;accent-color:var(--gold-deep)"></td></tr>`).join('')+'</tbody>';
 }
 $('sq').addEventListener('input',renderSet);$('sact').addEventListener('change',renderSet);
 async function saveRow(tr){
   const n=tr.dataset.n,c=tr.querySelector('.sc').value,ov=tr.querySelector('.so').value.trim(),act=tr.querySelector('.sa').checked;
-  const grp=isCoC(c)?tr.querySelector('.sg').value.trim():'';
+  const grp=isCoC(c)?tr.querySelector('.sg').value.trim():'';const sq=isCoC(c)?tr.querySelector('.sn').value.trim():'';
+  if(isCoC(c)&&!/^[1-9][0-9]?$/.test(sq)){$('sout').innerHTML='<div class="msg err">請填這位是同公司的第幾位（1、2、3…；第 1 位照原價）</div>';tr.querySelector('.sn').disabled=false;tr.querySelector('.sn').focus();return}
   if(isCoC(c)&&!grp){$('sout').innerHTML='<div class="msg err">選「同公司」請在右邊填公司名稱（同公司的社友填相同名稱），再按一下類別儲存</div>';tr.querySelector('.sg').disabled=false;tr.querySelector('.sg').focus();return}
   if(ov&&!/^[1-9][0-9]{0,5}$/.test(ov)){$('sout').innerHTML='<div class="msg err">年費調整請填數字，或留空用預設</div>';return}
-  try{await rpc('imc_member_save',{p:PW,n,newm:isNewC(c),fam:isFamC(c),ovr:ov?+ov:null,act,grp});
+  try{await rpc('imc_member_save',{p:PW,n,newm:isNewC(c),fam:isFamC(c),ovr:ov?+ov:null,act,grp,seq:sq?+sq:null});
     $('sout').innerHTML=`<div class="msg ok">已儲存 ${esc(n)}</div>`;
     [DUES,MEM]=await Promise.all([rpc('imc_dues_list',{p:PW}),rpc('imc_admin_members',{p:PW})]);tiles();
     $('anl').innerHTML=MEM.filter(m=>m.active).map(m=>`<option value="${esc(m.name)}">`).join('');}
   catch(err){$('sout').innerHTML=`<div class="msg err">${esc(err.message)}</div>`}
 }
 $('tSet').addEventListener('change',e=>{const tr=e.target.closest('tr[data-n]');if(!tr)return;
-  if(e.target.classList.contains('sc')){const co=isCoC(e.target.value);const g=tr.querySelector('.sg');g.disabled=!co;if(!co)g.value='';if(co&&!g.value.trim()){g.focus();$('sout').innerHTML='<div class="msg err">請填同公司的公司名稱（同公司社友填相同名稱），填完按 Enter 或點別處即儲存</div>';return}}
+  if(e.target.classList.contains('sc')){const co=isCoC(e.target.value);const g=tr.querySelector('.sg'),q=tr.querySelector('.sn');g.disabled=q.disabled=!co;if(!co){g.value='';q.value=''}if(co&&(!g.value.trim()||!q.value.trim())){g.focus();$('sout').innerHTML='<div class="msg err">請填公司名稱（同公司社友填相同名稱）和這位是第幾位，填完點別處即儲存</div>';return}}
   saveRow(tr)});
 $('savepay').addEventListener('click',async()=>{try{await rpc('imc_set_pay_info',{p:PW,v:$('payinfo').value});$('pout').innerHTML='<div class="msg ok">已儲存。</div>'}catch(e){$('pout').innerHTML=`<div class="msg err">${esc(e.message)}</div>`}});
 $('mt').addEventListener('change',()=>$('mgbox').classList.toggle('hide',!isCoC($('mt').value)));
-$('mf2').addEventListener('submit',async e=>{e.preventDefault();const c=$('mt').value;const grp=isCoC(c)?$('mg').value.trim():'';if(isCoC(c)&&!grp){$('mout').innerHTML='<div class="msg err">請填公司名稱</div>';return}try{await rpc('imc_member_save',{p:PW,n:$('mn').value,newm:isNewC(c),fam:isFamC(c),ovr:null,act:true,grp});$('mout').innerHTML='<div class="msg ok">已新增。</div>';$('mn').value='';await reload()}catch(err){$('mout').innerHTML=`<div class="msg err">${esc(err.message)}</div>`}});
+$('mf2').addEventListener('submit',async e=>{e.preventDefault();const c=$('mt').value;const grp=isCoC(c)?$('mg').value.trim():'';const seq=isCoC(c)?$('mq2').value.trim():'';if(isCoC(c)&&(!grp||!/^[1-9][0-9]?$/.test(seq))){$('mout').innerHTML='<div class="msg err">請填公司名稱和第幾位</div>';return}try{await rpc('imc_member_save',{p:PW,n:$('mn').value,newm:isNewC(c),fam:isFamC(c),ovr:null,act:true,grp,seq:seq?+seq:null});$('mout').innerHTML='<div class="msg ok">已新增。</div>';$('mn').value='';await reload()}catch(err){$('mout').innerHTML=`<div class="msg err">${esc(err.message)}</div>`}});
 if(PW){boot().catch(()=>{PW='';try{sessionStorage.removeItem('imc_fin')}catch(e){}})}
 </script>
 </body>
