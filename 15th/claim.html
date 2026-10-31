@@ -85,7 +85,7 @@ async function init(){
   try{
     const [names,items]=await Promise.all([rpc('imc_claim_names'),rpc('imc_claim_items')]);
     NAMES=names.map(x=>x.name);ITEMS=items;
-    const ORD=['社長','秘書長','財務長','理監事','秘書'];$('who').innerHTML='<option value="">— 請選擇報帳人 —</option>'+ORD.filter(g=>names.some(n=>n.grp===g)).map(g=>`<optgroup label="${esc(g)}">`+names.filter(n=>n.grp===g).map(n=>`<option value="${esc(n.name)}">${esc(n.name)}${g==='理監事'?'':'（'+g+'）'}</option>`).join('')+'</optgroup>').join('');
+    const ORD=['社長','秘書長','財務長','理事','監事','秘書'];$('who').innerHTML='<option value="">— 請選擇報帳人 —</option>'+ORD.filter(g=>names.some(n=>n.grp===g)).map(g=>`<optgroup label="${esc(g)}">`+names.filter(n=>n.grp===g).map(n=>`<option value="${esc(n.name)}">${esc(n.name)}${n.title?'（'+esc(n.title)+'）':''}</option>`).join('')+'</optgroup>').join('');
     const by={};items.forEach(i=>{(by[i.category]=by[i.category]||[]).push(i)});
     $('bud').innerHTML='<option value="">— 請選擇預算科目 —</option>'+Object.keys(by).map(c=>`<optgroup label="${esc(c)}">`+by[c].map(i=>`<option value="${i.id}">${esc(i.item)}</option>`).join('')+'</optgroup>').join('');
     $('budhint').textContent='科目與財務長的「收支預算」一致，選不到合適的請選最接近者，財務長入帳時可調整。';
