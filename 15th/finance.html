@@ -96,11 +96,7 @@
         <select id="mt"><option value="A">A 原社友</option><option value="B">B 原社友直系寶眷</option><option value="C">C 新社友</option><option value="D">D 新社友直系寶眷</option></select>
         <button class="btn" type="submit">新增</button><div id="mout"></div>
       </form>
-      <form class="card" id="pf" style="max-width:560px">
-        <h2>更改財務長密碼</h2>
-        <label class="f" for="np">新密碼（至少 12 碼）</label><input type="password" id="np" minlength="12" autocomplete="new-password" required>
-        <button class="btn" type="submit">更改密碼</button><div id="cout"></div>
-      </form>
+      
     </div>
   </section>
 </main>
@@ -252,7 +248,6 @@ async function saveRow(tr){
 $('tSet').addEventListener('change',e=>{const tr=e.target.closest('tr[data-n]');if(tr)saveRow(tr)});
 $('savepay').addEventListener('click',async()=>{try{await rpc('imc_set_pay_info',{p:PW,v:$('payinfo').value});$('pout').innerHTML='<div class="msg ok">已儲存。</div>'}catch(e){$('pout').innerHTML=`<div class="msg err">${esc(e.message)}</div>`}});
 $('mf2').addEventListener('submit',async e=>{e.preventDefault();const c=$('mt').value;try{await rpc('imc_member_save',{p:PW,n:$('mn').value,newm:c==='C'||c==='D',fam:c==='B'||c==='D',ovr:null,act:true});$('mout').innerHTML='<div class="msg ok">已新增。</div>';$('mn').value='';await reload()}catch(err){$('mout').innerHTML=`<div class="msg err">${esc(err.message)}</div>`}});
-$('pf').addEventListener('submit',async e=>{e.preventDefault();try{await rpc('imc_change_pass',{p:PW,np:$('np').value});PW=$('np').value;try{sessionStorage.setItem('imc_fin',PW)}catch(_){}$('np').value='';$('cout').innerHTML='<div class="msg ok">密碼已更改。</div>'}catch(err){$('cout').innerHTML=`<div class="msg err">${esc(err.message)}</div>`}});
 if(PW){boot().catch(()=>{PW='';try{sessionStorage.removeItem('imc_fin')}catch(e){}})}
 </script>
 </body>
