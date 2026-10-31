@@ -89,7 +89,7 @@
     <div id="v-set" class="hide">
       <div class="card">
         <h2>社友類別與年費設定</h2>
-        <div class="muted">A 原社友 12,000｜B 原社友直系寶眷 6,000｜C 新社友 12,000＋入社費 5,000｜D 新社友（直系寶眷） 6,000＋入社費 5,000｜E／F 同公司多人入社（原／新社友，F 另加入社費 5,000）（皆另加社館基金 1,000）。<br>依章程第十三條之二，<b>E／F 同公司多人入社</b>：類別選 E 或 F，填公司名稱（同公司社友填相同名稱）與這位是同公司的<b>第幾位</b>，系統自動減免常年社費——第 1 位照原價 12,000；第 2 位減 3,000（9,000）、第 3 位減 4,000（8,000）、第 4 位減 5,000（7,000）、第 5 位起減 6,000（6,000，最多減 6,000）；入社費 5,000 仍須繳。直系寶眷固定 6,000，以類別為準。未足一年按比例、保留社籍（1/4 年費）等其他情形，在「年費調整」填實收年費，優先於上述規則。變更後立即生效。</div>
+        <div class="muted">A 原社友 12,000｜B 原社友（直系寶眷） 6,000｜C 原社友（同公司）｜D 新社友 12,000＋入社費 5,000｜E 新社友（直系寶眷） 6,000＋入社費 5,000｜F 新社友（同公司，另加入社費 5,000）（皆另加社館基金 1,000）。<br>依章程第十三條之二，<b>C／F 同公司多人入社</b>：類別選 C 或 F，填公司名稱（同公司社友填相同名稱）與這位是同公司的<b>第幾位</b>，系統自動減免常年社費——第 1 位照原價 12,000；第 2 位減 3,000（9,000）、第 3 位減 4,000（8,000）、第 4 位減 5,000（7,000）、第 5 位起減 6,000（6,000，最多減 6,000）；入社費 5,000 仍須繳。直系寶眷固定 6,000，以類別為準。未足一年按比例、保留社籍（1/4 年費）等其他情形，在「年費調整」填實收年費，優先於上述規則。變更後立即生效。</div>
         <div class="row" style="margin:10px 0"><input type="search" id="sq" class="grow" placeholder="搜尋姓名"><label class="opt" style="min-height:42px"><input type="checkbox" id="sact"><span class="l">只看停用</span></label></div>
         <div class="tw"><table class="t" id="tSet"></table></div>
         <div id="sout"></div>
@@ -98,7 +98,7 @@
         <h2>新增社友</h2>
         <label class="f" for="mn">姓名</label><input type="text" id="mn" required>
         <label class="f" for="mt">類別</label>
-        <select id="mt"><option value="A">A 原社友</option><option value="B">B 原社友直系寶眷</option><option value="C">C 新社友</option><option value="D">D 新社友（直系寶眷）</option><option value="E">E 原社友（同公司）</option><option value="F">F 新社友（同公司）</option></select>
+        <select id="mt"><option value="A">A 原社友</option><option value="B">B 原社友（直系寶眷）</option><option value="C">C 原社友（同公司）</option><option value="D">D 新社友</option><option value="E">E 新社友（直系寶眷）</option><option value="F">F 新社友（同公司）</option></select>
         <div id="mgbox" class="hide"><label class="f" for="mg">公司名稱（同公司社友填相同名稱）</label><input type="text" id="mg"><label class="f" for="mq2">這位是同公司的第幾位（1、2、3…）</label><input type="text" id="mq2" inputmode="numeric"></div>
         <button class="btn" type="submit">新增</button><div id="mout"></div>
       </form>
@@ -139,9 +139,9 @@ async function reload(){
   tiles();show(TAB);
 }
 const needSum=m=>m.need.reduce((s,x)=>s+x.amount,0);
-const catOf=m=>m.is_family?(m.is_new?'D':'B'):(m.company_group?(m.is_new?'F':'E'):(m.is_new?'C':'A'));
-const CATN={A:'A 原社友',B:'B 原社友直系寶眷',C:'C 新社友',D:'D 新社友（直系寶眷）',E:'E 原社友（同公司）',F:'F 新社友（同公司）'};
-const isNewC=c=>c==='C'||c==='D'||c==='F',isFamC=c=>c==='B'||c==='D',isCoC=c=>c==='E'||c==='F';
+const catOf=m=>m.is_family?(m.is_new?'E':'B'):(m.company_group?(m.is_new?'F':'C'):(m.is_new?'D':'A'));
+const CATN={A:'A 原社友',B:'B 原社友（直系寶眷）',C:'C 原社友（同公司）',D:'D 新社友',E:'E 新社友（直系寶眷）',F:'F 新社友（同公司）'};
+const isNewC=c=>c==='D'||c==='E'||c==='F',isFamC=c=>c==='B'||c==='E',isCoC=c=>c==='C'||c==='F';
 function tiles(){
   const act=MEM.filter(m=>m.active);
   const exp=act.reduce((s,m)=>s+needSum(m),0);
