@@ -252,55 +252,76 @@ const bmap=()=>{const m={};OV.forEach(o=>m[o.id]=o);return m};
 $('csvL').addEventListener('click',()=>{const m=bmap();csvDl('收支明細.csv',[['日期','科目編號','類別','科目','項目','金額','摘要','方式','對象','憑證','狀態','備註','來源']].concat(LG.slice().reverse().map(l=>{const o=m[l.budget_id]||{};return [l.entry_date,l.budget_id,l.kind,o.category,o.item,l.amount,l.description,l.method,l.counterparty,l.voucher,l.voided?'作廢':'正常',l.note,l.dues_id?'繳費匯入':'手動']})))});
 $('csvB').addEventListener('click',()=>csvDl('預算執行表.csv',[['類別','科目','項目','數量','單位','單價','預算金額','實際金額','差異','執行率%']].concat(OV.map(o=>[o.kind,o.category,o.item,o.qty,o.unit,o.unit_price,o.amount,o.actual,o.amount-o.actual,pct(Number(o.actual),Number(o.amount))??''])))) ;
 $('prt').addEventListener('click',()=>{show('ov');$('ovk').value='';renderOv();setTimeout(()=>window.print(),200)});
-function loadXlsx(){return new Promise((res,rej)=>{if(window.XLSX)return res();const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=res;s.onerror=()=>rej(new Error('無法載入 Excel 元件，請檢查網路後重試（或先用 CSV 匯出）'));document.head.appendChild(s)})}
+function loadXlsx(){return new Promise((res,rej)=>{if(window.ExcelJS)return res();const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';s.onload=res;s.onerror=()=>rej(new Error('無法載入 Excel 元件，請檢查網路後重試（或先用 CSV 匯出）'));document.head.appendChild(s)})}
 $('xl').addEventListener('click',async()=>{const o=$('xout');o.innerHTML='';
-  try{await loadXlsx();buildXlsx();o.innerHTML='<div class="msg ok">已下載。用 Excel 或 WPS 開啟即可（公式會自動計算）。</div>'}catch(e){o.innerHTML=`<div class="msg err">${esc(e.message)}</div>`}});
-function buildXlsx(){
-  const X=XLSX,m=bmap();
-  /* 收支明細（先建，因執行表要引用）*/
+  try{await loadXlsx();await buildXlsx();o.innerHTML='<div class="msg ok">已下載。用 Excel 或 WPS 開啟即可（藍字可調整，金額與合計為公式，會自動計算）。</div>'}catch(e){o.innerHTML=`<div class="msg err">${esc(e.message)}</div>`}});
+async function buildXlsx(){
+  const FONT='Microsoft JhengHei',NUM='#,##0;\\(#,##0\\);\\-',PCT='0.0%';
+  const BLUE='FF1C2C60',HEAD='FF535353',GRAY='FFC5A366',INC='FFF3EBDA',EXP='FFE3E6F0',CAT='FFEFEFEF',LINE='FFCFCFCF',INK='FF1C2C60';
+  const m=bmap(),L=LG.slice().reverse();
+  const wb=new ExcelJS.Workbook();wb.creator='苗栗IMC 財務工作台';wb.created=new Date();
+  const ws=wb.addWorksheet('預算執行表',{views:[{state:'frozen',ySplit:4,showGridLines:false}],pageSetup:{orientation:'landscape',paperSize:9,fitToPage:true,fitToWidth:1,fitToHeight:0,printTitlesRow:'1:4',margins:{left:.4,right:.4,top:.5,bottom:.5,header:.3,footer:.3}},headerFooter:{oddFooter:'&C第 &P 頁／共 &N 頁'}});
+  const wl=wb.addWorksheet('收支明細',{views:[{state:'frozen',ySplit:1}],pageSetup:{orientation:'landscape',paperSize:9,fitToPage:true,fitToWidth:1,fitToHeight:0,printTitlesRow:'1:1'}});
+  /* ---- 收支明細 ---- */
   const H2=['日期','科目編號','類別','科目','項目','金額','摘要','方式','對象','憑證','狀態','備註','來源'];
-  const L=LG.slice().reverse();
-  const ws2=X.utils.aoa_to_sheet([H2].concat(L.map(l=>{const o=m[l.budget_id]||{};return [l.entry_date,l.budget_id,l.kind,o.category||'',o.item||'',Number(l.amount),l.description,l.method,l.counterparty,l.voucher,l.voided?'作廢':'正常',l.note,l.dues_id?'繳費匯入':'手動']})));
-  ws2['!cols']=[12,9,7,22,24,12,30,8,14,18,7,24,9].map(w=>({wch:w}));
-  for(let r=2;r<=L.length+1;r++){const c=ws2['F'+r];if(c)c.z='#,##0'}
+  wl.columns=[12,9,7,22,24,12,32,8,14,18,7,24,9].map(w=>({width:w}));
+  wl.addRow(H2);
+  L.forEach(l=>{const o=m[l.budget_id]||{};wl.addRow([l.entry_date,l.budget_id,l.kind,o.category||'',o.item||'',Number(l.amount),l.description,l.method,l.counterparty,l.voucher,l.voided?'作廢':'正常',l.note,l.dues_id?'繳費匯入':'手動'])});
   const last=Math.max(L.length+1,2);
-  /* 預算執行表 */
-  const rows=[];const put=(r,c,v,f,z)=>{rows.push({r,c,v,f,z})};
-  const title=['苗栗IMC 第15屆 預算執行表'],per=['社團法人苗栗縣國際工商經營研究社　期間 115/10/1–116/9/30　製表日 '+today()];
-  const head=['編號','類別','科目','項目','數量','單位','單價','預算金額','實際金額','差異（預算−實際）','執行率','備註'];
-  const aoa=[title,per,[],head];const ws1=X.utils.aoa_to_sheet(aoa);
-  let r=5;const kindTot={};
-  const setN=(col,row,v,f,z)=>{ws1[col+row]={t:'n',v:Number(v)||0,z:z||'#,##0'};if(f)ws1[col+row].f=f};
-  const setS=(col,row,v)=>{ws1[col+row]={t:'s',v:String(v)}};
-  const act=(id)=>L.filter(l=>String(l.budget_id)===String(id)&&!l.voided).reduce((s,l)=>s+Number(l.amount),0);
-  for(const kind of ['收入','支出']){
-    const subRows=[];
+  wl.eachRow((r,i)=>{r.eachCell({includeEmpty:true},(c,ci)=>{if(ci>13)return;c.font={name:FONT,size:10,bold:i===1,color:{argb:i===1?'FFFFFFFF':(r.getCell(11).value==='作廢'?'FF999999':'FF000000')}};c.border={bottom:{style:'thin',color:{argb:LINE}}};
+    if(i===1){c.fill={type:'pattern',pattern:'solid',fgColor:{argb:HEAD}};c.alignment={horizontal:'center',vertical:'middle'}}
+    else{c.alignment={vertical:'middle',horizontal:[2,3,8,11,13].includes(ci)?'center':(ci===6?'right':'left'),wrapText:ci===7||ci===12};if(ci===6)c.numFmt=NUM}})});
+  wl.getRow(1).height=22;wl.autoFilter={from:'A1',to:'M'+last};
+  /* ---- 預算執行表 ---- */
+  ws.columns=[{width:6},{width:30},{width:9},{width:7},{width:11},{width:14},{width:14},{width:14},{width:10},{width:28},{width:7}];
+  const thin={style:'thin',color:{argb:LINE}};const box={top:thin,bottom:thin,left:thin,right:thin};
+  const sty=(c,o)=>{c.font={name:FONT,size:o.sz||10,bold:!!o.b,color:{argb:o.col||'FF000000'}};if(o.fill)c.fill={type:'pattern',pattern:'solid',fgColor:{argb:o.fill}};c.alignment={horizontal:o.h||'left',vertical:'middle',wrapText:!!o.wrap};if(o.nf)c.numFmt=o.nf;if(o.box!==false)c.border=box};
+  const SUMIFS=r=>`SUMIFS('收支明細'!$F$2:$F$${last},'收支明細'!$B$2:$B$${last},K${r},'收支明細'!$K$2:$K$${last},"正常")`;
+  const act=id=>L.filter(l=>String(l.budget_id)===String(id)&&!l.voided).reduce((s,l)=>s+Number(l.amount),0);
+  let r=1;
+  ws.mergeCells('A1:J1');ws.getCell('A1').value='苗栗IMC 第15屆　經費收支預算執行表';sty(ws.getCell('A1'),{sz:15,b:1,col:'FFFFFFFF',fill:BLUE,h:'center',box:false});ws.getRow(1).height=30;
+  ws.mergeCells('A2:J2');ws.getCell('A2').value='社團法人苗栗縣國際工商經營研究社　期間：民國115年10月1日 至 116年9月30日　製表日：'+todayTW()+'　（藍字＝可調整輸入值）';sty(ws.getCell('A2'),{sz:9,col:'FF535353',h:'center',box:false});
+  const HD=['序','項目','數量','單位','單價','預算金額','實際金額','差異（預算−實際）','執行率','備註','編號'];
+  const band=(row,text,fill)=>{ws.mergeCells(`A${row}:J${row}`);ws.getCell('A'+row).value=text;sty(ws.getCell('A'+row),{sz:11,b:1,col:INK,fill,box:false});ws.getRow(row).height=20};
+  const header=row=>{HD.forEach((t,i)=>{const c=ws.getCell(row,i+1);c.value=t;sty(c,{sz:10,b:1,col:'FFFFFFFF',fill:HEAD,h:'center',wrap:true})});ws.getRow(row).height=30};
+  const tot={};r=3;
+  for(const [kind,fill,title] of [['收入',INC,'一、收入預算執行'],['支出',EXP,'二、支出預算執行']]){
+    band(r,title,fill);r++;header(r);if(kind==='收入')ws.getRow(r).height=30;r++;
+    const catRows=[];let n=0;if(kind==='支出')tot.es=r;
     for(const c of [...new Set(OV.filter(o=>o.kind===kind).map(o=>o.category))]){
-      const it=OV.filter(o=>o.kind===kind&&o.category===c);const a=r;
-      for(const o of it){
-        setN('A',r,o.id,null,'0');setS('B',r,kind);setS('C',r,c);setS('D',r,o.item);setN('E',r,o.qty,null,'#,##0.##');setS('F',r,o.unit);setN('G',r,o.unit_price);
-        setN('H',r,o.amount,`E${r}*G${r}`);
-        const av=act(o.id);setN('I',r,av,`SUMIFS('收支明細'!$F$2:$F$${last},'收支明細'!$B$2:$B$${last},A${r},'收支明細'!$K$2:$K$${last},"正常")`);
-        setN('J',r,Number(o.amount)-av,`H${r}-I${r}`);
-        ws1['K'+r]={t:'n',v:Number(o.amount)?av/Number(o.amount):0,f:`IF(H${r}=0,0,I${r}/H${r})`,z:'0.0%'};
-        setS('L',r,o.note||'');r++;
-      }
-      const b=r-1;
-      setS('C',r,c);setS('D',r,'小計');
+      const it=OV.filter(o=>o.kind===kind&&o.category===c);const cr=r;catRows.push(cr);n++;
+      ws.getCell(cr,1).value=n;ws.getCell(cr,2).value=c;
+      const a=cr+1,b=cr+it.length;
       const sb=it.reduce((s,o)=>s+Number(o.amount),0),sa=it.reduce((s,o)=>s+act(o.id),0);
-      setN('H',r,sb,`SUM(H${a}:H${b})`);setN('I',r,sa,`SUM(I${a}:I${b})`);setN('J',r,sb-sa,`H${r}-I${r}`);
-      ws1['K'+r]={t:'n',v:sb?sa/sb:0,f:`IF(H${r}=0,0,I${r}/H${r})`,z:'0.0%'};subRows.push(r);r++;
+      ws.getCell(cr,6).value={formula:`SUM(F${a}:F${b})`,result:sb};ws.getCell(cr,7).value={formula:`SUM(G${a}:G${b})`,result:sa};ws.getCell(cr,8).value={formula:`F${cr}-G${cr}`,result:sb-sa};ws.getCell(cr,9).value={formula:`IF(F${cr}=0,"",G${cr}/F${cr})`,result:sb?sa/sb:''};
+      for(let k=1;k<=11;k++)sty(ws.getCell(cr,k),{b:1,col:INK,fill:CAT,h:k===2?'left':(k>=6&&k<=8?'right':'center'),nf:k===9?PCT:(k>=6&&k<=8?NUM:undefined)});
+      ws.getCell(cr,2).alignment={horizontal:'left',vertical:'middle'};
+      r++;let i=0;
+      for(const o of it){i++;const av=act(o.id);
+        ws.getCell(r,1).value=`${n}.${i}`;ws.getCell(r,2).value='　'+o.item;ws.getCell(r,3).value=Number(o.qty);ws.getCell(r,4).value=o.unit;ws.getCell(r,5).value=Number(o.unit_price);
+        ws.getCell(r,6).value={formula:`C${r}*E${r}`,result:Number(o.amount)};ws.getCell(r,7).value={formula:SUMIFS(r),result:av};ws.getCell(r,8).value={formula:`F${r}-G${r}`,result:Number(o.amount)-av};ws.getCell(r,9).value={formula:`IF(F${r}=0,"",G${r}/F${r})`,result:Number(o.amount)?av/Number(o.amount):''};ws.getCell(r,10).value=o.note||'';ws.getCell(r,11).value=o.id;
+        sty(ws.getCell(r,1),{h:'center',col:'FF808080'});sty(ws.getCell(r,2),{});sty(ws.getCell(r,3),{h:'center',col:'FF0000FF',nf:'#,##0.##'});sty(ws.getCell(r,4),{h:'center'});sty(ws.getCell(r,5),{h:'right',col:'FF0000FF',nf:NUM});
+        sty(ws.getCell(r,6),{h:'right',nf:NUM});sty(ws.getCell(r,7),{h:'right',nf:NUM});sty(ws.getCell(r,8),{h:'right',nf:NUM});sty(ws.getCell(r,9),{h:'center',nf:PCT});sty(ws.getCell(r,10),{sz:9,col:'FF808080',wrap:true});sty(ws.getCell(r,11),{sz:8,col:'FFBFBFBF',h:'center'});
+        r++}
     }
-    setS('B',r,kind);setS('D',r,kind+'合計');
-    const tb=OV.filter(o=>o.kind===kind).reduce((s,o)=>s+Number(o.amount),0),ta=OV.filter(o=>o.kind===kind).reduce((s,o)=>s+act(o.id),0);
-    setN('H',r,tb,subRows.map(x=>'H'+x).join('+'));setN('I',r,ta,subRows.map(x=>'I'+x).join('+'));setN('J',r,tb-ta,`H${r}-I${r}`);
-    ws1['K'+r]={t:'n',v:tb?ta/tb:0,f:`IF(H${r}=0,0,I${r}/H${r})`,z:'0.0%'};kindTot[kind]={r,tb,ta};r+=2;
+    const tr=r,tb=OV.filter(o=>o.kind===kind).reduce((s,o)=>s+Number(o.amount),0),ta=OV.filter(o=>o.kind===kind).reduce((s,o)=>s+act(o.id),0);
+    ws.mergeCells(`A${tr}:E${tr}`);ws.getCell(tr,1).value=kind+'預算總計';
+    const sf=col=>catRows.map(x=>col+x).join('+');
+    ws.getCell(tr,6).value={formula:sf('F'),result:tb};ws.getCell(tr,7).value={formula:sf('G'),result:ta};ws.getCell(tr,8).value={formula:`F${tr}-G${tr}`,result:tb-ta};ws.getCell(tr,9).value={formula:`IF(F${tr}=0,"",G${tr}/F${tr})`,result:tb?ta/tb:''};
+    for(let k=1;k<=10;k++)sty(ws.getCell(tr,k),{b:1,col:INK,fill:GRAY,h:k===1?'center':(k>=6&&k<=8?'right':'center'),nf:k===9?PCT:(k>=6&&k<=8?NUM:undefined)});
+    tot[kind]={r:tr,tb,ta};
+    r+=2;
   }
-  const I=kindTot['收入'],E=kindTot['支出'];
-  setS('D',r,'結餘（收入合計−支出合計）');setN('H',r,I.tb-E.tb,`H${I.r}-H${E.r}`);setN('I',r,I.ta-E.ta,`I${I.r}-I${E.r}`);
-  ws1['!ref']=`A1:L${r}`;ws1['!cols']=[7,7,22,26,8,6,10,13,13,16,9,24].map(w=>({wch:w}));
-  const wb=X.utils.book_new();X.utils.book_append_sheet(wb,ws1,'預算執行表');X.utils.book_append_sheet(wb,ws2,'收支明細');
-  X.writeFile(wb,`苗栗IMC第15屆_預算執行表_${todayTW().replace(/-/g,'')}.xlsx`);
+  const I=tot['收入'],E=tot['支出'];
+  const bal=(row,label,fb,fa,vb,va)=>{ws.mergeCells(`A${row}:E${row}`);ws.getCell(row,1).value=label;ws.getCell(row,6).value={formula:fb,result:vb};ws.getCell(row,7).value={formula:fa,result:va};for(let k=1;k<=10;k++)sty(ws.getCell(row,k),{b:1,sz:11,col:INK,fill:INC,h:k===1?'center':'right',nf:k>=6&&k<=7?NUM:undefined})};
+  band(r,'三、結餘',INC);r++;
+  ws.getCell(r,1).value='';ws.mergeCells(`A${r}:E${r}`);ws.getCell(r,1).value='項目';ws.getCell(r,6).value='預算';ws.getCell(r,7).value='實際';for(let k=1;k<=10;k++)sty(ws.getCell(r,k),{b:1,col:'FFFFFFFF',fill:HEAD,h:'center'});r++;
+  bal(r,'收入總計 － 支出總計＝結餘',`F${I.r}-F${E.r}`,`G${I.r}-G${E.r}`,I.tb-E.tb,I.ta-E.ta);
+  ws.getCell(r,10).value='預算書應為收支平衡；實際為目前已入帳的收入減支出';sty(ws.getCell(r,10),{sz:9,col:'FF808080',wrap:true,fill:INC});ws.getRow(r).height=28;
+  /* 支出超支＝紅字 */
+  ws.addConditionalFormatting({ref:`G${tot.es}:H${E.r-1}`,rules:[{type:'expression',formulae:[`AND($H${tot.es}<0,$K${tot.es}<>"")`],style:{font:{color:{argb:'FFC00000'},bold:true}}}]});
+  const buf=await wb.xlsx.writeBuffer();
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));a.download=`苗栗IMC第15屆_經費收支預算執行表_${todayTW().replace(/-/g,'')}.xlsx`;a.click();
 }
 if(PW){boot().catch(()=>{PW='';try{sessionStorage.removeItem('imc_fin')}catch(e){}})}
 </script>
