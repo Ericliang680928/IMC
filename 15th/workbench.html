@@ -119,7 +119,7 @@ td.act button{margin-right:4px}
       </div>
       <div class="card" style="max-width:640px;margin-top:14px">
         <h2>社友繳費明細表</h2>
-        <div class="muted">每位社友一列，收費項目分欄（常年社費、社館基金、入社費、各版面贊助、樂捐…），繳費總金額為各項公式加總；另附「繳費流水」分頁逐筆列出。</div>
+        <div class="muted">每位社友一列，收費項目分欄（常年社費、社館基金、入社費、各版面贊助、樂捐…），繳費總金額為各項公式加總；另附「繳費流水」（逐筆）與「未繳費社友」（依類別應繳金額）兩個分頁。</div>
         <div class="row" style="margin-top:12px"><button class="btn" id="xp" style="width:auto;padding:0 22px">下載社友繳費明細表</button></div>
         <div id="xpout"></div>
       </div>
@@ -384,6 +384,7 @@ async function buildPayList(){
   const NUM='#,##0;[Red]-#,##0';
   const LAB={annual:'常年社費（每屆）',hall:'社館基金（每屆，專款專用）',join:'入社費（一次性，新社友）',ad_pres:'社長贊助｜電子年刊全版（底・封面）',ad_vp1:'一副贊助｜電子年刊全版（底・封面）',ad_vp2:'二副贊助｜電子年刊全版（底・封面）',ad_full:'顧問／社友贊助｜電子年刊全版',ad_half:'理監事／社友贊助｜電子年刊半版'};
   const ORDER=Object.keys(LAB),ADAMT={30000:'ad_pres',25000:'ad_vp1',20000:'ad_vp2',10000:'ad_full',5000:'ad_half'};
+  const MEM=await rpc('imc_admin_members',{p:PW});
   const bm=bmap();
   const live=LG.filter(l=>!l.voided&&l.kind==='收入').slice().sort((a,b)=>a.entry_date.localeCompare(b.entry_date)||a.id-b.id);
   const flat=live.map(l=>{const o=bm[l.budget_id]||{};let col;
@@ -424,9 +425,34 @@ async function buildPayList(){
   ws.autoFilter={from:{row:4,column:1},to:{row:4,column:nc}};
   const w2=wb.addWorksheet('繳費流水',{views:[{state:'frozen',ySplit:1}],pageSetup:{orientation:'portrait',paperSize:9,fitToPage:true,fitToWidth:1,fitToHeight:0}});
   const h2=['日期','社友姓名','收費項目','金額','摘要'];w2.addRow(h2).eachCell(c=>{c.font=font({bold:true,color:{argb:'FFFFFFFF'}});c.fill={type:'pattern',pattern:'solid',fgColor:{argb:NAVY}};c.alignment={horizontal:'center'};c.border=border});
-  flat.forEach(x=>{const r=w2.addRow([x.date,x.name,x.col,x.amt,x.desc]);r.eachCell((c,k)=>{c.font=font();c.border=border;if(k===4){c.numFmt=NUM}})});
+  flat.forEach((x,i)=>{const r=w2.addRow([x.date,x.name,x.col,x.amt,x.desc]);r.eachCell((c,k)=>{c.font=font();c.border=border;if(i%2)c.fill={type:'pattern',pattern:'solid',fgColor:{argb:ZEB}};if(k===4){c.numFmt=NUM;c.alignment={horizontal:'right'}}else if(k===1)c.alignment={horizontal:'center'}})});
   const n2=flat.length+1;const tr2=w2.addRow(['','合計','',{formula:`SUM(D2:D${n2})`,result:grand},'']);tr2.eachCell({includeEmpty:true},c=>{c.font=font({bold:true,color:{argb:NAVY}});c.fill={type:'pattern',pattern:'solid',fgColor:{argb:HEAD}}});tr2.getCell(4).numFmt=NUM;
   [12,16,36,12,36].forEach((w,i)=>w2.getColumn(i+1).width=w);w2.autoFilter={from:{row:1,column:1},to:{row:1,column:5}};
+  /* 未繳費社友 */
+  const w3=wb.addWorksheet('未繳費社友',{views:[{state:'frozen',xSplit:2,ySplit:4}],pageSetup:{orientation:'landscape',paperSize:9,fitToPage:true,fitToWidth:1,fitToHeight:0}});
+  const DUES=['annual','hall','join'];
+  const cat=m=>{const fam=m.is_family,co=!!m.company_group;return (fam?(m.is_new?'D':'B'):co?(m.is_new?'F':'E'):(m.is_new?'C':'A'))};
+  const CATN={A:'原社友',B:'寶眷',C:'新社友',D:'新社友寶眷',E:'同公司',F:'新社友同公司'};
+  const up=[];(MEM||[]).filter(m=>m.active!==false).forEach(m=>{const need=(m.need||[]).filter(n=>DUES.includes(n.code));const miss=need.filter(n=>!(m.paid_items||[]).includes(n.code));if(!miss.length)return;
+    const v={};miss.forEach(n=>v[n.code]=n.amount);up.push({name:m.name,cat:cat(m),v,pend:miss.every(n=>(m.pending_items||[]).includes(n.code))&&(m.pending_items||[]).length>0,part:(m.paid_items||[]).length>0})});
+  up.sort((a,b)=>a.name.localeCompare(b.name,'zh-Hant'));
+  const ucols=DUES.filter(k=>up.some(u=>u.v[k]));const un=5+ucols.length;
+  w3.mergeCells(1,1,1,un);const t3=w3.getCell(1,1);t3.value='苗栗IMC 第15屆　未繳費社友名單';t3.font=font({size:18,bold:true,color:{argb:NAVY}});t3.alignment={horizontal:'center',vertical:'middle'};w3.getRow(1).height=32;
+  w3.mergeCells(2,1,2,un);const s3=w3.getCell(2,1);s3.value=`社團法人苗栗縣國際工商經營研究社　製表日期：民國${today.getFullYear()-1911}年${today.getMonth()+1}月${today.getDate()}日　（金額單位：新台幣元，依社友類別應繳金額計算）`;s3.font=font({size:10});s3.alignment={horizontal:'center'};w3.getRow(3).height=6;
+  const h3=['序號','社友姓名','社友類別',...ucols.map(k=>LAB[k]),'未繳總金額','狀態'];
+  h3.forEach((h,i)=>{const c=w3.getRow(4).getCell(i+1);c.value=h;c.font=font({bold:true,color:{argb:'FFFFFFFF'}});c.fill={type:'pattern',pattern:'solid',fgColor:{argb:NAVY}};c.alignment={horizontal:'center',vertical:'middle',wrapText:true};c.border=border});w3.getRow(4).height=48;
+  const uf=4,ul=3+ucols.length,ut=ul+1;
+  up.forEach((u,i)=>{const r=5+i,row=w3.getRow(r);row.getCell(1).value=i+1;row.getCell(2).value=u.name;row.getCell(3).value=CATN[u.cat]||u.cat;
+    ucols.forEach((k,j)=>{if(u.v[k])row.getCell(uf+j).value=u.v[k]});
+    row.getCell(ut).value={formula:`SUM(${L(uf)}${r}:${L(ul)}${r})`,result:Object.values(u.v).reduce((a,b)=>a+b,0)};
+    row.getCell(ut+1).value=u.pend?'待審核':u.part?'部分未繳':'尚未繳費';
+    for(let k=1;k<=un;k++){const c=row.getCell(k);c.font=font(k===ut?{bold:true,color:{argb:NAVY}}:{});c.border=border;if(i%2)c.fill={type:'pattern',pattern:'solid',fgColor:{argb:ZEB}};if(k>=uf&&k<=ut){c.numFmt=NUM;c.alignment={horizontal:'right'}}else c.alignment={horizontal:k===2?'left':'center'}}});
+  const tr3=5+up.length,r3=w3.getRow(tr3);r3.getCell(2).value='合計';
+  for(let k=uf;k<=ut;k++){const tot=up.reduce((a,u)=>a+(k<ut?(u.v[ucols[k-uf]]||0):Object.values(u.v).reduce((x,y)=>x+y,0)),0);r3.getCell(k).value={formula:`SUM(${L(k)}5:${L(k)}${tr3-1})`,result:tot}}
+  for(let k=1;k<=un;k++){const c=r3.getCell(k);c.font=font({bold:true,color:{argb:NAVY}});c.fill={type:'pattern',pattern:'solid',fgColor:{argb:HEAD}};c.border={top:{style:'medium',color:{argb:GOLD}},bottom:{style:'medium',color:{argb:GOLD}},left:bd,right:bd};if(k>=uf&&k<=ut){c.numFmt=NUM;c.alignment={horizontal:'right'}}else c.alignment={horizontal:'center'}}
+  w3.mergeCells(tr3+2,1,tr3+2,un);const n3=w3.getCell(tr3+2,1);n3.value=`共 ${up.length} 位社友尚有未繳項目。「待審核」表示已送出繳費回報、尚待財務長確認。`;n3.font=font({size:10});
+  w3.getColumn(1).width=6;w3.getColumn(2).width=16;w3.getColumn(3).width=14;ucols.forEach((k,j)=>w3.getColumn(uf+j).width=20);w3.getColumn(ut).width=16;w3.getColumn(ut+1).width=12;
+  w3.autoFilter={from:{row:4,column:1},to:{row:4,column:un}};
   const buf=await wb.xlsx.writeBuffer();
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));a.download='苗栗IMC第15屆_社友繳費明細表.xlsx';a.click();
 }
