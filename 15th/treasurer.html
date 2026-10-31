@@ -12,6 +12,18 @@
 .sep{flex:none;width:1px;background:var(--line);margin:6px 6px}
 iframe.pane{display:block;width:100%;border:0;min-height:320px;background:transparent}
 .tabs button.on,.tabs button[aria-selected="true"]{background:var(--blue);color:#fff;border-color:var(--blue)}
+.stick{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line)}
+.stick .tabs{position:static;border-bottom:0}
+.gsw{display:none;gap:8px;padding:8px 0 0}
+.gsw button{flex:1;padding:12px 8px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink-strong);font:inherit;font-weight:700;font-size:17px;cursor:pointer}
+.gsw button[aria-selected="true"]{background:var(--blue);color:#fff;border-color:var(--blue)}
+@media (max-width:700px){
+  .gsw{display:flex}
+  .stick .tabs{flex-wrap:wrap;overflow:visible;gap:6px;padding:8px 0}
+  .stick .tabs .grp,.stick .tabs .sep{display:none}
+  .stick .tabs[data-g="f"] button[data-g="w"],.stick .tabs[data-g="w"] button[data-g="f"]{display:none}
+  .stick .tabs button{padding:8px 10px;min-height:40px;font-size:15px}.stick .tabs{gap:5px}
+}
 </style>
 </head>
 <body>
@@ -32,7 +44,9 @@ iframe.pane{display:block;width:100%;border:0;min-height:320px;background:transp
   </form>
 
   <section id="app" class="hide">
-    <div class="tabs" role="tablist" id="tabs">
+    <div class="stick">
+    <div class="gsw" id="gsw"><button data-g="f">社費審核</button><button data-g="w">帳務報表</button></div>
+    <div class="tabs" role="tablist" id="tabs" data-g="f">
       <span class="grp">社費審核</span>
       <button role="tab" data-g="f" data-t="pending">待審核</button>
       <button role="tab" data-g="f" data-t="all">全部紀錄</button>
@@ -44,6 +58,7 @@ iframe.pane{display:block;width:100%;border:0;min-height:320px;background:transp
       <button role="tab" data-g="w" data-t="lg">收支帳</button>
       <button role="tab" data-g="w" data-t="bd">預算編列</button>
       <button role="tab" data-g="w" data-t="ex">匯出報表</button>
+    </div>
     </div>
     <iframe class="pane hide" id="pf" title="社費審核"></iframe>
     <iframe class="pane hide" id="pw2" title="財務工作台"></iframe>
@@ -67,10 +82,12 @@ async function enter(){
 function go(g,t,reload){
   G=g;T[g]=t;
   document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.g===g&&b.dataset.t===t));
+  $('tabs').dataset.g=g;document.querySelectorAll('#gsw button').forEach(b=>b.setAttribute('aria-selected',b.dataset.g===g));
   frames.f.classList.toggle('hide',g!=='f');frames.w.classList.toggle('hide',g!=='w');
   const fr=frames[g];const msg={show:t};if(reload)msg.reload=1;
   if(fr.dataset.ready){fr._q=null;try{fr.contentWindow.postMessage(msg,location.origin)}catch(e){}}else fr._q=msg;
 }
+$('gsw').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const g=b.dataset.g;if(g!==G)go(g,T[g],true)});
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const g=b.dataset.g;go(g,b.dataset.t,g!==G)});
 window.addEventListener('message',e=>{if(e.origin!==location.origin)return;const d=e.data||{};if(!d.h)return;const fr=/workbench/.test(d.from)?frames.w:frames.f;fr.style.height=d.h+'px'});
 $('login').addEventListener('submit',async e=>{e.preventDefault();PW=$('pw').value;$('lerr').innerHTML='';
