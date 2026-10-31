@@ -84,20 +84,21 @@ async function init(){
   $('d').value=todayTW();
   try{
     const [names,items]=await Promise.all([rpc('imc_claim_names'),rpc('imc_claim_items')]);
-    NAMES=names.map(x=>x.name);ITEMS=items;
+    NAMES=names.map(x=>x.name);ITEMS=items;window.PRES=(names.find(n=>n.grp==='社長')||{}).name;
     const ORD=['社長','秘書長','財務長','理事','監事','秘書'];$('who').innerHTML='<option value="">— 請選擇報帳人 —</option>'+ORD.filter(g=>names.some(n=>n.grp===g)).map(g=>`<optgroup label="${esc(g)}">`+names.filter(n=>n.grp===g).map(n=>`<option value="${esc(n.name)}">${esc(n.name)}${n.title?'（'+esc(n.title)+'）':''}</option>`).join('')+'</optgroup>').join('');
     const by={};items.forEach(i=>{(by[i.category]=by[i.category]||[]).push(i)});
     $('bud').innerHTML='<option value="">— 請選擇預算科目 —</option>'+Object.keys(by).map(c=>`<optgroup label="${esc(c)}">`+by[c].map(i=>`<option value="${i.id}">${esc(i.item)}</option>`).join('')+'</optgroup>').join('');
     $('budhint').textContent='科目與財務長的「收支預算」一致，選不到合適的請選最接近者，財務長入帳時可調整。';
   }catch(e){$('out').innerHTML=`<div class="msg err">${esc(e.message)}</div>`;$('bud').innerHTML='<option value="">無法載入</option>'}
-  try{const s=localStorage.getItem('imc_claimer');if(s&&NAMES.includes(s)){$('who').value=s;loadMine()}}catch(e){}
+  try{localStorage.removeItem('imc_claimer')}catch(e){}
+  if(window.PRES){$('who').value=window.PRES;loadMine()}
 }
 $('who').addEventListener('change',loadMine);
 const bname=id=>{const i=ITEMS.find(x=>x.id==id);return i?i.category+'｜'+i.item:''};
 async function loadMine(){
   const n=$('who').value.trim();
   if(!NAMES.includes(n)){$('mine').classList.add('hide');return}
-  try{localStorage.setItem('imc_claimer',n)}catch(e){}
+  
   try{
     const L=await rpc('imc_claim_my',{n});
     $('mine').classList.remove('hide');
