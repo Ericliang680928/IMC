@@ -117,6 +117,12 @@ td.act button{margin-right:4px}
         <div class="row" style="margin-top:10px"><button class="sm" id="csvL">收支明細 CSV</button><button class="sm" id="csvB">預算執行表 CSV</button><button class="sm" id="prt">列印預算執行表</button></div>
         <div id="xout"></div>
       </div>
+      <div class="card" style="max-width:640px;margin-top:14px">
+        <h2>月財務收支表（給理監事會）</h2>
+        <div class="muted">格式同「115-9 財務收支表」：當月收支、累計收支、預算各組小計、占比，下方是當月餘絀、前期結餘、合計結餘與簽名列。</div>
+        <div class="row" style="margin-top:12px"><select id="rm" class="si"></select><button class="btn" id="xm" style="width:auto;padding:0 22px">下載月財務收支表</button></div>
+        <div id="xmout"></div>
+      </div>
     </div>
   </section>
 </main>
@@ -142,7 +148,7 @@ async function boot(){
 }
 async function reload(){
   [OV,LG]=await Promise.all([rpc('imc_fin_overview',{p:PW}),rpc('imc_ledger_list',{p:PW})]);
-  fillBud();show(TAB);
+  fillBud();fillMonths();show(TAB);
 }
 function fillBud(){
   const fb=$('fb'),v=fb.value;
@@ -253,8 +259,119 @@ $('csvL').addEventListener('click',()=>{const m=bmap();csvDl('收支明細.csv',
 $('csvB').addEventListener('click',()=>csvDl('預算執行表.csv',[['類別','科目','項目','數量','單位','單價','預算金額','實際金額','差異','執行率%']].concat(OV.map(o=>[o.kind,o.category,o.item,o.qty,o.unit,o.unit_price,o.amount,o.actual,o.amount-o.actual,pct(Number(o.actual),Number(o.amount))??''])))) ;
 $('prt').addEventListener('click',()=>{show('ov');$('ovk').value='';renderOv();setTimeout(()=>window.print(),200)});
 function loadXlsx(){return new Promise((res,rej)=>{if(window.ExcelJS)return res();const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';s.onload=res;s.onerror=()=>rej(new Error('無法載入 Excel 元件，請檢查網路後重試（或先用 CSV 匯出）'));document.head.appendChild(s)})}
+$('xm').addEventListener('click',async()=>{const o=$('xmout');o.innerHTML='';try{await loadXlsx();await buildMonthly($('rm').value);o.innerHTML='<div class="msg ok">已下載。</div>'}catch(e){o.innerHTML=`<div class="msg err">${esc(e.message)}</div>`}});
 $('xl').addEventListener('click',async()=>{const o=$('xout');o.innerHTML='';
   try{await loadXlsx();await buildXlsx();o.innerHTML='<div class="msg ok">已下載。用 Excel 或 WPS 開啟即可（金額與合計為公式，會自動計算）。</div>'}catch(e){o.innerHTML=`<div class="msg err">${esc(e.message)}</div>`}});
+/* ---- 月財務收支表（依 115-9 財務收支表格式）---- */
+const rocY=y=>y-1911;
+function rowKey(o){
+  if(o.kind==='收入'){const m={'原社友年費':'社費-原社友','原社友-寶眷':'社費-寶眷','新社友年費':'社費-新社友','新社友入社費':'社費-入社費','保留社友':'社費-保留','社刊廣告':'廣告收入','樂捐收入（顧問）':'樂捐/活動收入','餐費茶點（自費）':'來賓收入','社館基金收入（專款專用）':'社館基金(收入)'};return m[o.item]||'其他(收入)'}
+  const c=o.category;
+  if(c==='秘書處－人事')return '秘書處-人事支出';
+  if(c==='秘書處－行政/租金/基金/雜支')return o.item.startsWith('社館基金')?'秘書處-社館基金':(o.item==='其他雜支'?'秘書處-其他':'秘書處-行政支出');
+  if(c==='休閒次社團補助')return '秘書處-休閒社團';
+  if(c==='公共關係暨全國事務')return '國際暨全國事務';
+  if(c==='總務（年會活動）')return '總務';
+  return c;
+}
+const GROUP=k=>k.startsWith('社費-')?'社費收入':k;
+function monthOptions(){const s=new Set(LG.filter(l=>!l.voided).map(l=>l.entry_date.slice(0,7)));return [...s].sort()}
+function fillMonths(){const o=monthOptions(),cur=todayTW().slice(0,7);const el=$('rm');if(!el)return;const v=el.value;el.innerHTML=(o.includes(cur)?o:o.concat([cur])).sort().map(x=>`<option value="${x}">${rocY(+x.slice(0,4))}年${x.slice(5)}月</option>`).join('');el.value=v||o[o.length-1]||cur}
+async function buildMonthly(ym){
+  const FONT='微軟正黑體',NAVY='FF1C2C60',GOLD='FFC5A366',GREY='FF535353',HEAD='FFF3EBDA',INC='FFE9D9B8',EXPF='FFE3E6F0',INK='FF1C2C60',LINE='FFBFBFBF';
+  const NUM='#,##0;[Red]-#,##0';
+  const [Y,M]=ym.split('-').map(Number),mm=String(M).padStart(2,'0'),mnum=Y*100+M,roc=rocY(Y);
+  const lastDay=new Date(Y,M,0).getDate();
+  const start=(Y===2026&&M===9)?11:1;
+  const live=LG.filter(l=>!l.voided).slice().sort((a,b)=>a.entry_date.localeCompare(b.entry_date)||a.id-b.id);
+  const bm={};OV.forEach(o=>bm[o.id]=o);
+  const keyOf=id=>{const o=bm[id];return o?rowKey(o):'其他(收入)'};
+  const wb=new ExcelJS.Workbook();wb.creator='苗栗IMC 財務工作台';wb.created=new Date();
+  const ws=wb.addWorksheet(`${roc}-${M}`,{views:[{state:'frozen',ySplit:5,showGridLines:false}],pageSetup:{orientation:'portrait',paperSize:9,fitToPage:true,fitToWidth:1,fitToHeight:0,printArea:'A1:I200',margins:{left:.4,right:.4,top:.5,bottom:.5,header:.3,footer:.3}}});
+  const wd=wb.addWorksheet('收支明細',{views:[{state:'frozen',ySplit:1}]});
+  const wbud=wb.addWorksheet('預算明細',{views:[{state:'frozen',ySplit:1}]});
+  const thin={style:'thin',color:{argb:LINE}},box={top:thin,bottom:thin,left:thin,right:thin};
+  const sty=(c,o)=>{c.font={name:FONT,size:o.sz||11,bold:!!o.b,color:{argb:o.col||INK}};if(o.fill)c.fill={type:'pattern',pattern:'solid',fgColor:{argb:o.fill}};c.alignment={horizontal:o.h||'left',vertical:'middle',wrapText:o.wrap!==false};if(o.nf)c.numFmt=o.nf;if(o.box!==false)c.border=box};
+  /* 收支明細 */
+  wd.columns=[12,9,7,20,34,12,32,14,8,16,9].map(w=>({width:w}));
+  ['日期','科目編號','類別','報表列','科目','金額','摘要','對象','方式','憑證','月份'].forEach((t,i)=>{const c=wd.getCell(1,i+1);c.value=t;sty(c,{b:1,col:'FFFFFFFF',fill:NAVY,h:'center'})});
+  live.forEach((l,i)=>{const o=bm[l.budget_id]||{};const v=[new Date(l.entry_date+'T00:00:00'),l.budget_id,l.kind,keyOf(l.budget_id),`${o.category||''}｜${o.item||''}`,Number(l.amount),l.description,l.counterparty,l.method,l.voucher,Number(l.entry_date.slice(0,4))*100+Number(l.entry_date.slice(5,7))];
+    v.forEach((x,k)=>{const c=wd.getCell(i+2,k+1);c.value=x;sty(c,{wrap:false,box:true,h:[0,1,2,8,10].includes(k)?'center':(k===5?'right':'left'),nf:k===0?'yyyy/mm/dd':(k===5?'#,##0':undefined),sz:10})})});
+  const dl=Math.max(live.length+1,2);
+  /* 預算明細 */
+  wbud.columns=[9,8,26,30,8,7,11,13,18,14].map(w=>({width:w}));
+  ['科目編號','類別','大項','項目','數量','單位','單價','預算金額','報表列','群組'].forEach((t,i)=>{const c=wbud.getCell(1,i+1);c.value=t;sty(c,{b:1,col:'FFFFFFFF',fill:NAVY,h:'center'})});
+  OV.forEach((o,i)=>{const r=i+2,k=rowKey(o);[o.id,o.kind,o.category,o.item,Number(o.qty),o.unit,Number(o.unit_price)].forEach((x,j)=>{const c=wbud.getCell(r,j+1);c.value=x;sty(c,{wrap:false,sz:10,h:j===2||j===3?'left':'center',nf:j===6?'#,##0':undefined})});
+    const h=wbud.getCell(r,8);h.value={formula:`E${r}*G${r}`,result:Number(o.amount)};sty(h,{wrap:false,sz:10,h:'right',nf:'#,##0'});wbud.getCell(r,9).value=k;wbud.getCell(r,10).value=GROUP(k);sty(wbud.getCell(r,9),{wrap:false,sz:10});sty(wbud.getCell(r,10),{wrap:false,sz:10})});
+  const bl=Math.max(OV.length+1,2);
+  /* 報表 */
+  ws.columns=[{width:7},{width:20},{width:18},{width:48},{width:15},{width:15},{width:15},{width:9},{width:24},{width:2},{width:16,hidden:true}];
+  ws.mergeCells('A1:I2');ws.getCell('A1').value='社團法人苗栗縣國際工商經營研究社\n第十五屆  財務收支表';sty(ws.getCell('A1'),{sz:16,b:1,h:'center',col:'FFFFFFFF',fill:NAVY,box:false});ws.getRow(1).height=22;ws.getRow(2).height=26;
+  ws.getCell('A3').value='期間:';ws.mergeCells('B3:E3');ws.getCell('B3').value=`${roc}年${mm}月${String(start).padStart(2,'0')}日~${roc}年${mm}月${lastDay}日`;
+  ws.getCell('A4').value='帳號:';ws.mergeCells('B4:E4');ws.getCell('B4').value='322-100-084-609（華南銀行）';
+  [['A3',1],['B3',0],['A4',1],['B4',0]].forEach(([a,b])=>sty(ws.getCell(a),{sz:12,b:!!b,box:false}));
+  ws.getCell('K1').value='月份(yyyymm)';ws.getCell('K2').value=mnum;sty(ws.getCell('K1'),{sz:8,col:'FF999999',box:false,wrap:false});sty(ws.getCell('K2'),{sz:9,col:'FF999999',box:false,wrap:false,h:'center'});
+  ['種類','收支項目','細分項及說明','項目明細說明',`${roc}-${mm}月\n收支金額`,'累計收支','預算\n各組小計','占比%','備註'].forEach((t,i)=>{const c=ws.getCell(5,i+1);c.value=t;sty(c,{sz:11,b:1,fill:HEAD,h:'center'})});ws.getRow(5).height=40;
+  const sumF=(key,cum)=>`SUMIFS('收支明細'!$F$2:$F$${dl},'收支明細'!$D$2:$D$${dl},$K{r},'收支明細'!$K$2:$K$${dl},${cum?'"<="&$K$2':'$K$2'})`;
+  const monthRows=k=>live.filter(l=>keyOf(l.budget_id)===k&&Number(l.entry_date.slice(0,4))*100+Number(l.entry_date.slice(5,7))===mnum);
+  const cumRows=k=>live.filter(l=>keyOf(l.budget_id)===k&&Number(l.entry_date.slice(0,4))*100+Number(l.entry_date.slice(5,7))<=mnum);
+  const namesOf=k=>{const n=[...new Set(monthRows(k).map(l=>l.counterparty).filter(Boolean))];if(!n.length)return '**';const out=[];for(let i=0;i<n.length;i+=5)out.push(n.slice(i,i+5).join('.'));return out.join('\n')};
+  const itemsOf=k=>{const g={};monthRows(k).forEach(l=>{const it=(bm[l.budget_id]||{}).item||'';g[it]=(g[it]||0)+Number(l.amount)});const e=Object.entries(g);return e.length?e.map(([a,b])=>`${a} ${N(b)}`).join('\n'):'**'};
+  const budOf=g=>OV.filter(o=>GROUP(rowKey(o))===g).reduce((s,o)=>s+Number(o.amount),0);
+  const sumM=k=>monthRows(k).reduce((s,l)=>s+Number(l.amount),0),sumC=k=>cumRows(k).reduce((s,l)=>s+Number(l.amount),0);
+  const INCROWS=[['社費收入','原社友','社費-原社友'],['','原社友-寶眷','社費-寶眷'],['','新社友','社費-新社友'],['','新社友-入社費','社費-入社費'],['','保留社友','社費-保留'],['廣告收入','社刊廣告','廣告收入'],['樂捐/活動收入','顧問.樂捐.贊助','樂捐/活動收入'],['來賓收入','餐費茶點（自費）','來賓收入'],['社館基金','專款專用','社館基金(收入)'],['其他','代收款/暫收款/其他','其他(收入)']];
+  const EXPROWS=['秘書處-人事支出','秘書處-行政支出','秘書處-休閒社團','秘書處-社館基金','秘書處-其他','例會節目','經營研究','工商觀摩','創新比賽','國際暨全國事務','親善敦睦','社友發展','資訊發展','康樂活動','社刊編輯','總務'];
+  let r=6;const rowNote={'社館基金(收入)':'115-10月起\n開始提撥到社館專戶'};
+  const put=(row,key,label3,b2,kind)=>{
+    const nm=kind==='收入'?namesOf(key):itemsOf(key);
+    ws.getCell(row,2).value=b2;ws.getCell(row,3).value=label3;ws.getCell(row,4).value=nm;
+    ws.getCell(row,5).value={formula:sumF(key,false).replace('{r}',row),result:sumM(key)};
+    ws.getCell(row,6).value={formula:sumF(key,true).replace('{r}',row),result:sumC(key)};
+    ws.getCell(row,11).value=key;sty(ws.getCell(row,11),{sz:8,col:'FFBFBFBF',box:false,wrap:false});
+    if(rowNote[key])ws.getCell(row,9).value=rowNote[key];
+    const lines=nm.split('\n').length;ws.getRow(row).height=Math.max(24,17*lines+6);
+    for(let k=2;k<=9;k++)sty(ws.getCell(row,k),{h:k>=5&&k<=7?'right':(k===8?'right':'left'),nf:k>=5&&k<=7?NUM:(k===8?'0%':undefined),sz:k===4?10:11});
+  };
+  const incStart=r;let grpStart=null;
+  INCROWS.forEach(([b,c3,key],i)=>{put(r,key,c3,b,'收入');
+    if(b==='社費收入')grpStart=r;
+    const grp=GROUP(key);
+    if(key==='社費-保留'){const g=`SUMIFS('預算明細'!$H$2:$H$${bl},'預算明細'!$J$2:$J$${bl},"社費收入")`;ws.mergeCells(`G${grpStart}:G${r}`);ws.getCell(grpStart,7).value={formula:g,result:budOf('社費收入')};ws.mergeCells(`H${grpStart}:H${r}`);ws.getCell(grpStart,8).value={formula:`IF(G${grpStart}=0,0,SUM(F${grpStart}:F${r})/G${grpStart})`,result:budOf('社費收入')?['社費-原社友','社費-寶眷','社費-新社友','社費-入社費','社費-保留'].reduce((a,k)=>a+sumC(k),0)/budOf('社費收入'):0};ws.mergeCells(`B${grpStart}:B${r}`)}
+    else if(!key.startsWith('社費-')){const g=`SUMIFS('預算明細'!$H$2:$H$${bl},'預算明細'!$J$2:$J$${bl},K${r})`;ws.getCell(r,7).value={formula:g,result:budOf(grp)};ws.getCell(r,8).value={formula:`IF(G${r}=0,0,F${r}/G${r})`,result:budOf(grp)?sumC(key)/budOf(grp):0}}
+    r++});
+  const incEnd=r-1;
+  ws.mergeCells(`A${incStart}:A${incEnd}`);ws.getCell(incStart,1).value='收入';
+  for(let k=incStart;k<=incEnd;k++)sty(ws.getCell(k,1),{b:1,fill:INC,h:'center'});
+  const tIn=r;ws.mergeCells(`B${tIn}:D${tIn}`);ws.getCell(tIn,1).value='';ws.getCell(tIn,2).value='收入合計';
+  const totIn=live.filter(l=>l.kind==='收入'&&Number(l.entry_date.slice(0,4))*100+Number(l.entry_date.slice(5,7))===mnum).reduce((s,l)=>s+Number(l.amount),0),cumIn=live.filter(l=>l.kind==='收入'&&Number(l.entry_date.slice(0,4))*100+Number(l.entry_date.slice(5,7))<=mnum).reduce((s,l)=>s+Number(l.amount),0),budIn=OV.filter(o=>o.kind==='收入').reduce((s,o)=>s+Number(o.amount),0);
+  ws.getCell(tIn,5).value={formula:`SUM(E${incStart}:E${incEnd})`,result:totIn};ws.getCell(tIn,6).value={formula:`SUM(F${incStart}:F${incEnd})`,result:cumIn};ws.getCell(tIn,7).value={formula:`SUM(G${incStart}:G${incEnd})`,result:budIn};ws.getCell(tIn,8).value={formula:`IF(G${tIn}=0,0,F${tIn}/G${tIn})`,result:budIn?cumIn/budIn:0};
+  for(let k=1;k<=9;k++)sty(ws.getCell(tIn,k),{b:1,fill:INC,h:k>=5&&k<=7?'right':(k===8?'right':'center'),nf:k>=5&&k<=7?NUM:(k===8?'0%':undefined)});ws.getRow(tIn).height=24;
+  r++;const expStart=r;
+  EXPROWS.forEach(key=>{put(r,key,key.startsWith('秘書處')?key.split('-')[1]:'**',key,'支出');
+    if(!key.startsWith('秘書處'))ws.getCell(r,3).value='**';
+    const g=`SUMIFS('預算明細'!$H$2:$H$${bl},'預算明細'!$I$2:$I$${bl},K${r})`;ws.getCell(r,7).value={formula:g,result:budOf(key)};ws.getCell(r,8).value={formula:`IF(G${r}=0,0,F${r}/G${r})`,result:budOf(key)?sumC(key)/budOf(key):0};r++});
+  const expEnd=r-1;ws.mergeCells(`A${expStart}:A${expEnd}`);ws.getCell(expStart,1).value='支出';for(let k=expStart;k<=expEnd;k++)sty(ws.getCell(k,1),{b:1,fill:EXPF,h:'center'});
+  const tEx=r;ws.mergeCells(`B${tEx}:D${tEx}`);ws.getCell(tEx,2).value='支出合計';
+  const inM=l=>Number(l.entry_date.slice(0,4))*100+Number(l.entry_date.slice(5,7));
+  const totEx=live.filter(l=>l.kind==='支出'&&inM(l)===mnum).reduce((s,l)=>s+Number(l.amount),0),cumEx=live.filter(l=>l.kind==='支出'&&inM(l)<=mnum).reduce((s,l)=>s+Number(l.amount),0),budEx=OV.filter(o=>o.kind==='支出').reduce((s,o)=>s+Number(o.amount),0);
+  ws.getCell(tEx,5).value={formula:`SUM(E${expStart}:E${expEnd})`,result:totEx};ws.getCell(tEx,6).value={formula:`SUM(F${expStart}:F${expEnd})`,result:cumEx};ws.getCell(tEx,7).value={formula:`SUM(G${expStart}:G${expEnd})`,result:budEx};ws.getCell(tEx,8).value={formula:`IF(G${tEx}=0,0,F${tEx}/G${tEx})`,result:budEx?cumEx/budEx:0};
+  for(let k=1;k<=9;k++)sty(ws.getCell(tEx,k),{b:1,fill:EXPF,h:k>=5&&k<=7?'right':(k===8?'right':'center'),nf:k>=5&&k<=7?NUM:(k===8?'0%':undefined)});ws.getRow(tEx).height=24;
+  /* 餘絀 */
+  const prevIn=live.filter(l=>l.kind==='收入'&&inM(l)<mnum).reduce((s,l)=>s+Number(l.amount),0),prevEx=live.filter(l=>l.kind==='支出'&&inM(l)<mnum).reduce((s,l)=>s+Number(l.amount),0);
+  const rA=tEx+1,rB=tEx+2,rC=tEx+3;
+  const lab=(row,t,fill,col)=>{ws.mergeCells(`A${row}:D${row}`);ws.getCell(row,1).value=t;sty(ws.getCell(row,1),{b:1,fill,h:'right',col:col||INK,box:false})};
+  lab(rA,'當月餘絀(A)',HEAD);lab(rB,'前期結餘(B)',HEAD);lab(rC,'合計結餘(A+B)',GOLD);
+  ws.getCell(rA,5).value={formula:`E${tIn}-E${tEx}`,result:totIn-totEx};
+  ws.getCell(rB,5).value={formula:`SUMIFS('收支明細'!$F$2:$F$${dl},'收支明細'!$C$2:$C$${dl},"收入",'收支明細'!$K$2:$K$${dl},"<"&$K$2)-SUMIFS('收支明細'!$F$2:$F$${dl},'收支明細'!$C$2:$C$${dl},"支出",'收支明細'!$K$2:$K$${dl},"<"&$K$2)`,result:prevIn-prevEx};
+  ws.getCell(rC,5).value={formula:`E${rA}+E${rB}`,result:totIn-totEx+prevIn-prevEx};
+  [[rA,HEAD],[rB,HEAD],[rC,GOLD]].forEach(([row,f])=>{sty(ws.getCell(row,5),{b:1,fill:f,h:'right',nf:NUM});ws.getRow(row).height=24});
+  ws.mergeCells(`F${rC}:I${rC}`);ws.getCell(rC,6).value='須與銀行存款相符合（如下附存款照片）';sty(ws.getCell(rC,6),{b:1,fill:GOLD,h:'center',box:false});
+  const rS=rC+2;ws.mergeCells(`A${rS}:I${rS}`);ws.getCell(rS,1).value='社長:林浿安　　　　常務監事:梁群儒　　　　財務長:鄧瑞珍　　　　祕書:黃榆汝';sty(ws.getCell(rS,1),{sz:12,h:'left',box:false});ws.getRow(rS).height=28;
+  ws.getCell(rS+2,1).value='銀行存款照片:';sty(ws.getCell(rS+2,1),{sz:12,box:false,wrap:false});
+  const buf=await wb.xlsx.writeBuffer();
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));a.download=`苗栗IMC第15屆_財務收支表_${roc}年${mm}月.xlsx`;a.click();
+}
+
 async function buildXlsx(){
   const FONT='微軟正黑體',NAVY='FF1C2C60',INK='FF1C2C60',GOLD='FFC5A366',GREY='FF535353',SUB='FF535353',TOT='FFF3EBDA',CAT='FFEFEFEF',ZEB='FFF7F5EF',LINE='FFD9D9D9',MUTE='FF8A8A8A';
   const NUM='#,##0',DIFF='#,##0;[Red]-#,##0';
