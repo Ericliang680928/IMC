@@ -20,7 +20,7 @@
 <main class="wrap">
   <div class="card">
     <h2>活動辦完後，請在這裡先報帳</h2>
-    <div class="muted">先把支出登記上來，財務長就能提早掌握各活動花了多少，並安排撥款或入帳。報帳科目請依「財務收支預算科目」選擇。紙本發票或收據請另交財務長留存。</div>
+    <div class="muted">先把支出登記上來，財務長就能提早掌握各活動花了多少，並安排撥款或入帳。報帳科目請依「財務收支預算科目」選擇。報帳僅開放理監事（名單由財務長設定）。紙本發票或收據正本請另交財務長留存，照片只是方便先核對。</div>
   </div>
 
   <form class="card" id="f" autocomplete="off">
@@ -84,7 +84,7 @@ let NAMES=[],ITEMS=[],PICS=[];
 async function init(){
   $('d').value=todayTW();
   try{
-    const [names,items]=await Promise.all([rpc('imc_names'),rpc('imc_claim_items')]);
+    const [names,items]=await Promise.all([rpc('imc_claim_names'),rpc('imc_claim_items')]);
     NAMES=names.map(x=>x.name);ITEMS=items;
     const by={};items.forEach(i=>{(by[i.category]=by[i.category]||[]).push(i)});
     $('bud').innerHTML='<option value="">— 請選擇預算科目 —</option>'+Object.keys(by).map(c=>`<optgroup label="${esc(c)}">`+by[c].map(i=>`<option value="${i.id}">${esc(i.item)}</option>`).join('')+'</optgroup>').join('');
@@ -97,7 +97,7 @@ function sug(){
   if(!q){box.classList.add('hide');$('mine').classList.add('hide');return}
   const m=NAMES.filter(n=>n.includes(q));
   if(m.length===1&&m[0]===q){box.classList.add('hide');loadMine();return}
-  box.innerHTML=m.length?m.slice(0,30).map(n=>`<button type="button" role="option">${esc(n)}</button>`).join(''):'<div class="muted" style="padding:10px">名單中找不到，請確認姓名或洽財務長</div>';
+  box.innerHTML=m.length?m.slice(0,30).map(n=>`<button type="button" role="option">${esc(n)}</button>`).join(''):'<div class="muted" style="padding:10px">報帳僅限理監事，名單中找不到請洽財務長</div>';
   box.classList.remove('hide');$('mine').classList.add('hide');
 }
 $('who').addEventListener('input',sug);
