@@ -63,7 +63,7 @@
     <div id="v-add" class="hide">
       <form class="card" id="addf" style="max-width:560px">
         <h2>代登收款（現場收現、或已查帳直接入帳）</h2>
-        <label class="f" for="an">社友</label><select id="an" required></select>
+        <label class="f" for="an">社友</label><input type="text" id="an" list="anl" placeholder="輸入姓名關鍵字" autocomplete="off" required><datalist id="anl"></datalist>
         <label class="f">項目</label><div class="opts" id="aitems"></div>
         <div class="total"><span>合計</span><b id="asum">NT$ 0</b></div>
         <label class="f">方式</label>
@@ -123,7 +123,7 @@ async function boot(){
 }
 async function reload(){
   [DUES,MEM]=await Promise.all([rpc('imc_dues_list',{p:PW}),rpc('imc_admin_members',{p:PW})]);
-  $('an').innerHTML='<option value="">— 選擇社友 —</option>'+MEM.filter(m=>m.active).map(m=>`<option>${esc(m.name)}</option>`).join('');
+  $('anl').innerHTML=MEM.filter(m=>m.active).map(m=>`<option value="${esc(m.name)}">`).join('');
   tiles();show(TAB);
 }
 function expected(m){return FEES.filter(f=>!f.new_only||m.is_new).reduce((s,f)=>s+f.amount,0)}
@@ -204,7 +204,7 @@ $('mcsv').addEventListener('click',()=>{const r=mrows();csvDl('社費繳費總�
 $('addf').addEventListener('submit',async e=>{
   e.preventDefault();const it=[...document.querySelectorAll('#aitems input:checked')].map(i=>i.value);const o=$('aout');
   if(!$('an').value||!it.length){o.innerHTML='<div class="msg err">請選社友並勾選項目</div>';return}
-  try{await rpc('imc_dues_add',{p:PW,n:$('an').value,m:document.querySelector('input[name=am]:checked').value,it,l5:$('al5').value.trim(),d:$('ad').value,nt:$('ant').value});
+  try{await rpc('imc_dues_add',{p:PW,n:$('an').value.trim(),m:document.querySelector('input[name=am]:checked').value,it,l5:$('al5').value.trim(),d:$('ad').value,nt:$('ant').value});
     o.innerHTML='<div class="msg ok">已登錄並確認。</div>';document.querySelectorAll('#aitems input').forEach(i=>{i.checked=false;i.closest('.opt').classList.remove('on')});$('asum').textContent='NT$ 0';$('ant').value='';$('al5').value='';await reload()}
   catch(err){o.innerHTML=`<div class="msg err">${esc(err.message)}</div>`}
 });

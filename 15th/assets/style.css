@@ -83,3 +83,8 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .kv dt{opacity:.8}.kv dd{margin:0;color:var(--ink-strong)}
 .hide{display:none !important}
 @media print{header.top,.tabs,button,.noprint{display:none !important}body{background:#fff;color:#000}.card{border:0}}
+
+.sug{border:1px solid var(--line);border-radius:10px;margin-top:6px;max-height:240px;overflow-y:auto;background:var(--card);-webkit-overflow-scrolling:touch}
+.sug button{display:block;width:100%;text-align:left;padding:13px 14px;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink-strong);font:inherit;min-height:48px;cursor:pointer}
+.sug button:last-child{border-bottom:0}
+.sug button:active,.sug button:hover{background:var(--gold-soft)}
