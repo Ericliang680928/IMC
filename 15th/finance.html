@@ -264,7 +264,7 @@ $('mf2').addEventListener('submit',async e=>{e.preventDefault();const c=$('mt').
 if(PW){boot().catch(()=>{PW='';try{sessionStorage.removeItem('imc_fin')}catch(e){}})}
 
 if(document.documentElement.classList.contains('embed')){
-  window.addEventListener('message',e=>{if(e.origin!==location.origin)return;const d=e.data||{};if(d.reload&&typeof reload==='function'&&PW){try{reload()}catch(_){}}if(d.show&&typeof show==='function')show(d.show)});
+  window.addEventListener('message',e=>{if(e.origin!==location.origin)return;const d=e.data||{};if(d.show)TAB=d.show;if(d.reload&&typeof reload==='function'&&PW){try{reload()}catch(_){}}else if(d.show&&typeof show==='function')show(d.show)});
   let lastH=0;const post=()=>{const h=Math.ceil(document.documentElement.getBoundingClientRect().height);if(h&&h!==lastH){lastH=h;parent.postMessage({h,from:location.pathname},location.origin)}};
   new ResizeObserver(post).observe(document.body);window.addEventListener('load',post);
 }
