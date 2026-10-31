@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>財務後台 | 苗栗IMC 第15屆</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+.grp{flex:none;align-self:center;font-size:12px;font-weight:700;color:var(--gold-deep);padding:0 4px 0 8px;letter-spacing:.04em}
+.grp:first-child{padding-left:0}
+.sep{flex:none;width:1px;background:var(--line);margin:6px 6px}
+iframe.pane{display:block;width:100%;border:0;min-height:320px;background:transparent}
+.tabs button.on,.tabs button[aria-selected="true"]{background:var(--blue);color:#fff;border-color:var(--blue)}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap wide">
+  <div class="brand">
+    <img src="assets/imc-logo.png" alt="苗栗IMC 社徽" onerror="this.style.display='none'">
+    <div class="t"><div class="org">社團法人苗栗縣國際工商經營研究社</div><h1>財務後台・第15屆</h1></div>
+    <button class="sm hide" id="logout">登出</button>
+  </div>
+</div><hr class="rule"></header>
+
+<main class="wrap wide">
+  <form class="card" id="login" style="max-width:420px;margin-inline:auto">
+    <h2>財務長登入</h2>
+    <label class="f" for="pw">密碼</label>
+    <input type="password" id="pw" autocomplete="current-password" required>
+    <button class="btn" type="submit">登入</button><div id="lerr"></div>
+  </form>
+
+  <section id="app" class="hide">
+    <div class="tabs" role="tablist" id="tabs">
+      <span class="grp">社費審核</span>
+      <button role="tab" data-g="f" data-t="pending">待審核</button>
+      <button role="tab" data-g="f" data-t="all">全部紀錄</button>
+      <button role="tab" data-g="f" data-t="matrix">繳費總表</button>
+      <button role="tab" data-g="f" data-t="add">代登收款</button>
+      <button role="tab" data-g="f" data-t="set">設定</button>
+      <span class="sep"></span><span class="grp">帳務報表</span>
+      <button role="tab" data-g="w" data-t="ov">預算執行</button>
+      <button role="tab" data-g="w" data-t="lg">收支帳</button>
+      <button role="tab" data-g="w" data-t="bd">預算編列</button>
+      <button role="tab" data-g="w" data-t="ex">匯出報表</button>
+    </div>
+    <iframe class="pane hide" id="pf" title="社費審核"></iframe>
+    <iframe class="pane hide" id="pw2" title="財務工作台"></iframe>
+  </section>
+</main>
+
+<script src="assets/api.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+let PW='';try{PW=sessionStorage.getItem('imc_fin')||''}catch(e){}
+let G='f',T={f:'pending',w:'ov'},loaded=false;
+const frames={f:$('pf'),w:$('pw2')};
+const srcs={f:'finance.html?embed=1',w:'workbench.html?embed=1'};
+async function enter(){
+  await rpc('imc_dues_list',{p:PW});          /* 驗證密碼 */
+  try{sessionStorage.setItem('imc_fin',PW)}catch(e){}
+  $('login').classList.add('hide');$('app').classList.remove('hide');$('logout').classList.remove('hide');
+  if(!loaded){loaded=true;frames.f.src=srcs.f;frames.w.src=srcs.w}
+  go(G,T[G],false);
+}
+function go(g,t,reload){
+  G=g;T[g]=t;
+  document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.g===g&&b.dataset.t===t));
+  frames.f.classList.toggle('hide',g!=='f');frames.w.classList.toggle('hide',g!=='w');
+  const fr=frames[g];const msg={show:t};if(reload)msg.reload=1;
+  const send=()=>{try{fr.contentWindow.postMessage(msg,location.origin)}catch(e){}};
+  if(fr.contentDocument&&fr.contentDocument.readyState==='complete'&&fr.dataset.ready)send();else fr.addEventListener('load',()=>{fr.dataset.ready=1;setTimeout(send,300)},{once:true});
+}
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const g=b.dataset.g;go(g,b.dataset.t,g!==G)});
+window.addEventListener('message',e=>{if(e.origin!==location.origin)return;const d=e.data||{};if(!d.h)return;const fr=/workbench/.test(d.from)?frames.w:frames.f;fr.style.height=d.h+'px'});
+$('login').addEventListener('submit',async e=>{e.preventDefault();PW=$('pw').value;$('lerr').innerHTML='';
+  try{await enter()}catch(err){PW='';$('lerr').innerHTML=`<div class="msg err">${esc(err.message)}</div>`}});
+$('logout').addEventListener('click',()=>{PW='';try{sessionStorage.removeItem('imc_fin')}catch(e){}location.reload()});
+if(PW){enter().catch(()=>{PW='';try{sessionStorage.removeItem('imc_fin')}catch(e){}})}
+</script>
+</body>
+</html>
