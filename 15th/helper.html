@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>社務小幫手 | 苗栗IMC 第15屆</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="assets/style.css">
+<script>if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed')</script>
+<style>
+html.embed header.top,html.embed #logout,html.embed #login{display:none !important}
+html.embed body{background:transparent}
+html.embed .wrap{padding:0 0 16px}
+input.si,select.si,textarea.si{padding:8px 10px;min-height:42px;font-size:16px;border:1px solid var(--line);border-radius:10px;background:#fff;font-family:inherit;color:inherit}
+textarea.si{width:100%;min-height:120px;resize:vertical}
+.big{min-height:48px;padding:0 18px;font-size:16px;font-weight:700;border-radius:12px;border:2px solid var(--blue);background:var(--blue);color:#fff;cursor:pointer;font-family:inherit}
+.chip{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--ink-strong);font:inherit;font-size:15px;cursor:pointer}
+.chip:hover{border-color:var(--blue)}
+.now{border:2px solid var(--gold);background:#fffaf0}
+.now .t{font-size:19px;font-weight:700;color:var(--ink-strong);line-height:1.5}
+.ans{white-space:pre-wrap;line-height:1.75;font-size:16px}
+.hit{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px;background:#fff}
+.hit h3{margin:0 0 6px;font-size:15px;color:var(--ink-strong)}
+.hit.first{border:2px solid var(--blue)}
+.src{font-size:12.5px;opacity:.7;margin-top:6px}
+.sub{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 0}
+.sub button{min-height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:#fff;font:inherit;font-size:15px;font-weight:600;cursor:pointer}
+.sub button[aria-selected="true"]{background:var(--blue);color:#fff;border-color:var(--blue)}
+.pub{background:var(--ok-bg);color:var(--ok)}.adm{background:#eee;color:#555}
+.small{font-size:13px}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap wide">
+  <div class="brand">
+    <img src="assets/imc-logo.png" alt="苗栗IMC 社徽" onerror="this.style.display='none'">
+    <div class="t"><div class="org">社團法人苗栗縣國際工商經營研究社</div><h1>社務小幫手・第15屆</h1></div>
+    <button class="sm hide" id="logout">登出</button>
+  </div>
+</div><hr class="rule"></header>
+
+<main class="wrap wide">
+  <form class="card" id="login" style="max-width:420px;margin-inline:auto">
+    <h2>財務長登入</h2>
+    <label class="f" for="pw">密碼</label>
+    <input type="password" id="pw" autocomplete="current-password" required>
+    <button class="btn" type="submit">登入</button><div id="lerr"></div>
+  </form>
+
+  <section id="app" class="hide">
+    <div id="v-ask">
+      <div class="card now" id="now"><div class="muted">正在整理今天要處理的事…</div></div>
+
+      <div class="card">
+        <h2>問問看</h2>
+        <form class="row" id="qf" style="gap:8px">
+          <input class="si grow" id="q" placeholder="例如：入社費多少、怎麼報帳、雲林社交接誰負責" autocomplete="off" style="flex:1 1 220px">
+          <button class="big" type="submit">查詢</button>
+        </form>
+        <div class="row" style="margin-top:10px" id="chips"></div>
+        <div id="ans"></div>
+      </div>
+    </div>
+
+    <div id="v-kb" class="hide">
+      <div class="card"><h2>小幫手學到了什麼</h2><div id="ins"><div class="muted">讀取中…</div></div></div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h2 style="margin:0">知識庫</h2><button class="big" id="kNew" type="button" style="min-height:42px">＋新增一則</button></div>
+        <div id="kForm"></div>
+        <input class="si" id="kq" placeholder="搜尋標題或內容" style="width:100%;margin-top:12px">
+        <div id="kList"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="assets/api.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+let PW='';try{PW=sessionStorage.getItem('imc_fin')||''}catch(e){}
+let TAB='ask',KB=[],LOG=null,MEMS=[],DUES=[],CL=[];
+const EMB=document.documentElement.classList.contains('embed');
+const goto=(g,t)=>{try{parent.postMessage({goto:{g,t}},location.origin)}catch(e){}};
+const days=t=>t?Math.max(0,Math.floor((Date.now()-new Date(t).getTime())/864e5)):0;
+
+$('login').addEventListener('submit',async e=>{e.preventDefault();PW=$('pw').value;$('lerr').innerHTML='';
+  try{await boot();try{sessionStorage.setItem('imc_fin',PW)}catch(_){}}catch(err){PW='';$('lerr').innerHTML=`<div class="msg err">${esc(err.message)}</div>`}});
+$('logout').addEventListener('click',()=>{PW='';try{sessionStorage.removeItem('imc_fin')}catch(e){}location.reload()});
+
+async function boot(){
+  await loadData();
+  $('login').classList.add('hide');$('app').classList.remove('hide');$('logout').classList.remove('hide');
+  show(TAB);
+}
+async function loadData(){
+  [DUES,MEMS,CL]=await Promise.all([rpc('imc_dues_list',{p:PW}),rpc('imc_admin_members',{p:PW}),rpc('imc_claim_list',{p:PW})]);
+}
+function show(t){
+  TAB=t==='kb'?'kb':'ask';
+  $('v-ask').classList.toggle('hide',TAB!=='ask');$('v-kb').classList.toggle('hide',TAB!=='kb');
+  if(TAB==='ask'){renderNow();loadChips()}else{loadKb()}
+}
+
+/* ---------- 今天先做這一件（主動提醒）---------- */
+const unpaid=()=>MEMS.filter(m=>m.active).map(m=>{const owe=m.need.filter(x=>!(m.paid_items||[]).includes(x.code)&&!(m.pending_items||[]).includes(x.code));return{name:m.name,owe:owe.reduce((s,x)=>s+x.amount,0),n:owe.length}}).filter(x=>x.n>0);
+function renderNow(){
+  const pd=DUES.filter(d=>d.status==='待審核'),pc=CL.filter(c=>c.status==='待處理');
+  const oldD=pd.reduce((m,d)=>Math.max(m,days(d.submitted_at)),0),oldC=pc.reduce((m,c)=>Math.max(m,days(c.created_at)),0);
+  const todo=[];
+  if(pd.length)todo.push({w:oldD+pd.length*0.1,t:`有 ${pd.length} 筆社友繳費回報等你確認${oldD>=2?`（最久的已等 ${oldD} 天）`:''}`,b:'去確認',g:'f',tab:'pending'});
+  if(pc.length)todo.push({w:oldC+pc.length*0.1,t:`有 ${pc.length} 筆理監事報帳等你入帳，共 ${money(pc.reduce((s,c)=>s+Number(c.amount),0))}${oldC>=2?`（最久的已等 ${oldC} 天）`:''}`,b:'去入帳',g:'e',tab:'cpend'});
+  todo.sort((a,b)=>b.w-a.w);
+  const un=unpaid();
+  let h;
+  if(!todo.length){h=`<div class="t">目前沒有等你處理的事。</div><div class="muted" style="margin-top:6px">${un.length?`還有 ${un.length} 位社友尚未繳齊，可以點下面「誰還沒繳費」。`:'社費也都繳齊了。'}</div>`}
+  else{const f=todo[0];h=`<div class="muted small">今天先做這一件</div><div class="t">${esc(f.t)}</div><div class="row" style="margin-top:12px"><button class="big" data-go="${f.g}|${f.tab}">${esc(f.b)}</button></div>`+(todo.length>1?`<div class="muted" style="margin-top:12px">之後再做：${todo.slice(1).map(x=>`<a href="#" class="lnk" data-go="${x.g}|${x.tab}">${esc(x.t)}</a>`).join('；')}</div>`:'')}
+  $('now').innerHTML=h;
+}
+$('now').addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(!b)return;e.preventDefault();const[g,t]=b.dataset.go.split('|');goto(g,t)});
+
+/* ---------- 問問看：即時資料 + 知識庫 ---------- */
+const QUICK=[
+ ['誰還沒繳費',()=>{const u=unpaid().sort((a,b)=>b.owe-a.owe);return u.length?`尚未繳齊 ${u.length} 位，合計約 ${money(u.reduce((s,x)=>s+x.owe,0))}。\n\n`+u.slice(0,20).map(x=>`・${x.name}　${money(x.owe)}`).join('\n')+(u.length>20?`\n…還有 ${u.length-20} 位，完整名單看「繳費總表」。`:''):'目前每位社友都已繳齊或已回報。'}],
+ ['待審核繳費',()=>{const p=DUES.filter(d=>d.status==='待審核');return p.length?`共 ${p.length} 筆：\n\n`+p.slice(0,15).map(d=>`・${d.member_name}　${money(d.amount)}　${d.method}${d.last5?'（後5碼 '+d.last5+'）':''}`).join('\n'):'沒有待審核的繳費回報。'}],
+ ['待入帳報帳',()=>{const p=CL.filter(c=>c.status==='待處理');return p.length?`共 ${p.length} 筆，合計 ${money(p.reduce((s,c)=>s+Number(c.amount),0))}：\n\n`+p.slice(0,15).map(c=>`・${c.claimant}　${money(c.amount)}　${c.activity}｜${c.description}`).join('\n'):'沒有等待入帳的報帳。'}]
+];
+function chipsHtml(extra){return QUICK.map(([l])=>`<button class="chip" data-quick="${esc(l)}">${esc(l)}</button>`).join('')+(extra||[]).map(q=>`<button class="chip" data-ask="${esc(q)}">${esc(q)}</button>`).join('')}
+async function loadChips(){
+  $('chips').innerHTML=chipsHtml();
+  try{const I=await rpc('imc_kb_insights',{p:PW});$('chips').innerHTML=chipsHtml((I.top||[]).filter(x=>x.n>=2).slice(0,5).map(x=>x.q))}catch(e){}
+}
+$('chips').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.quick){const f=QUICK.find(x=>x[0]===b.dataset.quick);showAns(`<div class="hit first"><h3>${esc(f[0])}</h3><div class="ans">${esc(f[1]())}</div></div>`,false);$('q').value=''}
+  else if(b.dataset.ask){$('q').value=b.dataset.ask;ask(b.dataset.ask)}});
+$('qf').addEventListener('submit',e=>{e.preventDefault();const q=$('q').value.trim();if(q)ask(q)});
+function showAns(html,fb){$('ans').innerHTML=html+(fb?`<div class="row" id="fb" style="margin-top:12px"><span class="muted">這個答案有幫到你嗎？</span><button class="chip" data-fb="1">👍 有用</button><button class="chip" data-fb="-1">👎 沒幫助</button></div>`:'')}
+async function ask(q){
+  $('ans').innerHTML='<div class="muted" style="margin-top:12px">查詢中…</div>';
+  try{
+    const r=await rpc('imc_kb_search',{p:PW,q});LOG=r.log;const H=r.hits||[];
+    if(!H.length){showAns(`<div class="msg warn">知識庫裡還沒有這題的答案，我已經記下來了。<div class="row" style="margin-top:10px"><button class="chip" data-teach="${esc(q)}">我來補上答案</button></div></div>`,false);return}
+    const first=H[0];
+    showAns(`<div class="hit first"><h3>${esc(first.title)}</h3><div class="ans">${esc(first.body.length>420?first.body.slice(0,420)+'…':first.body)}</div>${first.body.length>420?`<div class="row" style="margin-top:8px"><button class="chip" data-more="${first.id}">看完整內容</button></div>`:''}<div class="src">來源：${esc(first.source||'知識庫')}</div></div>`+
+      (H.length>1?`<div class="muted" style="margin-top:12px">也許相關：</div>`+H.slice(1,4).map(h=>`<div class="hit"><h3>${esc(h.title)}</h3><div class="muted small">${esc(h.body.slice(0,90))}…</div><div class="row" style="margin-top:6px"><button class="chip" data-more="${h.id}">展開</button></div></div>`).join(''):''),true);
+    window._H=H;
+  }catch(e){showAns(`<div class="msg err">${esc(e.message)}</div>`,false)}
+}
+$('ans').addEventListener('click',async e=>{
+  const fb=e.target.closest('[data-fb]');
+  if(fb){try{await rpc('imc_kb_feedback',{lid:LOG,v:Number(fb.dataset.fb)});$('fb').innerHTML='<span class="muted">謝謝，已記下，之後會更準。</span>'}catch(err){$('fb').innerHTML=`<span class="muted">${esc(err.message)}</span>`}return}
+  const mo=e.target.closest('[data-more]');
+  if(mo){const h=(window._H||[]).find(x=>String(x.id)===mo.dataset.more);if(h){const box=mo.closest('.hit');box.innerHTML=`<h3>${esc(h.title)}</h3><div class="ans">${esc(h.body)}</div><div class="src">來源：${esc(h.source||'知識庫')}</div>`}return}
+  const t=e.target.closest('[data-teach]');
+  if(t){setTab('kb');openForm(null,t.dataset.teach)}
+});
+
+/* ---------- 知識庫管理 ---------- */
+function setTab(t){goto('h',t);TAB=t;show(t)}
+async function loadKb(){
+  try{
+    const [L,I]=await Promise.all([rpc('imc_kb_list',{p:PW}),rpc('imc_kb_insights',{p:PW})]);KB=L;
+    const top=(I.top||[]).map(x=>`<span class="pill adm">${esc(x.q)} ×${x.n}</span>`).join(' ')||'<span class="muted">還沒有查詢紀錄</span>';
+    const miss=(I.miss||[]).map(x=>`<div class="row" style="margin-top:6px"><span>${esc(x.q)}${x.n>1?` ×${x.n}`:''}</span><button class="chip" data-teach="${esc(x.q)}">補上答案</button></div>`).join('')||'<span class="muted">目前沒有查不到的問題</span>';
+    const bad=(I.bad||[]).map(x=>`<div class="row" style="margin-top:6px"><span>${esc(x.title)}　👎 ${x.bad}</span><button class="chip" data-edit="${x.id}">檢查</button></div>`).join('');
+    $('ins').innerHTML=`<div class="muted small">已收 ${I.total} 則知識、${I.logs} 次查詢紀錄。只記問題文字與有沒有幫助，不記是誰問的。</div>
+      <div style="margin-top:12px"><b>常被問到</b><div class="row" style="margin-top:6px">${top}</div></div>
+      <div style="margin-top:14px"><b>查不到答案的問題</b>${miss}</div>
+      ${bad?`<div style="margin-top:14px"><b>被按「沒幫助」的答案</b>${bad}</div>`:''}`;
+    renderKb();
+  }catch(e){$('ins').innerHTML=`<div class="msg err">${esc(e.message)}</div>`}
+}
+function renderKb(){
+  const q=$('kq').value.trim().toLowerCase();
+  const L=KB.filter(k=>!q||(k.title+k.body+k.tags).toLowerCase().includes(q));
+  $('kList').innerHTML=L.length?L.map(k=>`<div class="hit" style="${k.active?'':'opacity:.55'}"><div class="row" style="justify-content:space-between"><b>${esc(k.title)}</b><span class="pill ${k.scope==='public'?'pub':'adm'}">${k.scope==='public'?'可給 LINE':'僅後台'}</span></div><div class="muted small" style="margin-top:4px">${esc(k.body.slice(0,110))}${k.body.length>110?'…':''}</div><div class="row" style="margin-top:8px"><span class="muted small">查到 ${k.hits}　👍${k.good}　👎${k.bad}${k.active?'':'　已停用'}</span><button class="chip" data-edit="${k.id}">編輯</button></div></div>`).join(''):'<div class="muted" style="margin-top:12px">沒有符合的內容。</div>';
+}
+$('kq').addEventListener('input',renderKb);
+$('kNew').addEventListener('click',()=>openForm(null,''));
+function openForm(id,title){
+  const k=id?KB.find(x=>x.id===id):null;
+  $('kForm').innerHTML=`<form id="kf" class="hit first" style="margin-top:12px"><input class="si" id="kt" placeholder="標題（一句話說這是什麼）" value="${esc(k?k.title:title||'')}" style="width:100%" required>
+  <textarea class="si" id="kb" placeholder="內容：用短句、條列，社友一看就懂" style="margin-top:8px" required>${esc(k?k.body:'')}</textarea>
+  <input class="si" id="kg" placeholder="關鍵字（空白隔開，幫助搜尋）" value="${esc(k?k.tags:'')}" style="width:100%;margin-top:8px">
+  <div class="row" style="margin-top:8px"><select class="si" id="ks"><option value="admin"${k&&k.scope==='public'?'':' selected'}>僅後台使用</option><option value="public"${k&&k.scope==='public'?' selected':''}>可給 LINE 機器人（不含帳務與個資）</option></select>
+  ${k?`<label class="row"><input type="checkbox" id="ka"${k.active?' checked':''}> 啟用</label>`:''}</div>
+  <div class="row" style="margin-top:10px"><button class="big" type="submit">儲存</button><button class="chip" type="button" id="kc">取消</button></div><div id="kout"></div></form>`;
+  $('kForm').dataset.id=id||'';$('kt').focus();
+  $('kc').onclick=()=>$('kForm').innerHTML='';
+  $('kf').addEventListener('submit',async ev=>{ev.preventDefault();
+    try{await rpc('imc_kb_save',{p:PW,i:id,t:$('kt').value,b:$('kb').value,tg:$('kg').value,sc:$('ks').value,src:k?k.source:'財務長補充',act:$('ka')?$('ka').checked:true});
+      $('kForm').innerHTML='<div class="msg ok">已儲存，小幫手下次就會用這個答案。</div>';await loadKb()}catch(err){$('kout').innerHTML=`<div class="msg err">${esc(err.message)}</div>`}});
+}
+document.addEventListener('click',e=>{
+  const ed=e.target.closest('[data-edit]');if(ed){openForm(Number(ed.dataset.edit));$('kForm').scrollIntoView({behavior:'smooth',block:'nearest'})}
+  const t=e.target.closest('#ins [data-teach]');if(t){openForm(null,t.dataset.teach);$('kForm').scrollIntoView({behavior:'smooth',block:'nearest'})}
+});
+
+if(PW){boot().catch(()=>{PW='';try{sessionStorage.removeItem('imc_fin')}catch(e){}})}
+if(EMB){
+  window.addEventListener('message',e=>{if(e.origin!==location.origin)return;const d=e.data||{};if(d.show)TAB=d.show;
+    if(d.reload&&PW){loadData().then(()=>show(TAB)).catch(()=>{})}else if(d.show&&PW&&!$('app').classList.contains('hide'))show(d.show)});
+  let lastH=0;const post=()=>{const h=Math.ceil(document.documentElement.getBoundingClientRect().height);if(h&&h!==lastH){lastH=h;parent.postMessage({h,from:location.pathname},location.origin)}};
+  new ResizeObserver(post).observe(document.body);window.addEventListener('load',post);
+}
+</script>
+</body>
+</html>
