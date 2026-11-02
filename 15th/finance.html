@@ -209,7 +209,7 @@ $('v-claims').addEventListener('click',async e=>{const b=e.target.closest('butto
   try{
     if(a==='ph'){b.disabled=true;const P=await rpc('imc_claim_photos',{p:PW,i:id});b.closest('dd').innerHTML=P.map(x=>`<img src="${x}" alt="憑證" style="max-width:100%;border-radius:8px;border:1px solid var(--line);margin:4px 0;display:block">`).join('');return}
     if(a==='ok'){if(!bud.value){out.innerHTML='<div class="msg err">請先選擇入帳科目</div>';return}await rpc('imc_claim_review',{p:PW,i:id,s:'已入帳',rn:rn.value,b:Number(bud.value)})}
-    if(a==='no'){if(!confirm('確定退回這筆報帳？'))return;await rpc('imc_claim_review',{p:PW,i:id,s:'退回',rn:rn.value,b:bud.value?Number(bud.value):null})}
+    if(a==='no'){if(!rn.value.trim()){out.innerHTML='<div class="msg err">退回請先在上方填寫原因（報帳人會看到）</div>';rn.focus();return}if(!confirm('確定退回這筆報帳？'))return;await rpc('imc_claim_review',{p:PW,i:id,s:'退回',rn:rn.value,b:bud.value?Number(bud.value):null})}
     if(a==='undo'){if(!confirm('撤銷後會把收支帳中的這筆作廢，確定？'))return;await rpc('imc_claim_review',{p:PW,i:id,s:'待處理',rn:'',b:null})}
     await reload();
   }catch(err){out.innerHTML=`<div class="msg err">${esc(err.message)}</div>`}});
