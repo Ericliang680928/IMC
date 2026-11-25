@@ -217,22 +217,40 @@ dialog.result::backdrop { background: transparent; }
 }
 .rbox.rolling .rstage { color: #cdd6f6; }
 .rbox.done .rstage { min-height: 0; padding: 14px 18px; font-size: clamp(1.8rem, 4.6vw, 2.8rem); }
-.rstage small { display: block; margin-top: .25em; font-size: 1rem; font-weight: 500; color: #dcb481; letter-spacing: .04em; }
-.rstage small:empty { display: none; }
+.rstage > small { display: block; margin-top: .25em; font-size: 1rem; font-weight: 500; color: #dcb481; letter-spacing: .04em; }
+.rstage > small:empty { display: none; }
 .rstage .who { display: block; max-width: 100%; }
-/* 一次抽一位：揭曉的名字彈出來 */
-.rbox.reveal .rstage .who { color: #ffe29a; animation: pop .55s cubic-bezier(.2, 1.3, .3, 1) both; }
-@keyframes pop { from { opacity: 0; transform: scale(.72); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .rbox.reveal .rstage .who { animation: none; } }
+/* 一次抽一位：抽的時候、揭曉時，整張登機證放在舞台上（全部抽完才換成標題＋名單） */
+.rbox:not(.done) .rstage {
+  --notch: #111b4b; padding: 24px 22px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 420 120'%3E%3Cpath d='M-10 100C90 110 170 20 290 38 350 47 390 24 430 6' fill='none' stroke='%23dcb481' stroke-opacity='.4' stroke-width='2.5' stroke-dasharray='4 9' stroke-linecap='round'/%3E%3Cpath d='M404 8 436 -6 428 24 420 14 412 19 414 11Z' fill='%23dcb481' fill-opacity='.6'/%3E%3C/svg%3E") right top / 58% auto no-repeat,
+    #111b4b;
+}
+.rbox:not(.done) .rstage .who, .rbox:not(.done) .rstage > small, .rbox.done .rstage .bigpass { display: none; }
+.rstage .bigpass { --stub: 112px; width: min(640px, 100%); text-align: left; animation: fadein .25s both; box-shadow: 0 16px 36px -14px rgba(0, 0, 0, .8); }
+.bigpass .pmain { padding: 22px 24px 20px 28px; gap: 4px; }
+.bigpass .pmain::after { width: 30px; height: 30px; top: 18px; right: 18px; }
+.bigpass .pfrom { font-size: .95rem; padding-right: 40px; }
+.rstage .bigpass .nm { font-size: clamp(2.8rem, 6vw, 4.4rem); line-height: 1.15; transition: color .2s; }
+.bigpass .pgift { font-size: 1.05rem; }
+.rstage .bigpass .no { font-size: 3.6rem; }
+.bigpass .pstub small { font-size: .95rem; }
+.rbox.rolling .rstage .bigpass .nm { color: #8e97c2; }
+.rbox.reveal .rstage .bigpass { animation: stamp .6s cubic-bezier(.2, 1.25, .3, 1) both; box-shadow: 0 0 0 3px #f6c453, 0 0 26px 2px rgba(246, 196, 83, .4), 0 16px 36px -14px rgba(0, 0, 0, .8); }
+@keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+@keyframes stamp { from { opacity: .55; transform: scale(1.14) rotate(-2.5deg); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .rstage .bigpass, .rbox.reveal .rstage .bigpass { animation: none; } }
 .rtitles { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; min-width: 0; }
 .rprog { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22); border-radius: 999px; padding: 2px 12px; font-size: .9rem; font-weight: 700; color: #dfe5ff; font-variant-numeric: tabular-nums; }
 .rprog:empty { display: none; }
 /* 已抽出的得主（抽的過程中累積） */
 .drawn { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .drawn:empty { display: none; }
-.drawn li { display: flex; gap: 8px; align-items: baseline; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.2); border-radius: 999px; padding: 3px 14px 3px 10px; font-weight: 700; }
-.drawn .cn { color: #f6c453; font-variant-numeric: tabular-nums; }
-.rbox.reveal .drawn li:last-child { border-color: #f6c453; background: rgba(246, 196, 83, .16); }
+.drawn li { display: grid; grid-template-columns: auto auto; align-items: stretch; background: var(--ticket); color: #1c2c60; border-radius: 10px; overflow: hidden; font-family: var(--font-serif); font-weight: 900; }
+.drawn .dn { padding: 6px 12px 6px 14px; font-size: 1.05rem; }
+.drawn .dno { display: grid; place-items: center; min-width: 34px; padding: 0 9px; border-left: 2px dashed #d3c8ad; color: #8f6a22; font-size: .95rem; font-variant-numeric: tabular-nums; }
+.rbox.reveal .drawn li:last-child { box-shadow: 0 0 0 2px #f6c453; }
 /* 抽的過程顯示 .drawn，全部抽完才顯示登機證名單 */
 .rbox:not(.done) .passes, .rbox.done .drawn { display: none; }
 .rbox.done .only-run, .rbox:not(.done) .only-done, .rbox:not(.done) .ractions .toast { display: none; }
@@ -248,11 +266,11 @@ button.link.armed { color: var(--red); font-weight: 700; }
 /* 登機證 */
 .passes { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
 .pass {
-  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 64px; min-width: 0; overflow: hidden;
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) var(--stub, 64px); min-width: 0; overflow: hidden;
   background: var(--ticket); color: #1c2c60; border-radius: 14px; box-shadow: 0 8px 18px -10px rgba(0, 0, 0, .6);
   animation: land .5s cubic-bezier(.2, .85, .25, 1) both; animation-delay: calc(var(--i, 0) * 90ms);
 }
-.pass::before, .pass::after { content: ""; position: absolute; right: 56px; width: 16px; height: 16px; border-radius: 50%; background: var(--notch, #fff); }
+.pass::before, .pass::after { content: ""; position: absolute; right: calc(var(--stub, 64px) - 8px); width: 16px; height: 16px; border-radius: 50%; background: var(--notch, #fff); }
 .pass::before { top: -8px; }
 .pass::after { bottom: -8px; }
 .pmain { position: relative; padding: 12px 14px 12px 16px; display: grid; gap: 2px; min-width: 0; }
@@ -293,6 +311,12 @@ button.link.armed { color: var(--red); font-weight: 700; }
   .rbox.done .rstage { min-height: 0; }
   .passes { grid-template-columns: minmax(0, 1fr); gap: 10px; }
   .pass .nm { font-size: 1.5rem; }
+  .rstage .bigpass { --stub: 84px; }
+  .rstage .bigpass .nm { font-size: 2.5rem; }
+  .rstage .bigpass .no { font-size: 2.8rem; }
+  .bigpass .pmain { padding: 16px 16px 14px 20px; }
+  .bigpass .pmain::after { width: 24px; height: 24px; top: 14px; right: 12px; }
+  .bigpass .pfrom { font-size: .82rem; padding-right: 30px; }
   .ractions { display: grid; grid-template-columns: 1fr 1fr; justify-content: stretch; padding: 10px 16px calc(14px + env(safe-area-inset-bottom, 0px)); }
   .ractions .toast { grid-column: 1 / -1; order: -1; margin: 0; text-align: center; min-height: 1.3em; }
   .ractions button { padding: 12px 10px; }
@@ -418,7 +442,10 @@ button.link.armed { color: var(--red); font-weight: 700; }
     </div>
     <h2 class="sr" id="rTitle">抽獎</h2>
     <div class="rbody">
-      <div class="rstage" id="stage" aria-hidden="true"><span class="who" id="sMain">準備好了嗎？</span><small id="sSub"></small></div>
+      <div class="rstage" id="stage" aria-hidden="true">
+        <span class="who" id="sMain">準備好了嗎？</span><small id="sSub"></small>
+        <div class="pass bigpass" id="bigpass"><div class="pmain"><span class="pfrom">社友福利　驚喜包</span><strong class="nm" id="bpName"></strong><span class="pgift">3合1好禮包</span></div><div class="pstub"><small>第</small><span class="no" id="bpNo"></span><small>位</small></div></div>
+      </div>
       <p class="sr" id="sr" role="status"></p>
       <ol class="drawn" id="drawn" aria-label="已抽出的得主"></ol>
       <ol class="passes" id="winners" aria-label="全部得獎名單"></ol>
@@ -444,7 +471,7 @@ button.link.armed { color: var(--red); font-weight: 700; }
   var names = $('names'), numEl = $('num'), dedupe = $('dedupe'), warn = $('warn'), clearBtn = $('clear');
   var drawBtn = $('draw'), drawBar = $('drawBar'), bar = $('bar');
   var dlg = $('result'), rbox = $('rbox'), stage = $('stage'), sMain = $('sMain'), sSub = $('sSub');
-  var drawnEl = $('drawn'), winnersEl = $('winners'), sr = $('sr');
+  var drawnEl = $('drawn'), winnersEl = $('winners'), sr = $('sr'), bpName = $('bpName'), bpNo = $('bpNo');
   var nextBtn = $('next'), againBtn = $('again'), copyBtn = $('copy'), doneBtn = $('done'), closeBtn = $('rClose'), toast = $('toast');
   var recap = $('recap'), chips = $('chips'), toast2 = $('toast2'), restartBtn = $('restart');
   var busy = false, drawVisible = false, armTimer = 0;
@@ -539,9 +566,9 @@ button.link.armed { color: var(--red); font-weight: 700; }
     drawnEl.innerHTML = '';
     list.forEach(function (n, i) {
       var li = document.createElement('li');
-      var c = document.createElement('span'); c.className = 'cn'; c.textContent = i + 1;
-      var t = document.createElement('span'); t.textContent = n;
-      li.appendChild(c); li.appendChild(t); drawnEl.appendChild(li);
+      var t = document.createElement('span'); t.className = 'dn'; t.textContent = n;
+      var c = document.createElement('span'); c.className = 'dno'; c.textContent = i + 1;
+      li.appendChild(t); li.appendChild(c); drawnEl.appendChild(li);
     });
   }
   // 全部抽完：每位得主一張登機證
@@ -631,14 +658,14 @@ button.link.armed { color: var(--red); font-weight: 700; }
     $('rPrize').textContent = prizeText(c.k);
     $('rProg').textContent = '第 ' + no + ' / ' + c.k + ' 位';
     setMode('rolling');
-    sMain.textContent = '抽獎中'; sSub.textContent = '第 ' + no + ' 位';
+    bpNo.textContent = no; bpName.textContent = '';
     renderDrawn(c.winners);
     openDlg();
 
     var ticks = reduced() ? 1 : 22, t = 0;
     (function spin() {
       if (t < ticks) {
-        sMain.textContent = c.pool[randInt(c.pool.length)];
+        bpName.textContent = c.pool[randInt(c.pool.length)];
         t++;
         setTimeout(spin, 40 + t * 5);
       } else reveal();
@@ -649,7 +676,7 @@ button.link.armed { color: var(--red); font-weight: 700; }
       c.winners.push(w); sess = c;
       $('rProg').textContent = '已抽出 ' + no + ' / ' + c.k;
       setMode('reveal');
-      sMain.textContent = w; sSub.textContent = '第 ' + no + ' 位得主';
+      bpName.textContent = w; bpNo.textContent = no;
       renderDrawn(c.winners);
       sr.textContent = '第 ' + no + ' 位：' + w;
       if (dlg.open) confetti(last ? 160 : 60);
