@@ -16,8 +16,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@700;900&display=swap">
 <style>
 /* 設計重點：海報的藍天旅行感 + 第15屆 CI（珍珠白、香檳金、社徽藍）。
-   記憶點只有一個：抽獎時跳出全螢幕結果層，得主以「登機證」依序飛出。其餘保持安靜。
-   電腦：結果層一屏排滿 10 張（投影用）。手機：底部固定抽獎列、結果兩欄一屏看完。 */
+   記憶點只有一個：按下抽獎後同頁跳出結果視窗，得主以「登機證」依序飛出。其餘保持安靜。
+   電腦版：置中大視窗（適合投影）。手機版：全螢幕視窗 + 底部操作列 + 浮動抽獎鈕。 */
 :root {
   --pearl: #f3f1ec;
   --sky-1: #b9dcfa;
@@ -34,8 +34,6 @@
   --tag-bg: #1c2c60;
   --outline: #ffffff;
   --ticket: #fffdf7;
-  --chip-bg: #fbefd0;
-  --chip-ink: #6b4f12;
   --shadow: 0 12px 30px -14px rgba(28, 44, 96, .42);
   --font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
   --font-serif: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
@@ -45,7 +43,6 @@
     --pearl: #0b1230; --sky-1: #15235a; --sky-2: #0f1a46; --ink: #ecebf3; --muted: #a3add0;
     --navy: #aebdf3; --red: #ff6573; --sun: #ffc83d; --gold: #e3bd7a; --paper: #172050;
     --line: #2b3870; --field: #101845; --tag-bg: #2a3f8f; --outline: #0b1230;
-    --chip-bg: #2c2412; --chip-ink: #f0d9a8;
     --shadow: 0 12px 30px -14px rgba(0, 0, 0, .65);
     color-scheme: dark;
   }
@@ -54,20 +51,21 @@
   --pearl: #0b1230; --sky-1: #15235a; --sky-2: #0f1a46; --ink: #ecebf3; --muted: #a3add0;
   --navy: #aebdf3; --red: #ff6573; --sun: #ffc83d; --gold: #e3bd7a; --paper: #172050;
   --line: #2b3870; --field: #101845; --tag-bg: #2a3f8f; --outline: #0b1230;
-  --chip-bg: #2c2412; --chip-ink: #f0d9a8;
   --shadow: 0 12px 30px -14px rgba(0, 0, 0, .65);
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
+html.lock { overflow: hidden; }
 body {
   margin: 0; background: var(--pearl); color: var(--ink);
   font-family: var(--font-sans); font-size: 16px; line-height: 1.6;
   padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
+  padding-bottom: 84px;
 }
-body.ov-open { overflow: hidden; }
 img { max-width: 100%; }
 .wrap { max-width: 1080px; margin: 0 auto; padding-inline: 18px; }
+.sr { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* ---------- 天空區：品牌列 + 海報主視覺 ---------- */
 .sky {
@@ -89,7 +87,7 @@ img { max-width: 100%; }
 .copy { position: relative; display: grid; gap: 14px; justify-items: start; }
 .flight { position: absolute; right: 0; top: -6px; width: 150px; height: 70px; color: var(--navy); opacity: .85; }
 .tag {
-  display: inline-block; margin: 0; background: var(--tag-bg); color: #fff; font-weight: 900;
+  display: inline-block; background: var(--tag-bg); color: #fff; font-weight: 900; margin: 0;
   font-size: clamp(1.25rem, 3vw, 1.7rem); line-height: 1.2; padding: .3em 1.3em .3em 1.1em;
   clip-path: polygon(0 10%, 3% 0, 100% 6%, 97% 100%, 2% 92%);
 }
@@ -130,12 +128,10 @@ img { max-width: 100%; }
   font-weight: 700; font-size: .85rem; line-height: 1.2; padding: .3em .85em; border-radius: 999px;
 }
 
-/* ---------- 抽獎區（頁面上） ---------- */
+/* ---------- 頁面上的抽獎區 ---------- */
 .draw { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px; align-items: start; padding-block: 8px 28px; }
 .panel { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 14px; min-width: 0; box-shadow: var(--shadow); }
-.panel h2, .panel h3 { margin: 0; font-weight: 900; color: var(--navy); }
-.panel h2 { font-size: 1.2rem; }
-.panel h3 { font-size: 1.05rem; }
+.panel h2 { margin: 0; font-size: 1.2rem; font-weight: 900; color: var(--navy); }
 .phead { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .count { background: var(--field); border: 1px solid var(--line); border-radius: 999px; padding: .1em .8em; color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 500; }
 .prize { color: var(--red); font-weight: 900; }
@@ -144,7 +140,7 @@ textarea {
   width: 100%; min-height: 290px; resize: vertical; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px;
   background: var(--field); color: var(--ink); font: inherit; line-height: 1.7;
 }
-textarea:focus-visible, button:focus-visible, input:focus-visible, .overlay:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+textarea:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
 .row { display: flex; gap: 14px 18px; align-items: center; flex-wrap: wrap; }
 .row label { display: flex; align-items: center; gap: 8px; }
 input[type=number] { width: 84px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--field); color: var(--ink); font: inherit; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -161,111 +157,96 @@ button.primary {
 }
 button.primary:hover:not(:disabled) { background: #b81c2c; border-color: #b81c2c; }
 button.link { border: 0; background: none; padding: 2px 4px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; font-size: .9rem; }
-button.small { padding: 6px 14px; font-size: .9rem; }
 
 .ready {
-  min-height: 170px; display: grid; place-content: center; gap: .3em; text-align: center; border-radius: 18px; padding: 22px; color: #fff;
+  min-height: 170px; display: grid; place-items: center; text-align: center; border-radius: 18px; padding: 22px; color: #fff;
   background:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 420 120'%3E%3Cpath d='M-10 100C90 110 170 20 290 38 350 47 390 24 430 6' fill='none' stroke='%23dcb481' stroke-opacity='.45' stroke-width='2.5' stroke-dasharray='4 9' stroke-linecap='round'/%3E%3Cpath d='M404 8 436 -6 428 24 420 14 412 19 414 11Z' fill='%23dcb481' fill-opacity='.65'/%3E%3C/svg%3E") right top / 62% auto no-repeat,
     radial-gradient(120% 140% at 82% 0, #2f469c 0, transparent 58%),
     linear-gradient(160deg, #18286a, #0b1439);
-  font-weight: 900; font-size: clamp(1.9rem, 5vw, 2.8rem); line-height: 1.15; box-shadow: inset 0 0 0 1px rgba(220, 180, 129, .35);
+  box-shadow: inset 0 0 0 1px rgba(220, 180, 129, .35);
 }
-.ready small { font-size: 1rem; font-weight: 500; color: #dcb481; letter-spacing: .04em; }
+.ready strong { display: block; font-size: clamp(2rem, 6vw, 3.2rem); font-weight: 900; line-height: 1.15; }
+.ready small { display: block; margin-top: .4em; font-size: 1rem; font-weight: 500; color: #dcb481; letter-spacing: .04em; }
 .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-.last { display: grid; gap: 10px; border-top: 1px dashed var(--line); padding-top: 14px; }
-.chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-.chips li { display: inline-flex; align-items: baseline; gap: 8px; background: var(--chip-bg); color: var(--chip-ink); border-radius: 10px; padding: 5px 12px; font-weight: 700; }
-.chips .no { font-family: var(--font-serif); font-weight: 900; color: #a37a2b; font-variant-numeric: tabular-nums; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chips .no { color: #e3bd7a; } }
 .toast { color: var(--muted); font-size: .9rem; }
+.recap { display: grid; gap: 10px; padding-top: 14px; border-top: 1px dashed var(--line); }
+.recap h3 { margin: 0; font-size: 1rem; color: var(--navy); }
+.chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.chips li { display: flex; gap: 8px; align-items: baseline; background: var(--field); border: 1px solid var(--line); border-radius: 999px; padding: 2px 14px 2px 10px; font-weight: 700; }
+.chips .cn { color: var(--gold); font-variant-numeric: tabular-nums; }
+:root:not([data-theme="dark"]) .chips .cn { color: #8f6a22; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chips .cn { color: var(--gold); } }
 
-/* ---------- 手機底部固定抽獎列 ---------- */
-.dock { display: none; }
-
-/* ---------- 全螢幕結果層（抽獎時跳出） ---------- */
-.overlay {
-  position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain;
-  background: #0f1a4b; color: #fff;
+/* 手機／捲到下方時的浮動抽獎鈕 */
+.bar {
+  position: fixed; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  width: min(560px, calc(100vw - 24px)); display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: var(--paper); border: 1px solid var(--line); border-radius: 999px; padding: 8px 8px 8px 22px;
+  box-shadow: 0 18px 40px -16px rgba(28, 44, 96, .65); z-index: 20;
 }
-.overlay::before {
-  content: ""; position: fixed; inset: 0; pointer-events: none;
+.bar b { display: block; color: var(--red); font-weight: 900; line-height: 1.25; }
+.bar span { display: block; color: var(--muted); font-size: .82rem; line-height: 1.3; }
+.bar button.primary { padding: 10px 26px; font-size: 1.05rem; flex: none; }
+
+/* ---------- 抽獎結果視窗 ---------- */
+dialog.result {
+  position: fixed; inset: 0; margin: 0; padding: 0; border: 0; width: 100%; height: 100%; max-width: none; max-height: none;
+  background: rgba(6, 10, 32, .76); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); color: #fff; overflow: hidden;
+}
+dialog.result[open] { display: grid; place-items: center; }
+dialog.result::backdrop { background: transparent; }
+.rbox {
+  --notch: #111b4b;
+  position: relative; display: flex; flex-direction: column; width: min(1020px, calc(100vw - 40px)); max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px);
+  background: #111b4b; border: 1px solid rgba(220, 180, 129, .5); border-radius: 24px;
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .75); overflow: hidden;
+}
+.rhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px 0 28px; flex: none; }
+.rprize { color: #f6c453; font-weight: 900; font-size: 1.1rem; letter-spacing: .02em; }
+.rx { width: 44px; height: 44px; border-radius: 50%; padding: 0; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.28); color: #fff; font-size: 1.6rem; line-height: 1; }
+.rx:hover:not(:disabled) { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.5); }
+.rbody { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 10px 28px 14px; display: grid; grid-auto-rows: max-content; gap: 18px; align-content: start; }
+.rstage {
+  min-height: 210px; display: grid; place-items: center; text-align: center; border-radius: 18px; padding: 22px; color: #fff;
   background:
-    radial-gradient(55% 40% at 8% 0, rgba(63, 95, 200, .55), transparent 70%),
-    radial-gradient(45% 36% at 100% 4%, rgba(220, 180, 129, .26), transparent 70%);
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 420 120'%3E%3Cpath d='M-10 100C90 110 170 20 290 38 350 47 390 24 430 6' fill='none' stroke='%23dcb481' stroke-opacity='.4' stroke-width='2.5' stroke-dasharray='4 9' stroke-linecap='round'/%3E%3Cpath d='M404 8 436 -6 428 24 420 14 412 19 414 11Z' fill='%23dcb481' fill-opacity='.6'/%3E%3C/svg%3E") right top / 58% auto no-repeat,
+    linear-gradient(160deg, #1b2c74, #0c1540);
+  font-weight: 900; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: 1.15; overflow-wrap: anywhere;
+  box-shadow: inset 0 0 0 1px rgba(220, 180, 129, .35);
 }
-.ov-inner { position: relative; width: 100%; max-width: 1360px; margin: 0 auto; flex: 1; display: flex; flex-direction: column; gap: clamp(12px, 2vw, 24px); padding: clamp(14px, 2.6vw, 30px); }
-.ov-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.ov-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: #dcb481; }
-.ov-brand img { height: 42px; width: auto; }
-.ov-x { width: 44px; height: 44px; padding: 0; display: grid; place-items: center; background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.25); color: #fff; }
-.ov-x:hover:not(:disabled) { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.5); }
-.ov-body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: clamp(14px, 2.6vw, 30px); }
-.ov-roll { text-align: center; }
-.ov-roll .name { font-size: clamp(3rem, 12vw, 8rem); font-weight: 900; line-height: 1.15; overflow-wrap: anywhere; min-height: 1.15em; color: #fff; }
-.ov-roll .name.rolling { color: #cdd6f6; }
-.ov-roll small { display: block; margin-top: .4em; color: #dcb481; font-size: clamp(1rem, 2.4vw, 1.5rem); letter-spacing: .08em; }
-.ov-result { display: grid; gap: clamp(20px, 3.2vw, 36px); }
-.ov-pill { display: inline-block; margin-bottom: 1.1em; padding: .3em 1.1em; border: 1px solid rgba(220, 180, 129, .55); border-radius: 999px; color: #dcb481; font-weight: 700; font-size: clamp(.95rem, 2vw, 1.25rem); }
-.overlay.is-rolling .ov-actions, .overlay.is-rolling .ov-x { visibility: hidden; }
-.ov-head { text-align: center; }
-.ov-head h2 { margin: 0; font-size: clamp(1.9rem, 5vw, 3.4rem); font-weight: 900; line-height: 1.2; color: #fff; }
-.ov-head p { margin: .3em 0 0; color: #dcb481; font-size: clamp(.95rem, 1.8vw, 1.2rem); }
-.ov-actions {
-  position: sticky; bottom: 0; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: center;
-  padding: 14px 0 calc(14px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(rgba(15, 26, 75, 0), #0f1a4b 34%);
-}
-.ov-actions button:not(.primary) { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.3); color: #fff; }
-.ov-actions button:not(.primary):hover:not(:disabled) { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.55); }
-.ov-actions .toast { color: #dcb481; }
+.rbox.rolling .rstage { color: #cdd6f6; }
+.rbox.done .rstage { min-height: 0; padding: 14px 18px; font-size: clamp(1.8rem, 4.6vw, 2.8rem); }
+.rstage small { display: block; margin-top: .25em; font-size: 1rem; font-weight: 500; color: #dcb481; letter-spacing: .04em; }
+.ractions { flex: none; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: flex-end; padding: 12px 28px 20px; border-top: 1px solid rgba(255,255,255,.12); }
+.ractions .toast { margin-right: auto; color: #aeb8de; }
+.ractions button { background: transparent; color: #fff; border-color: rgba(255,255,255,.38); }
+.ractions button:hover:not(:disabled) { border-color: #fff; }
+.ractions button.gold { background: #dcb481; color: #1b1508; border-color: #dcb481; font-weight: 900; padding: 10px 34px; }
 
 /* 登機證 */
-.passes { --cols: 2; --stub: 46px; --gap: 12px; list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: var(--gap); }
+.passes { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
 .pass {
-  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) var(--stub); min-width: 0; overflow: hidden;
-  flex: 0 0 calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols));
-  background: var(--ticket); color: #1c2c60; border-radius: 14px; box-shadow: 0 10px 22px -10px rgba(0, 0, 0, .6);
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 64px; min-width: 0; overflow: hidden;
+  background: var(--ticket); color: #1c2c60; border-radius: 14px; box-shadow: 0 8px 18px -10px rgba(0, 0, 0, .6);
   animation: land .55s cubic-bezier(.2, .85, .25, 1) both; animation-delay: calc(var(--i, 0) * 170ms);
 }
-.pass::before, .pass::after { content: ""; position: absolute; right: calc(var(--stub) - 8px); width: 16px; height: 16px; border-radius: 50%; background: #0f1a4b; }
+.pass::before, .pass::after { content: ""; position: absolute; right: 56px; width: 16px; height: 16px; border-radius: 50%; background: var(--notch, #fff); }
 .pass::before { top: -8px; }
 .pass::after { bottom: -8px; }
-.pmain { position: relative; padding: 10px 8px 10px 14px; display: grid; gap: 2px; min-width: 0; align-content: center; }
-.pfrom { display: none; font-size: .74rem; color: #666d8a; font-weight: 700; padding-right: 28px; }
-.pass .nm { font-family: var(--font-serif); font-weight: 900; font-size: clamp(1.25rem, 5vw, 1.45rem); line-height: 1.2; overflow-wrap: anywhere; min-width: 0; }
-.pgift { font-size: .78rem; font-weight: 700; color: #8f6a22; }
+.pmain { position: relative; padding: 12px 14px 12px 16px; display: grid; gap: 2px; min-width: 0; }
+.pmain::after {
+  content: ""; position: absolute; top: 12px; right: 12px; width: 22px; height: 22px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Cpath d='M3 17 33 3 26 33 18 22 10 27 12 18Z' fill='%23c5a366'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.pfrom { font-size: .74rem; color: #666d8a; font-weight: 700; padding-right: 28px; }
+.pass .nm { font-family: var(--font-serif); font-weight: 900; font-size: 1.7rem; line-height: 1.2; overflow-wrap: anywhere; min-width: 0; }
+.pgift { font-size: .8rem; font-weight: 700; color: #8f6a22; }
 .pstub { display: flex; flex-direction: column; align-items: center; justify-content: center; border-left: 2px dashed #d3c8ad; color: #8f6a22; padding: 6px 0; }
-.pstub small { font-size: .7rem; font-weight: 700; line-height: 1; }
-.pass .no { font-family: var(--font-serif); font-weight: 900; font-size: 1.6rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.pstub small { font-size: .72rem; font-weight: 700; line-height: 1; }
+.pass .no { font-family: var(--font-serif); font-weight: 900; font-size: 1.9rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
 @keyframes land { from { opacity: 0; transform: translate(-26px, 12px) rotate(-3deg) scale(.96); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .pass { animation: none; } }
-@media (min-width: 600px) {
-  .passes { --cols: 3; --stub: 64px; --gap: 14px; }
-  .pfrom { display: block; }
-  .pmain { padding: 14px 10px 14px 18px; }
-  .pmain::after {
-    content: ""; position: absolute; top: 12px; right: 12px; width: 22px; height: 22px;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Cpath d='M3 17 33 3 26 33 18 22 10 27 12 18Z' fill='%23c5a366'/%3E%3C/svg%3E") center / contain no-repeat;
-  }
-  .pass .nm { font-size: clamp(1.4rem, 2.1vw, 1.95rem); }
-  .pass .no { font-size: 1.9rem; }
-}
-@media (min-width: 860px) { .passes { --cols: 4; } }
-@media (min-width: 1100px) { .passes { --cols: 5; } }
-/* 大螢幕／投影：整體放大一級 */
-@media (min-width: 1600px) {
-  .ov-inner { max-width: 1700px; padding-inline: 44px; }
-  .passes { --stub: 84px; --gap: 18px; }
-  .pmain { padding: 20px 14px 20px 24px; gap: 4px; }
-  .pfrom { font-size: .95rem; }
-  .pass .nm { font-size: 2.5rem; }
-  .pgift { font-size: 1rem; }
-  .pstub small { font-size: .9rem; }
-  .pass .no { font-size: 2.7rem; }
-  .pmain::after { width: 28px; height: 28px; top: 16px; right: 16px; }
-  .ov-brand img { height: 52px; }
-  .ov-brand { font-size: 1.15rem; }
-}
 
 /* ---------- 頁尾 ---------- */
 .foot { margin-top: 12px; }
@@ -275,24 +256,26 @@ button.small { padding: 6px 14px; font-size: .9rem; }
 }
 .foot p { margin: 0; padding: 10px 18px 26px; text-align: center; color: var(--muted); font-size: .85rem; }
 
-/* ---------- 手機／平板 ---------- */
+/* ---------- 平板與手機 ---------- */
 @media (max-width: 900px) {
   .hero { grid-template-columns: minmax(0, 1fr); gap: 24px; }
   .flight { right: 0; top: -2px; width: 120px; height: 56px; }
 }
 @media (max-width: 760px) {
   .draw { grid-template-columns: minmax(0, 1fr); }
-  body { padding-bottom: 88px; }
-  .draw-actions { display: none; }
-  .dock {
-    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; align-items: center; justify-content: space-between; gap: 12px;
-    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
-    background: var(--paper); border-top: 1px solid var(--line); box-shadow: 0 -10px 24px -14px rgba(28, 44, 96, .5);
-  }
-  .dock-info { color: var(--muted); font-size: .9rem; line-height: 1.35; }
-  .dock-info b { display: block; color: var(--navy); font-size: 1.02rem; }
-  .dock button.primary { padding: 12px 30px; flex: none; }
-  body.ov-open .dock { display: none; }
+  /* 手機版結果視窗：全螢幕，操作列固定在底部 */
+  dialog.result[open] { display: block; }
+  .rbox { width: 100%; height: 100vh; height: 100dvh; max-height: none; border: 0; border-radius: 0; }
+  .rhead { padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 0 20px; }
+  .rbody { padding: 8px 16px 14px; gap: 14px; }
+  .rstage { min-height: 36vh; min-height: 36dvh; border-radius: 16px; }
+  .rbox.done .rstage { min-height: 0; }
+  .passes { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .pass .nm { font-size: 1.5rem; }
+  .ractions { display: grid; grid-template-columns: 1fr 1fr; justify-content: stretch; padding: 10px 16px calc(14px + env(safe-area-inset-bottom, 0px)); }
+  .ractions .toast { grid-column: 1 / -1; order: -1; margin: 0; text-align: center; min-height: 1.3em; }
+  .ractions button { padding: 12px 10px; }
+  .ractions button.gold { grid-column: 1 / -1; padding: 13px 10px; font-size: 1.1rem; }
 }
 @media (max-width: 560px) {
   .sky { padding-bottom: 28px; }
@@ -300,15 +283,11 @@ button.small { padding: 6px 14px; font-size: .9rem; }
   .brand .theme img { height: 78px; }
   .shots { grid-template-rows: auto 170px; }
   .panel { padding: 16px; }
-  .ov-brand span { font-size: .95rem; }
-  .ov-actions button { flex: 1 1 auto; }
-  .ov-actions button.primary { font-size: 1.05rem; padding: 12px 20px; }
 }
 </style>
 </head>
 <body>
 
-<div id="page">
 <div class="sky">
   <div class="wrap">
     <header class="brand">
@@ -373,23 +352,23 @@ button.small { padding: 6px 14px; font-size: .9rem; }
 
     <section class="panel" aria-label="抽獎">
       <div class="phead">
-        <h2>抽獎</h2>
+        <h2>抽獎舞台</h2>
         <span class="prize" id="prize">3合1好禮包 × 10 名</span>
       </div>
-      <div class="ready"><span>準備好了嗎？</span><small id="readyInfo">共 0 人參加，抽 10 名</small></div>
-      <div class="actions draw-actions"><button class="primary" id="draw">開始抽獎</button></div>
-      <div class="last" id="last" hidden>
-        <div class="phead">
-          <h3>上一輪得主</h3>
-          <div class="actions">
-            <button type="button" class="small" id="reopen">全螢幕顯示</button>
-            <button type="button" class="small" id="copyMain">複製名單</button>
-            <span class="toast" id="toastMain" role="status"></span>
-          </div>
-        </div>
-        <ol class="chips" id="chips"></ol>
+      <div class="ready" id="ready"><div><strong>準備好了嗎？</strong><small id="readySub">名單 25 人，抽出 10 名</small></div></div>
+      <div class="actions">
+        <button type="button" class="primary" id="draw">開始抽獎</button>
+        <span class="toast" id="toast2" role="status"></span>
       </div>
-      <p class="note">按下「開始抽獎」會全螢幕跳出抽獎結果。使用瀏覽器的密碼學亂數（crypto.getRandomValues），每個人中獎機率相同，同一人不會重複中獎。名單只留在這個瀏覽器，不會上傳。</p>
+      <div class="recap" id="recap" hidden>
+        <h3>上次抽出的名單</h3>
+        <ol class="chips" id="chips"></ol>
+        <div class="actions">
+          <button type="button" id="reopen">查看得獎名單</button>
+          <button type="button" id="copy2">複製得獎名單</button>
+        </div>
+      </div>
+      <p class="note">使用瀏覽器的密碼學亂數（crypto.getRandomValues），每個人中獎機率相同，同一人不會重複中獎。名單只留在這個瀏覽器，不會上傳。</p>
     </section>
   </div>
 </main>
@@ -399,43 +378,31 @@ button.small { padding: 6px 14px; font-size: .9rem; }
   <p>社團法人苗栗縣國際工商經營研究社　第15屆　藝術共感・行動共創</p>
 </footer>
 
-<div class="dock" id="dock">
-  <div class="dock-info"><b id="dockPrize">3合1好禮包 × 10 名</b><span id="dockInfo">共 0 人參加</span></div>
-  <button class="primary" id="drawDock">開始抽獎</button>
-</div>
+<div class="bar" id="bar" hidden>
+  <div><b id="barPrize">3合1好禮包 × 10 名</b><span id="barCount">名單 25 人</span></div>
+  <button type="button" class="primary" id="drawBar">開始抽獎</button>
 </div>
 
-<!-- 抽獎結果層：按下開始抽獎後跳出 -->
-<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="ovTitle" tabindex="-1" hidden>
-  <div class="ov-inner">
-    <div class="ov-top">
-      <div class="ov-brand"><img src="assets/imc-logo.png" width="256" height="256" alt=""><span id="ovTitle">社友福利 驚喜包抽獎</span></div>
-      <button type="button" class="ov-x" id="close" aria-label="關閉抽獎結果" disabled>
-        <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 4l12 12M16 4 4 16"/></svg>
-      </button>
+<dialog class="result" id="result" aria-labelledby="rTitle">
+  <div class="rbox" id="rbox">
+    <div class="rhead">
+      <span class="rprize" id="rPrize">3合1好禮包 × 10 名</span>
+      <button type="button" class="rx" id="rClose" aria-label="關閉抽獎結果">×</button>
     </div>
-    <div class="ov-body">
-      <div class="ov-roll" id="ovRoll">
-        <div class="ov-pill" id="ovPill">3合1好禮包</div>
-        <div class="name rolling" id="stage" aria-hidden="true"></div>
-        <small id="ovSub">抽獎中…</small>
-      </div>
-      <div class="ov-result" id="ovResult" hidden>
-        <div class="ov-head">
-          <h2 id="ovHead" aria-live="polite"></h2>
-          <p id="ovMeta"></p>
-        </div>
-        <ol class="passes" id="winners"></ol>
-      </div>
+    <h2 class="sr" id="rTitle">抽獎結果</h2>
+    <div class="rbody">
+      <div class="rstage" id="stage" aria-hidden="true">準備好了嗎？</div>
+      <p class="sr" id="sr" role="status"></p>
+      <ol class="passes" id="winners"></ol>
     </div>
-    <div class="ov-actions">
-      <button class="primary" id="again" disabled>重新抽一次</button>
-      <button id="copy" disabled>複製得獎名單</button>
-      <button id="back" disabled>返回頁面</button>
+    <div class="ractions">
       <span class="toast" id="toast" role="status"></span>
+      <button type="button" id="again" disabled>重新抽一次</button>
+      <button type="button" id="copy" disabled>複製得獎名單</button>
+      <button type="button" class="gold" id="done" disabled>完成</button>
     </div>
   </div>
-</div>
+</dialog>
 
 <script>
 (function () {
@@ -446,13 +413,16 @@ button.small { padding: 6px 14px; font-size: .9rem; }
 
   var $ = function (id) { return document.getElementById(id); };
   var names = $('names'), numEl = $('num'), dedupe = $('dedupe'), warn = $('warn');
-  var page = $('page'), overlay = $('overlay'), stage = $('stage'), winnersEl = $('winners');
-  var drawBtns = [$('draw'), $('drawDock')];
-  var againBtn = $('again'), copyBtn = $('copy'), backBtn = $('back'), closeBtn = $('close'), toast = $('toast');
-  var busy = false, lastWinners = [], lastTotal = 0, lastFocus = null;
-  var reduce = function () { return window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches; };
+  var drawBtn = $('draw'), drawBar = $('drawBar'), bar = $('bar');
+  var dlg = $('result'), rbox = $('rbox'), stage = $('stage'), winnersEl = $('winners'), sr = $('sr');
+  var againBtn = $('again'), copyBtn = $('copy'), doneBtn = $('done'), closeBtn = $('rClose'), toast = $('toast');
+  var recap = $('recap'), chips = $('chips'), toast2 = $('toast2');
+  var busy = false, lastWinners = [], lastTotal = 0, drawVisible = false;
 
   names.value = SAMPLE.join('\n');
+
+  function prizeText(k) { return '3合1好禮包' + (k >= 1 ? ' × ' + k + ' 名' : ''); }
+  function reduced() { return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); }
 
   function parse() {
     var list = names.value.split(/[\n,，、;；\t]+/).map(function (s) { return s.trim(); }).filter(Boolean);
@@ -480,22 +450,57 @@ button.small { padding: 6px 14px; font-size: .9rem; }
 
   function refresh() {
     var list = parse(), k = parseInt(numEl.value, 10);
-    var prizeText = '3合1好禮包' + (k >= 1 ? ' × ' + k + ' 名' : '');
     $('count').textContent = list.length + ' 人';
-    $('prize').textContent = prizeText; $('dockPrize').textContent = prizeText;
-    $('readyInfo').textContent = '共 ' + list.length + ' 人參加' + (k >= 1 ? '，抽 ' + k + ' 名' : '');
-    $('dockInfo').textContent = '共 ' + list.length + ' 人參加';
+    $('prize').textContent = prizeText(k);
+    $('barPrize').textContent = prizeText(k);
+    $('barCount').textContent = '名單 ' + list.length + ' 人';
+    $('readySub').textContent = '名單 ' + list.length + ' 人，抽出 ' + (k >= 1 ? k : 0) + ' 名';
     var msg = '';
     if (!list.length) msg = '請先輸入名單。';
     else if (!(k >= 1)) msg = '抽出人數至少是 1。';
     else if (k > list.length) msg = '抽出人數 (' + k + ') 超過名單人數 (' + list.length + ')。';
     warn.textContent = msg;
-    drawBtns.forEach(function (b) { b.disabled = busy || !!msg; });
+    drawBtn.disabled = drawBar.disabled = busy || !!msg;
     return { list: list, k: k, ok: !msg };
   }
 
+  // ---------- 結果視窗（不支援 <dialog> 的舊瀏覽器退回成同樣樣式的全螢幕層） ----------
+  function syncBar() { bar.hidden = drawVisible || dlg.open; }
+  function onClosed() {
+    document.documentElement.classList.remove('lock');
+    Array.prototype.forEach.call(dlg.querySelectorAll('canvas'), function (c) { c.remove(); });
+    syncBar();
+  }
+  function openDlg() {
+    if (dlg.open) return;
+    if (typeof dlg.showModal === 'function') { try { dlg.showModal(); } catch (e) { dlg.setAttribute('open', ''); } }
+    else dlg.setAttribute('open', '');
+    document.documentElement.classList.add('lock');
+    syncBar();
+  }
+  function closeDlg() {
+    if (!dlg.open || busy) return;
+    if (typeof dlg.close === 'function') dlg.close(); else { dlg.removeAttribute('open'); onClosed(); }
+  }
+  dlg.addEventListener('close', onClosed);
+  dlg.addEventListener('cancel', function (e) { if (busy) e.preventDefault(); });
+  dlg.addEventListener('click', function (e) { if (e.target === dlg) closeDlg(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && dlg.open) { if (busy) e.preventDefault(); else if (typeof dlg.showModal !== 'function') closeDlg(); }
+  });
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (es) { drawVisible = es[0].isIntersecting; syncBar(); }).observe(drawBtn);
+  }
+
+  // ---------- 畫面內容 ----------
+  function setDoneStage() {
+    stage.innerHTML = '';
+    stage.appendChild(document.createTextNode('恭喜 ' + lastWinners.length + ' 位得主'));
+    var sm = document.createElement('small'); sm.textContent = '共 ' + lastTotal + ' 人參加';
+    stage.appendChild(sm);
+  }
   // 每位得主一張登機證
-  function renderPasses(winners) {
+  function render(winners) {
     winnersEl.innerHTML = '';
     winners.forEach(function (n, i) {
       var li = document.createElement('li');
@@ -508,36 +513,35 @@ button.small { padding: 6px 14px; font-size: .9rem; }
       winnersEl.appendChild(li);
     });
   }
-
-  // 頁面上保留上一輪得主
-  function renderLast() {
-    $('last').hidden = !lastWinners.length;
-    var ul = $('chips'); ul.innerHTML = '';
+  function updateRecap() {
+    chips.innerHTML = '';
     lastWinners.forEach(function (n, i) {
       var li = document.createElement('li');
-      var no = document.createElement('span'); no.className = 'no'; no.textContent = i + 1;
-      var nm = document.createElement('span'); nm.textContent = n;
-      li.appendChild(no); li.appendChild(nm); ul.appendChild(li);
+      var c = document.createElement('span'); c.className = 'cn'; c.textContent = i + 1;
+      var t = document.createElement('span'); t.textContent = n;
+      li.appendChild(c); li.appendChild(t); chips.appendChild(li);
     });
+    recap.hidden = !lastWinners.length;
   }
+  function lockButtons(on) { againBtn.disabled = copyBtn.disabled = doneBtn.disabled = closeBtn.disabled = on; }
 
   // 抽完的彩帶，只放一次；偏好減少動態時不放
   function confetti() {
-    if (reduce()) return;
+    if (reduced()) return;
     var cv = document.createElement('canvas'), dpr = Math.min(window.devicePixelRatio || 1, 2);
     var W = window.innerWidth, H = window.innerHeight;
     cv.width = W * dpr; cv.height = H * dpr; cv.setAttribute('aria-hidden', 'true');
-    cv.style.cssText = 'position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:60';
-    document.body.appendChild(cv);
+    cv.style.cssText = 'position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:5';
+    dlg.appendChild(cv);
     var ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
     var cols = ['#f6b60b', '#cf2233', '#ffffff', '#c5a366', '#4aa3e8', '#ff8aa0'];
-    var ox = W / 2, oy = H * 0.34, ps = [];
-    for (var i = 0; i < 160; i++) {
-      var a = Math.random() * Math.PI * 2, sp = 4 + Math.random() * 10;
+    var r = stage.getBoundingClientRect(), ox = r.left + r.width / 2, oy = r.top + r.height / 2, ps = [];
+    for (var i = 0; i < 150; i++) {
+      var a = Math.random() * Math.PI * 2, sp = 4 + Math.random() * 9;
       ps.push({ x: ox, y: oy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 6, w: 6 + Math.random() * 6, h: 4 + Math.random() * 5,
                 rot: Math.random() * 6.28, vr: (Math.random() - .5) * .4, c: cols[i % cols.length] });
     }
-    var t0 = performance.now(), DUR = 2800;
+    var t0 = performance.now(), DUR = 2600;
     (function frame(now) {
       var t = now - t0, alive = false;
       ctx.clearRect(0, 0, W, H);
@@ -553,80 +557,54 @@ button.small { padding: 6px 14px; font-size: .9rem; }
     })(t0);
   }
 
-  // ----- 結果層 -----
-  function setOverlayButtons(enabled) {
-    againBtn.disabled = !enabled; copyBtn.disabled = !enabled; backBtn.disabled = !enabled; closeBtn.disabled = !enabled;
-  }
-  function openOverlay() {
-    if (!overlay.hidden) return;
-    lastFocus = document.activeElement;
-    overlay.hidden = false; document.body.classList.add('ov-open');
-    try { page.inert = true; } catch (e) {}
-    overlay.scrollTop = 0; overlay.focus();
-  }
-  function closeOverlay() {
-    if (busy || overlay.hidden) return;
-    overlay.hidden = true; document.body.classList.remove('ov-open');
-    try { page.inert = false; } catch (e) {}
-    renderLast();
-    var target = (lastFocus && document.contains(lastFocus) && lastFocus.offsetParent !== null) ? lastFocus : (drawBtns[0].offsetParent !== null ? drawBtns[0] : drawBtns[1]);
-    try { target.focus(); } catch (e) {}
-  }
-  function showRolling(k) {
-    overlay.classList.add('is-rolling');
-    $('ovRoll').hidden = false; $('ovResult').hidden = true;
-    $('ovPill').textContent = '3合1好禮包 × ' + k + ' 名';
-    stage.textContent = ''; stage.classList.add('rolling'); $('ovSub').textContent = '抽獎中…';
-    toast.textContent = ''; setOverlayButtons(false);
-  }
-  function showResult(winners, total, withFx) {
-    overlay.classList.remove('is-rolling');
-    $('ovRoll').hidden = true; $('ovResult').hidden = false;
-    $('ovHead').textContent = '恭喜 ' + winners.length + ' 位得主';
-    $('ovMeta').textContent = '3合1好禮包　共 ' + total + ' 人參加';
-    renderPasses(winners);
-    setOverlayButtons(true);
-    overlay.scrollTop = 0; overlay.focus();
-    if (withFx) confetti();
-  }
-
   function run() {
     var s = refresh();
     if (!s.ok || busy) return;
-    busy = true; refresh();
+    busy = true; drawBtn.disabled = drawBar.disabled = true; lockButtons(true);
+    toast.textContent = ''; toast2.textContent = ''; sr.textContent = '';
+    $('rPrize').textContent = prizeText(s.k);
     var winners = pick(s.list, s.k);
-    openOverlay(); showRolling(s.k);
-    var ticks = reduce() ? 1 : 30, t = 0;
+    winnersEl.innerHTML = '';
+    rbox.classList.remove('done'); rbox.classList.add('rolling');
+    stage.textContent = '抽獎中';
+    openDlg();
+    var ticks = reduced() ? 1 : 30, t = 0;
     (function spin() {
       if (t < ticks) {
         stage.textContent = s.list[randInt(s.list.length)];
         t++;
         setTimeout(spin, 40 + t * 5);
       } else {
-        lastWinners = winners; lastTotal = s.list.length; busy = false;
-        showResult(winners, s.list.length, true);
-        refresh();
+        lastWinners = winners; lastTotal = s.list.length;
+        rbox.classList.remove('rolling'); rbox.classList.add('done');
+        setDoneStage();
+        render(winners);
+        if (dlg.open) confetti();
+        busy = false; lockButtons(false); refresh(); updateRecap();
+        sr.textContent = '抽出 ' + winners.length + ' 位：' + winners.join('、');
       }
     })();
+  }
+
+  function showResult() {
+    if (busy || !lastWinners.length) return;
+    $('rPrize').textContent = prizeText(lastWinners.length);
+    rbox.classList.remove('rolling'); rbox.classList.add('done');
+    setDoneStage(); render(lastWinners); lockButtons(false); toast.textContent = '';
+    openDlg();
   }
 
   function fallbackCopy(text) {
     var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta);
     ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta);
   }
-  function doCopy(out) {
+  function copyWinners(el) {
     var text = lastWinners.map(function (n, i) { return (i + 1) + '. ' + n; }).join('\n');
-    var done = function () { out.textContent = '已複製'; };
+    var done = function () { el.textContent = '已複製'; };
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
     } else { fallbackCopy(text); done(); }
   }
-  copyBtn.addEventListener('click', function () { doCopy(toast); });
-  $('copyMain').addEventListener('click', function () { doCopy($('toastMain')); });
-  $('reopen').addEventListener('click', function () {
-    if (!lastWinners.length) return;
-    openOverlay(); showResult(lastWinners, lastTotal, false);
-  });
 
   $('clear').addEventListener('click', function () {
     names.value = ''; $('sampleNote').hidden = true; refresh(); names.focus();
@@ -634,24 +612,14 @@ button.small { padding: 6px 14px; font-size: .9rem; }
   names.addEventListener('input', function () { $('sampleNote').hidden = true; refresh(); });
   numEl.addEventListener('input', refresh);
   dedupe.addEventListener('change', refresh);
-  drawBtns.forEach(function (b) { b.addEventListener('click', run); });
+  drawBtn.addEventListener('click', run);
+  drawBar.addEventListener('click', run);
   againBtn.addEventListener('click', run);
-  backBtn.addEventListener('click', closeOverlay);
-  closeBtn.addEventListener('click', closeOverlay);
-
-  // 鍵盤：Esc 關閉（抽獎中不可關）；Tab 只在結果層內循環
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && !overlay.hidden && !busy) closeOverlay();
-  });
-  overlay.addEventListener('keydown', function (e) {
-    if (e.key !== 'Tab') return;
-    var f = [].slice.call(overlay.querySelectorAll('button:not([disabled])'));
-    if (!f.length) { e.preventDefault(); overlay.focus(); return; }
-    var first = f[0], last = f[f.length - 1], cur = document.activeElement;
-    if (e.shiftKey && (cur === first || cur === overlay)) { e.preventDefault(); last.focus(); }
-    else if (!e.shiftKey && (cur === last || cur === overlay)) { e.preventDefault(); first.focus(); }
-  });
-
+  doneBtn.addEventListener('click', closeDlg);
+  closeBtn.addEventListener('click', closeDlg);
+  $('reopen').addEventListener('click', showResult);
+  copyBtn.addEventListener('click', function () { copyWinners(toast); });
+  $('copy2').addEventListener('click', function () { copyWinners(toast2); });
   refresh();
 })();
 </script>
