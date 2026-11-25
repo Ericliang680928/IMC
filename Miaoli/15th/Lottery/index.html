@@ -198,15 +198,18 @@ dialog.result[open] { display: grid; place-items: center; }
 dialog.result::backdrop { background: transparent; }
 .rbox {
   --notch: #111b4b;
-  position: relative; display: flex; flex-direction: column; width: min(1020px, calc(100vw - 40px)); max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px);
-  background: #111b4b; border: 1px solid rgba(220, 180, 129, .5); border-radius: 24px;
-  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .75); overflow: hidden;
+  position: relative; display: flex; flex-direction: column; width: 100%; height: 100vh; height: 100dvh; max-height: none;
+  background: #111b4b; border: 0; border-radius: 0; overflow: hidden;
 }
-.rhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px 0 28px; flex: none; }
-.rprize { color: #f6c453; font-weight: 900; font-size: 1.1rem; letter-spacing: .02em; }
+.rhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: clamp(14px, 2vh, 28px) clamp(18px, 3vw, 48px) 0 clamp(28px, 4vw, 72px); flex: none; }
+.rtools { display: flex; align-items: center; gap: 10px; flex: none; }
+.rfs { height: 44px; padding: 0 18px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.28); color: #fff; font-weight: 700; }
+.rfs:hover { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.5); }
+.rprize { color: #f6c453; font-weight: 900; font-size: clamp(1.1rem, 1.5vw, 1.6rem); letter-spacing: .02em; }
 .rx { width: 44px; height: 44px; border-radius: 50%; padding: 0; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.28); color: #fff; font-size: 1.6rem; line-height: 1; }
 .rx:hover:not(:disabled) { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.5); }
-.rbody { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 10px 28px 14px; display: grid; grid-auto-rows: max-content; gap: 18px; align-content: start; }
+.rbody { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 10px clamp(28px, 4vw, 72px) 14px; display: flex; flex-direction: column; gap: 18px; }
+.rbody > * { flex: none; }
 .rstage {
   min-height: 210px; display: grid; place-items: center; text-align: center; border-radius: 18px; padding: 22px; color: #fff;
   background:
@@ -222,20 +225,20 @@ dialog.result::backdrop { background: transparent; }
 .rstage .who { display: block; max-width: 100%; }
 /* 一次抽一位：抽的時候、揭曉時，整張登機證放在舞台上（全部抽完才換成標題＋名單） */
 .rbox:not(.done) .rstage {
-  --notch: #111b4b; padding: 24px 22px;
+  --notch: #111b4b; padding: 24px 22px; flex: 1 1 auto;
   background:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 420 120'%3E%3Cpath d='M-10 100C90 110 170 20 290 38 350 47 390 24 430 6' fill='none' stroke='%23dcb481' stroke-opacity='.4' stroke-width='2.5' stroke-dasharray='4 9' stroke-linecap='round'/%3E%3Cpath d='M404 8 436 -6 428 24 420 14 412 19 414 11Z' fill='%23dcb481' fill-opacity='.6'/%3E%3C/svg%3E") right top / 58% auto no-repeat,
     #111b4b;
 }
 .rbox:not(.done) .rstage .who, .rbox:not(.done) .rstage > small, .rbox.done .rstage .bigpass { display: none; }
-.rstage .bigpass { --stub: 112px; width: min(640px, 100%); text-align: left; animation: fadein .25s both; box-shadow: 0 16px 36px -14px rgba(0, 0, 0, .8); }
-.bigpass .pmain { padding: 22px 24px 20px 28px; gap: 4px; }
-.bigpass .pmain::after { width: 30px; height: 30px; top: 18px; right: 18px; }
-.bigpass .pfrom { font-size: .95rem; padding-right: 40px; }
-.rstage .bigpass .nm { font-size: clamp(2.8rem, 6vw, 4.4rem); line-height: 1.15; transition: color .2s; }
-.bigpass .pgift { font-size: 1.05rem; }
-.rstage .bigpass .no { font-size: 3.6rem; }
-.bigpass .pstub small { font-size: .95rem; }
+.rstage .bigpass { --stub: clamp(112px, 11vw, 190px); width: min(980px, 100%); text-align: left; animation: fadein .25s both; box-shadow: 0 16px 36px -14px rgba(0, 0, 0, .8); }
+.bigpass .pmain { padding: clamp(22px, 2.4vw, 40px) clamp(24px, 2.6vw, 44px) clamp(20px, 2.2vw, 36px) clamp(28px, 3vw, 48px); gap: 4px; }
+.bigpass .pmain::after { width: clamp(30px, 3vw, 48px); height: clamp(30px, 3vw, 48px); top: 18px; right: 18px; }
+.bigpass .pfrom { font-size: clamp(.95rem, 1.3vw, 1.4rem); padding-right: 40px; }
+.rstage .bigpass .nm { font-size: clamp(2.8rem, min(5.6vw, 11vh), 6.4rem); line-height: 1.15; transition: color .2s; }
+.bigpass .pgift { font-size: clamp(1.05rem, 1.4vw, 1.5rem); }
+.rstage .bigpass .no { font-size: clamp(3.6rem, min(5vw, 10vh), 6rem); }
+.bigpass .pstub small { font-size: clamp(.95rem, 1.2vw, 1.3rem); }
 .rbox.rolling .rstage .bigpass .nm { color: #8e97c2; }
 .rbox.reveal .rstage .bigpass { animation: stamp .6s cubic-bezier(.2, 1.25, .3, 1) both; box-shadow: 0 0 0 3px #f6c453, 0 0 26px 2px rgba(246, 196, 83, .4), 0 16px 36px -14px rgba(0, 0, 0, .8); }
 @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
@@ -248,23 +251,23 @@ dialog.result::backdrop { background: transparent; }
 .drawn { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .drawn:empty { display: none; }
 .drawn li { display: grid; grid-template-columns: auto auto; align-items: stretch; background: var(--ticket); color: #1c2c60; border-radius: 10px; overflow: hidden; font-family: var(--font-serif); font-weight: 900; }
-.drawn .dn { padding: 6px 12px 6px 14px; font-size: 1.05rem; }
+.drawn .dn { padding: 6px 12px 6px 14px; font-size: clamp(1.05rem, 1.3vw, 1.5rem); }
 .drawn .dno { display: grid; place-items: center; min-width: 34px; padding: 0 9px; border-left: 2px dashed #d3c8ad; color: #8f6a22; font-size: .95rem; font-variant-numeric: tabular-nums; }
 .rbox.reveal .drawn li:last-child { box-shadow: 0 0 0 2px #f6c453; }
 /* 抽的過程顯示 .drawn，全部抽完才顯示登機證名單 */
 .rbox:not(.done) .passes, .rbox.done .drawn { display: none; }
 .rbox.done .only-run, .rbox:not(.done) .only-done, .rbox:not(.done) .ractions .toast { display: none; }
-.ractions { flex: none; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: flex-end; padding: 12px 28px 20px; border-top: 1px solid rgba(255,255,255,.12); }
+.ractions { flex: none; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: flex-end; padding: 12px clamp(28px, 4vw, 72px) clamp(14px, 2.4vh, 28px); border-top: 1px solid rgba(255,255,255,.12); }
 .ractions .toast { margin-right: auto; color: #aeb8de; }
 .ractions button { background: transparent; color: #fff; border-color: rgba(255,255,255,.38); }
 .ractions button:hover:not(:disabled) { border-color: #fff; }
 .ractions button.gold { background: #dcb481; color: #1b1508; border-color: #dcb481; font-weight: 900; padding: 10px 34px; }
-.ractions button.primary { background: #cf2233; color: #fff; border-color: #cf2233; font-weight: 900; font-size: 1.15rem; padding: 12px 40px; }
+.ractions button.primary { background: #cf2233; color: #fff; border-color: #cf2233; font-weight: 900; font-size: clamp(1.15rem, 1.6vw, 1.6rem); padding: .6em 2em; }
 .ractions button.primary:hover:not(:disabled) { background: #e0293c; border-color: #e0293c; }
 button.link.armed { color: var(--red); font-weight: 700; }
 
 /* 登機證 */
-.passes { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.passes { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(280px, 24vw, 440px), 1fr)); gap: 14px; }
 .pass {
   position: relative; display: grid; grid-template-columns: minmax(0, 1fr) var(--stub, 64px); min-width: 0; overflow: hidden;
   background: var(--ticket); color: #1c2c60; border-radius: 14px; box-shadow: 0 8px 18px -10px rgba(0, 0, 0, .6);
@@ -279,7 +282,7 @@ button.link.armed { color: var(--red); font-weight: 700; }
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Cpath d='M3 17 33 3 26 33 18 22 10 27 12 18Z' fill='%23c5a366'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 .pfrom { font-size: .74rem; color: #666d8a; font-weight: 700; padding-right: 28px; }
-.pass .nm { font-family: var(--font-serif); font-weight: 900; font-size: 1.7rem; line-height: 1.2; overflow-wrap: anywhere; min-width: 0; }
+.pass .nm { font-family: var(--font-serif); font-weight: 900; font-size: clamp(1.7rem, 1.9vw, 2.5rem); line-height: 1.2; overflow-wrap: anywhere; min-width: 0; }
 .pgift { font-size: .8rem; font-weight: 700; color: #8f6a22; }
 .pstub { display: flex; flex-direction: column; align-items: center; justify-content: center; border-left: 2px dashed #d3c8ad; color: #8f6a22; padding: 6px 0; }
 .pstub small { font-size: .72rem; font-weight: 700; line-height: 1; }
@@ -300,6 +303,10 @@ button.link.armed { color: var(--red); font-weight: 700; }
   .hero { grid-template-columns: minmax(0, 1fr); gap: 24px; }
   .flight { right: 0; top: -2px; width: 120px; height: 56px; }
 }
+/* 矮螢幕（筆電、投影機）：10 位得主排成兩列，不用捲動就看得到全部 */
+@media (max-height: 740px) and (min-width: 761px) {
+  .passes { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+}
 @media (max-width: 760px) {
   .draw { grid-template-columns: minmax(0, 1fr); }
   /* 手機版結果視窗：全螢幕，操作列固定在底部 */
@@ -312,7 +319,7 @@ button.link.armed { color: var(--red); font-weight: 700; }
   .passes { grid-template-columns: minmax(0, 1fr); gap: 10px; }
   .pass .nm { font-size: 1.5rem; }
   .rstage .bigpass { --stub: 84px; }
-  .rstage .bigpass .nm { font-size: 2.5rem; }
+  .rstage .bigpass .nm { font-size: clamp(2.5rem, 11vw, 3.3rem); }
   .rstage .bigpass .no { font-size: 2.8rem; }
   .bigpass .pmain { padding: 16px 16px 14px 20px; }
   .bigpass .pmain::after { width: 24px; height: 24px; top: 14px; right: 12px; }
@@ -438,7 +445,10 @@ button.link.armed { color: var(--red); font-weight: 700; }
         <span class="rprize" id="rPrize">3合1好禮包 × 10 名</span>
         <span class="rprog" id="rProg"></span>
       </div>
-      <button type="button" class="rx" id="rClose" aria-label="關閉（已抽出的進度會保留）">×</button>
+      <div class="rtools">
+        <button type="button" class="rfs" id="rFs" hidden>全螢幕</button>
+        <button type="button" class="rx" id="rClose" aria-label="關閉（已抽出的進度會保留）">×</button>
+      </div>
     </div>
     <h2 class="sr" id="rTitle">抽獎</h2>
     <div class="rbody">
@@ -474,7 +484,7 @@ button.link.armed { color: var(--red); font-weight: 700; }
   var drawnEl = $('drawn'), winnersEl = $('winners'), sr = $('sr'), bpName = $('bpName'), bpNo = $('bpNo');
   var nextBtn = $('next'), againBtn = $('again'), copyBtn = $('copy'), doneBtn = $('done'), closeBtn = $('rClose'), toast = $('toast');
   var recap = $('recap'), chips = $('chips'), toast2 = $('toast2'), restartBtn = $('restart');
-  var busy = false, drawVisible = false, armTimer = 0;
+  var busy = false, drawVisible = false, armTimer = 0, fsWanted = true, fsBtn = $('rFs');
   // 目前這一輪：{ pool: 還沒抽的人, winners: 已抽出的人（依序）, total: 名單總人數, k: 要抽幾位 }
   // 只有第一位揭曉後才會成為 sess；抽滿 k 位就是「已抽完」。
   var sess = null;
@@ -533,11 +543,36 @@ button.link.armed { color: var(--red); font-weight: 700; }
   function syncBar() { bar.hidden = drawVisible || dlg.open; }
   function onClosed() {
     document.documentElement.classList.remove('lock');
+    exitFs();
     Array.prototype.forEach.call(dlg.querySelectorAll('canvas'), function (c) { c.remove(); });
     syncBar();
   }
+  // 瀏覽器真正的全螢幕（網址列、分頁都收起來）。需要在點擊當下呼叫；不支援的瀏覽器（如 iPhone Safari）略過，視窗本身一樣佔滿整個畫面。
+  function fsEl() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
+  function fsOK() { var d = document.documentElement; return !!(d.requestFullscreen || d.webkitRequestFullscreen); }
+  function enterFs() {
+    if (fsEl() || !fsOK()) return;
+    var d = document.documentElement;
+    try { var p = (d.requestFullscreen || d.webkitRequestFullscreen).call(d, { navigationUI: 'hide' }); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+  }
+  function exitFs() {
+    if (!fsEl()) return;
+    try { var p = (document.exitFullscreen || document.webkitExitFullscreen).call(document); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+  }
+  function syncFs() {
+    var on = !!fsEl();
+    fsBtn.textContent = on ? '退出全螢幕' : '全螢幕';
+    fsBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    if (!on && dlg.open) fsWanted = false;   // 抽的途中自己按 Esc 退出全螢幕，就不再自動拉回去
+  }
+  fsBtn.hidden = !fsOK();
+  fsBtn.addEventListener('click', function () { if (fsEl()) { fsWanted = false; exitFs(); } else { fsWanted = true; enterFs(); } });
+  document.addEventListener('fullscreenchange', syncFs);
+  document.addEventListener('webkitfullscreenchange', syncFs);
+
   function openDlg() {
     if (dlg.open) return;
+    fsWanted = true; enterFs();
     if (typeof dlg.showModal === 'function') { try { dlg.showModal(); } catch (e) { dlg.setAttribute('open', ''); } }
     else dlg.setAttribute('open', '');
     document.documentElement.classList.add('lock');
@@ -654,6 +689,7 @@ button.link.armed { color: var(--red); font-weight: 700; }
     }
     var no = c.winners.length + 1, last = no >= c.k;
     busy = true; lockButtons(true); disarm(); refresh();
+    if (fsWanted) enterFs();
     toast.textContent = ''; toast2.textContent = ''; sr.textContent = '';
     $('rPrize').textContent = prizeText(c.k);
     $('rProg').textContent = '第 ' + no + ' / ' + c.k + ' 位';
