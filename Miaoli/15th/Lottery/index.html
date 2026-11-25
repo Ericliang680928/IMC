@@ -4,103 +4,223 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<title>苗栗IMC 15屆 抽獎</title>
-<meta name="description" content="苗栗IMC 第15屆活動抽獎頁：貼上名單，一鍵抽出得獎者。">
+<title>苗栗IMC 15屆 抽獎｜社友福利驚喜包</title>
+<meta name="description" content="苗栗IMC 第15屆社友福利：3合1好禮包（記憶護頸枕、旅行證件套、行李箱），11/25 月例會現場抽出 10 名。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="社友福利 驚喜包送給您！">
+<meta property="og:description" content="10/31 前繳社費即可參加，11/25 月例會現場抽出 10 名。">
+<meta property="og:image" content="https://ericliang680928.github.io/IMC/Miaoli/15th/Lottery/assets/og.jpg">
 <link rel="icon" type="image/png" href="assets/imc-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@700;900&display=swap">
 <style>
-/* Layout: two columns (name list | draw stage) on desktop, stacked on phone */
+/* 設計重點：海報的藍天旅行感 + 第15屆 CI（珍珠白、香檳金、社徽藍）。
+   記憶點只有一個：得主以「登機證」依序飛出。其餘保持安靜。 */
 :root {
-  --bg: #efefef;
-  --surface: #f9f8f6;
-  --fg: #535353;
-  --muted: #7a7a7a;
-  --line: #d9d4ca;
-  --accent: #b08d4f;
-  --accent-fg: #ffffff;
-  --gold: #a6823f;
-  --gold-bg: #f8eed7;
-  --imc-blue: #1c2c60;
-  --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
-  --font-display: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --pearl: #f3f1ec;
+  --sky-1: #b9dcfa;
+  --sky-2: #e4f0fb;
+  --ink: #1b2347;
+  --muted: #58628a;
+  --navy: #1c2c60;
+  --red: #cf2233;
+  --sun: #f6b60b;
+  --gold: #c5a366;
+  --paper: #ffffff;
+  --line: #d3dcec;
+  --field: #f4f7fc;
+  --tag-bg: #1c2c60;
+  --outline: #ffffff;
+  --ticket: #fffdf7;
+  --shadow: 0 12px 30px -14px rgba(28, 44, 96, .42);
+  --font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --font-serif: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #16171b; --surface: #1f2026; --fg: #e6e3dc; --muted: #a09c93; --line: #34343b;
-    --accent: #dcb481; --accent-fg: #1b1508; --gold: #dcb481; --gold-bg: #2c2412; --imc-blue: #9fb0e8;
+    --pearl: #0b1230; --sky-1: #15235a; --sky-2: #0f1a46; --ink: #ecebf3; --muted: #a3add0;
+    --navy: #aebdf3; --red: #ff6573; --sun: #ffc83d; --gold: #e3bd7a; --paper: #172050;
+    --line: #2b3870; --field: #101845; --tag-bg: #2a3f8f; --outline: #0b1230;
+    --shadow: 0 12px 30px -14px rgba(0, 0, 0, .65);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #16171b; --surface: #1f2026; --fg: #e6e3dc; --muted: #a09c93; --line: #34343b;
-  --accent: #dcb481; --accent-fg: #1b1508; --gold: #dcb481; --gold-bg: #2c2412; --imc-blue: #9fb0e8;
+  --pearl: #0b1230; --sky-1: #15235a; --sky-2: #0f1a46; --ink: #ecebf3; --muted: #a3add0;
+  --navy: #aebdf3; --red: #ff6573; --sun: #ffc83d; --gold: #e3bd7a; --paper: #172050;
+  --line: #2b3870; --field: #101845; --tag-bg: #2a3f8f; --outline: #0b1230;
+  --shadow: 0 12px 30px -14px rgba(0, 0, 0, .65);
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body {
-  margin: 0;
-  background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
-  padding-block: 24px;
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  margin: 0; background: var(--pearl); color: var(--ink);
+  font-family: var(--font-sans); font-size: 16px; line-height: 1.6;
+  padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
 }
 img { max-width: 100%; }
-[hidden] { display: none !important; }
-.wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 20px; }
-h1 { font-family: var(--font-display); font-size: 1.7rem; margin: 0; text-wrap: balance; }
-.brand { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-inline: 18px; }
+
+/* ---------- 天空區：品牌列 + 海報主視覺 ---------- */
+.sky {
+  background:
+    radial-gradient(46% 38% at 88% 6%, rgba(255,255,255,.75), transparent 70%),
+    radial-gradient(40% 30% at 6% 34%, rgba(255,255,255,.55), transparent 70%),
+    linear-gradient(180deg, var(--sky-1) 0, var(--sky-2) 78%, var(--pearl) 100%);
+  padding-block: 18px 40px;
+}
+.brand { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
 .brand .org { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.brand .org img { height: 64px; width: auto; }
-.brand .theme { line-height: 0; }
-.brand .theme img { height: 124px; width: auto; }
-.brand .orgname { color: var(--imc-blue); font-weight: 700; line-height: 1.3; }
+.brand .org img { height: 58px; width: auto; }
+.brand .orgname { color: var(--navy); font-weight: 700; line-height: 1.3; }
 .brand .orgname small { display: block; font-weight: 400; font-size: .7rem; letter-spacing: .04em; }
-.sub { color: var(--muted); margin: 4px 0 0; }
-.grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px; align-items: start; }
-@media (max-width: 760px) { .grid { grid-template-columns: minmax(0, 1fr); } }
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
-label.h { font-weight: 700; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-.count { color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+.brand .theme { line-height: 0; }
+.brand .theme img { height: 92px; width: auto; }
+
+.hero { display: grid; grid-template-columns: minmax(0, 1.06fr) minmax(0, .94fr); gap: 32px; align-items: center; }
+.copy { position: relative; display: grid; gap: 14px; justify-items: start; }
+.flight { position: absolute; right: 0; top: -6px; width: 150px; height: 70px; color: var(--navy); opacity: .85; }
+.tag {
+  display: inline-block; background: var(--tag-bg); color: #fff; font-weight: 900;
+  font-size: clamp(1.25rem, 3vw, 1.7rem); line-height: 1.2; padding: .3em 1.3em .3em 1.1em;
+  clip-path: polygon(0 10%, 3% 0, 100% 6%, 97% 100%, 2% 92%);
+}
+.tag em { font-style: normal; color: var(--sun); }
+.title { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 .22em; font-weight: 900; line-height: 1.08; }
+.title span {
+  text-shadow:
+    3px 0 0 var(--outline), -3px 0 0 var(--outline), 0 3px 0 var(--outline), 0 -3px 0 var(--outline),
+    2px 2px 0 var(--outline), -2px -2px 0 var(--outline), 2px -2px 0 var(--outline), -2px 2px 0 var(--outline);
+}
+.t-red { font-size: clamp(3.4rem, 10vw, 6rem); color: var(--red); }
+.t-navy { font-size: clamp(2.1rem, 5.6vw, 3.5rem); color: var(--navy); }
+.swoosh { width: min(100%, 360px); height: 18px; margin-top: -4px; }
+.ribbon {
+  display: inline-block; margin: 6px 0 0;
+  background: var(--red); color: #fff; font-weight: 900; font-size: clamp(1.45rem, 3.4vw, 2.1rem); line-height: 1.25;
+  padding: .18em 1.7em; clip-path: polygon(0 0, 100% 0, calc(100% - .7em) 50%, 100% 100%, 0 100%, .7em 50%);
+}
+.ribbon b { color: var(--sun); font-size: 1.45em; line-height: 1; }
+.gifts { margin: 0; font-weight: 700; font-size: clamp(1rem, 2.4vw, 1.2rem); color: var(--ink); }
+.gifts i { font-style: normal; color: var(--red); margin-inline: .3em; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; width: 100%; margin-top: 4px; }
+.fact { display: flex; align-items: center; gap: 12px; background: var(--paper); border-radius: 16px; padding: 12px 16px; box-shadow: var(--shadow); }
+.fact svg { flex: none; width: 40px; height: 40px; }
+.fact .ic-cal { color: var(--navy); }
+.fact .ic-gift { color: var(--red); }
+.fact b { display: block; font-size: 1.45rem; font-weight: 900; line-height: 1.15; color: var(--navy); }
+.fact span { color: var(--muted); }
+.fact mark { background: var(--sun); color: #1b2347; font-weight: 900; padding: .02em .35em; border-radius: 6px; }
+
+.shots { display: grid; grid-template-columns: minmax(0, 1fr) 38%; grid-template-rows: auto 210px; gap: 12px; }
+.shot { position: relative; margin: 0; border-radius: 22px; overflow: hidden; box-shadow: var(--shadow); background: #dbe8f6; }
+.shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.shot.pillow { grid-column: 1 / -1; aspect-ratio: 3.1 / 1; }
+.shot.passport img { object-position: 78% 50%; }
+.shot figcaption {
+  position: absolute; left: 10px; bottom: 10px; background: rgba(255,255,255,.94); color: #1c2c60;
+  font-weight: 700; font-size: .85rem; line-height: 1.2; padding: .3em .85em; border-radius: 999px;
+}
+
+/* ---------- 抽獎區 ---------- */
+.draw { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px; align-items: start; padding-block: 8px 28px; }
+.panel { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 14px; min-width: 0; box-shadow: var(--shadow); }
+.panel h2 { margin: 0; font-size: 1.2rem; font-weight: 900; color: var(--navy); }
+.phead { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.count { background: var(--field); border: 1px solid var(--line); border-radius: 999px; padding: .1em .8em; color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 500; }
+.prize { color: var(--red); font-weight: 900; }
+.help { margin: -6px 0 0; color: var(--muted); font-size: .92rem; }
 textarea {
-  width: 100%; min-height: 280px; resize: vertical; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px;
-  background: var(--bg); color: var(--fg); font: inherit; line-height: 1.6;
+  width: 100%; min-height: 290px; resize: vertical; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--field); color: var(--ink); font: inherit; line-height: 1.7;
 }
-textarea:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-.row label { display: flex; align-items: center; gap: 6px; }
-input[type=number] { width: 80px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); font: inherit; font-variant-numeric: tabular-nums; }
+textarea:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+.row { display: flex; gap: 14px 18px; align-items: center; flex-wrap: wrap; }
+.row label { display: flex; align-items: center; gap: 8px; }
+input[type=number] { width: 84px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--field); color: var(--ink); font: inherit; font-weight: 700; font-variant-numeric: tabular-nums; }
 .note { color: var(--muted); font-size: .85rem; margin: 0; }
-.warn { color: #c0392b; font-size: .9rem; min-height: 1.3em; margin: 0; }
-button { font: inherit; cursor: pointer; border-radius: 8px; padding: 9px 16px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); }
+.note.sample { color: var(--red); font-weight: 700; font-size: .92rem; }
+.warn { color: #c0392b; font-size: .92rem; min-height: 1.4em; margin: 0; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .warn { color: #ff8a80; } }
+button { font: inherit; cursor: pointer; border-radius: 999px; padding: 9px 20px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); }
 button:hover { border-color: var(--muted); }
-button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 700; font-size: 1.1rem; padding: 12px 28px; }
 button:disabled { opacity: .5; cursor: not-allowed; }
-.stage {
-  min-height: 120px; display: grid; place-items: center; text-align: center; border-radius: 8px;
-  background: var(--bg); border: 1px dashed var(--line); padding: 18px; font-family: var(--font-display);
-  font-size: clamp(1.8rem, 6vw, 3rem); font-weight: 700; overflow-wrap: anywhere;
+button.primary {
+  background: #cf2233; color: #fff; border-color: #cf2233; font-weight: 900; font-size: 1.2rem; padding: 13px 38px;
+  box-shadow: 0 10px 22px -10px rgba(207, 34, 51, .75);
 }
-.stage.rolling { color: var(--muted); }
-.stage small { display: block; font-size: .9rem; font-weight: 400; color: var(--muted); }
-.winners { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
-.winners li { display: flex; gap: 10px; align-items: baseline; background: var(--gold-bg); border: 1px solid var(--gold); border-radius: 8px; padding: 8px 12px; min-width: 0; animation: pop .35s ease-out both; }
-.winners .no { color: var(--gold); font-weight: 700; font-variant-numeric: tabular-nums; }
-.winners .nm { font-weight: 700; overflow-wrap: anywhere; min-width: 0; }
-.empty { color: var(--muted); margin: 0; }
-@keyframes pop { from { transform: scale(.85); opacity: 0; } to { transform: none; opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .winners li { animation: none; } }
+button.primary:hover:not(:disabled) { background: #b81c2c; border-color: #b81c2c; }
+button.link { border: 0; background: none; padding: 2px 4px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; font-size: .9rem; }
+
+.stage {
+  min-height: 190px; display: grid; place-items: center; text-align: center; border-radius: 18px; padding: 22px; color: #fff;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 420 120'%3E%3Cpath d='M-10 100C90 110 170 20 290 38 350 47 390 24 430 6' fill='none' stroke='%23dcb481' stroke-opacity='.45' stroke-width='2.5' stroke-dasharray='4 9' stroke-linecap='round'/%3E%3Cpath d='M404 8 436 -6 428 24 420 14 412 19 414 11Z' fill='%23dcb481' fill-opacity='.65'/%3E%3C/svg%3E") right top / 62% auto no-repeat,
+    radial-gradient(120% 140% at 82% 0, #2f469c 0, transparent 58%),
+    linear-gradient(160deg, #18286a, #0b1439);
+  font-weight: 900; font-size: clamp(2rem, 6.4vw, 3.6rem); line-height: 1.15; overflow-wrap: anywhere; box-shadow: inset 0 0 0 1px rgba(220, 180, 129, .35);
+}
+.stage.rolling { color: #cdd6f6; }
+.stage small { display: block; margin-top: .3em; font-size: 1rem; font-weight: 500; color: #dcb481; letter-spacing: .04em; }
 .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .toast { color: var(--muted); font-size: .9rem; }
-@media (max-width: 520px) {
-  .brand .org img { height: 52px; }
-  .brand .theme img { height: 100px; }
+
+/* 登機證 */
+.passes { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+.pass {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 64px; min-width: 0; overflow: hidden;
+  background: var(--ticket); color: #1c2c60; border-radius: 14px; box-shadow: 0 8px 18px -10px rgba(28, 44, 96, .55);
+  animation: land .55s cubic-bezier(.2, .85, .25, 1) both; animation-delay: calc(var(--i, 0) * 170ms);
+}
+.pass::before, .pass::after { content: ""; position: absolute; right: 56px; width: 16px; height: 16px; border-radius: 50%; background: var(--paper); }
+.pass::before { top: -8px; }
+.pass::after { bottom: -8px; }
+.pmain { position: relative; padding: 12px 14px 12px 16px; display: grid; gap: 2px; min-width: 0; }
+.pmain::after {
+  content: ""; position: absolute; top: 12px; right: 12px; width: 22px; height: 22px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Cpath d='M3 17 33 3 26 33 18 22 10 27 12 18Z' fill='%23c5a366'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.pfrom { font-size: .74rem; color: #666d8a; font-weight: 700; padding-right: 28px; }
+.pass .nm { font-family: var(--font-serif); font-weight: 900; font-size: 1.6rem; line-height: 1.2; overflow-wrap: anywhere; min-width: 0; }
+.pgift { font-size: .8rem; font-weight: 700; color: #8f6a22; }
+.pstub { display: flex; flex-direction: column; align-items: center; justify-content: center; border-left: 2px dashed #d3c8ad; color: #8f6a22; padding: 6px 0; }
+.pstub small { font-size: .72rem; font-weight: 700; line-height: 1; }
+.pass .no { font-family: var(--font-serif); font-weight: 900; font-size: 1.9rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.empty { color: var(--muted); margin: 0; }
+@keyframes land { from { opacity: 0; transform: translate(-26px, 12px) rotate(-3deg) scale(.96); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .pass { animation: none; } }
+
+/* ---------- 頁尾 ---------- */
+.foot { margin-top: 12px; }
+.foot .globe {
+  display: block; width: 100%; height: clamp(56px, 9vw, 120px); object-fit: cover; object-position: center top;
+  -webkit-mask-image: linear-gradient(transparent, #000 38%); mask-image: linear-gradient(transparent, #000 38%);
+}
+.foot p { margin: 0; padding: 10px 18px 26px; text-align: center; color: var(--muted); font-size: .85rem; }
+
+/* ---------- 手機 ---------- */
+@media (max-width: 900px) {
+  .hero { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .flight { right: 0; top: -2px; width: 120px; height: 56px; }
+}
+@media (max-width: 760px) { .draw { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 560px) {
+  .sky { padding-bottom: 28px; }
+  .brand .org img { height: 50px; }
+  .brand .theme img { height: 78px; }
+  .shots { grid-template-rows: auto 170px; }
+  .panel { padding: 16px; }
+  .passes { grid-template-columns: minmax(0, 1fr); }
 }
 </style>
 </head>
 <body>
 
-<div class="wrap">
-  <header>
-    <div class="brand">
+<div class="sky">
+  <div class="wrap">
+    <header class="brand">
       <div class="org" id="orgLogo">
         <img src="assets/imc-logo.png" width="256" height="256" alt="苗栗IMC 社徽">
         <div class="orgname">社團法人苗栗縣國際工商經營研究社<small>INTERNATIONAL MANAGEMENT COUNCIL of Miaoli</small></div>
@@ -108,24 +228,63 @@ button:disabled { opacity: .5; cursor: not-allowed; }
       <div class="theme" id="themeLogo">
         <img src="assets/15th-logo.png" width="560" height="492" alt="第15屆 藝術共感・行動共創 ART &amp; ACTION">
       </div>
-    </div>
-    <h1>苗栗IMC 15屆 抽獎</h1>
-    <p class="sub">貼上名單，每行一位，按下按鈕抽出得獎者。</p>
-  </header>
+    </header>
 
-  <div class="grid">
+    <section class="hero" aria-label="社友福利">
+      <div class="copy">
+        <svg class="flight" viewBox="0 0 150 70" aria-hidden="true" fill="none" stroke="currentColor">
+          <path d="M3 62C38 66 62 20 104 32c18 5 28-6 34-17" stroke-width="2.2" stroke-dasharray="3 7" stroke-linecap="round"/>
+          <path d="M130 8 148 2 143 22 137 15 131 18 133 12Z" fill="currentColor" stroke="none"/>
+        </svg>
+        <p class="tag" style="margin:0">社友<em>福利</em></p>
+        <h1 class="title"><span class="t-red">驚喜包</span><span class="t-navy">送給您！</span></h1>
+        <svg class="swoosh" viewBox="0 0 360 18" aria-hidden="true" preserveAspectRatio="none"><path d="M3 12C80 3 170 16 357 5" fill="none" stroke="#f6b60b" stroke-width="5" stroke-linecap="round"/></svg>
+        <p class="ribbon"><b>3</b>合<b>1</b>好禮包</p>
+        <p class="gifts">記憶護頸枕<i>＋</i>旅行證件套<i>＋</i>行李箱</p>
+        <div class="facts">
+          <div class="fact">
+            <svg class="ic-cal" viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><rect x="5" y="8" width="30" height="27" rx="5"/><path d="M5 17h30M13 4v8M27 4v8"/><g fill="currentColor" stroke="none"><circle cx="13" cy="24" r="2"/><circle cx="20" cy="24" r="2"/><circle cx="27" cy="24" r="2"/><circle cx="13" cy="30" r="2"/><circle cx="20" cy="30" r="2"/></g></svg>
+            <div><b>10/31 前</b><span>繳社費即可參加</span></div>
+          </div>
+          <div class="fact">
+            <svg class="ic-gift" viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><rect x="6" y="17" width="28" height="18" rx="3"/><rect x="4" y="11" width="32" height="7" rx="2.5"/><path d="M20 11v24"/><path d="M20 11c-3-7-11-6-9-1.5 1 2 5 1.5 9 1.5ZM20 11c3-7 11-6 9-1.5-1 2-5 1.5-9 1.5Z"/></svg>
+            <div><b>11/25 月例會</b><span>現場抽出 <mark>10 名</mark></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="shots">
+        <figure class="shot pillow"><img src="assets/gift-pillow.jpg" width="695" height="222" alt="三色記憶護頸枕：灰、粉、藍" loading="eager"><figcaption>記憶護頸枕</figcaption></figure>
+        <figure class="shot passport"><img src="assets/gift-passport.jpg" width="560" height="249" alt="旅行證件套：黑、藍、棕三色，棕色款打開可見護照與機票" loading="eager"><figcaption>旅行證件套</figcaption></figure>
+        <figure class="shot suitcase"><img src="assets/gift-suitcase.jpg" width="470" height="573" alt="三種尺寸的行李箱：白、黃、綠" loading="eager"><figcaption>行李箱</figcaption></figure>
+      </div>
+    </section>
+  </div>
+</div>
+
+<main class="wrap">
+  <div class="draw">
     <section class="panel" aria-label="名單">
-      <label class="h" for="names">參加名單 <span class="count" id="count">0 人</span></label>
+      <div class="phead">
+        <h2><label for="names">參加名單</label></h2>
+        <span class="count" id="count">0 人</span>
+      </div>
+      <p class="help">貼上 10/31 前已繳社費的社友，每行一位。</p>
       <textarea id="names" spellcheck="false" placeholder="每行一個名字，也可以用逗號分隔"></textarea>
-      <p class="note" id="sampleNote">目前是範例名單，請換成你的名單。</p>
+      <p class="note sample" id="sampleNote">目前是範例名單，請換成你的名單。</p>
       <div class="row">
-        <label for="num">抽出人數 <input id="num" type="number" min="1" value="10"></label>
+        <label for="num">抽出人數 <input id="num" type="number" min="1" value="10"> 名</label>
         <label for="dedupe"><input id="dedupe" type="checkbox" checked> 自動移除重複姓名</label>
+        <button type="button" class="link" id="clear">清空名單</button>
       </div>
       <p class="warn" id="warn" role="alert"></p>
     </section>
 
     <section class="panel" aria-label="抽獎">
+      <div class="phead">
+        <h2>抽獎舞台</h2>
+        <span class="prize" id="prize">3合1好禮包 × 10 名</span>
+      </div>
       <div class="stage" id="stage">準備好了嗎？</div>
       <div class="actions">
         <button class="primary" id="draw">開始抽獎</button>
@@ -133,12 +292,17 @@ button:disabled { opacity: .5; cursor: not-allowed; }
         <button id="copy" disabled>複製得獎名單</button>
         <span class="toast" id="toast" role="status"></span>
       </div>
-      <p class="note">使用瀏覽器的密碼學亂數（crypto.getRandomValues），每個人中獎機率相同，同一人不會重複中獎。</p>
-      <ol class="winners" id="winners"></ol>
+      <ol class="passes" id="winners"></ol>
       <p class="empty" id="empty">得獎名單會顯示在這裡。</p>
+      <p class="note">使用瀏覽器的密碼學亂數（crypto.getRandomValues），每個人中獎機率相同，同一人不會重複中獎。名單只留在這個瀏覽器，不會上傳。</p>
     </section>
   </div>
-</div>
+</main>
+
+<footer class="foot">
+  <img class="globe" src="assets/globe.jpg" width="1199" height="97" alt="" loading="lazy">
+  <p>社團法人苗栗縣國際工商經營研究社　第15屆　藝術共感・行動共創</p>
+</footer>
 
 <script>
 (function () {
@@ -148,7 +312,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   for (var i = 0; i < 25; i++) SAMPLE.push(surnames[i % 20] + given[i]);
 
   var $ = function (id) { return document.getElementById(id); };
-  var names = $('names'), numEl = $('num'), dedupe = $('dedupe'), warn = $('warn');
+  var names = $('names'), numEl = $('num'), dedupe = $('dedupe'), warn = $('warn'), prize = $('prize');
   var stage = $('stage'), winnersEl = $('winners'), empty = $('empty');
   var drawBtn = $('draw'), againBtn = $('again'), copyBtn = $('copy'), toast = $('toast');
   var busy = false, lastWinners = [];
@@ -182,6 +346,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   function refresh() {
     var list = parse(), k = parseInt(numEl.value, 10);
     $('count').textContent = list.length + ' 人';
+    prize.textContent = '3合1好禮包' + (k >= 1 ? ' × ' + k + ' 名' : '');
     var msg = '';
     if (!list.length) msg = '請先輸入名單。';
     else if (!(k >= 1)) msg = '抽出人數至少是 1。';
@@ -191,16 +356,52 @@ button:disabled { opacity: .5; cursor: not-allowed; }
     return { list: list, k: k, ok: !msg };
   }
 
+  // 每位得主一張登機證
   function render(winners) {
     winnersEl.innerHTML = '';
     winners.forEach(function (n, i) {
       var li = document.createElement('li');
-      li.style.animationDelay = (i * 60) + 'ms';
-      var no = document.createElement('span'); no.className = 'no'; no.textContent = (i + 1);
-      var nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = n;
-      li.appendChild(no); li.appendChild(nm); winnersEl.appendChild(li);
+      li.className = 'pass';
+      li.style.setProperty('--i', i);
+      li.innerHTML = '<div class="pmain"><span class="pfrom">社友福利　驚喜包</span><strong class="nm"></strong><span class="pgift">3合1好禮包</span></div>' +
+                     '<div class="pstub"><small>第</small><span class="no"></span><small>位</small></div>';
+      li.querySelector('.nm').textContent = n;
+      li.querySelector('.no').textContent = i + 1;
+      winnersEl.appendChild(li);
     });
     empty.hidden = winners.length > 0;
+  }
+
+  // 抽完的彩帶，只放一次；偏好減少動態時不放
+  function confetti() {
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var cv = document.createElement('canvas'), dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var W = window.innerWidth, H = window.innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr; cv.setAttribute('aria-hidden', 'true');
+    cv.style.cssText = 'position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:50';
+    document.body.appendChild(cv);
+    var ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+    var cols = ['#f6b60b', '#cf2233', '#1c2c60', '#ffffff', '#c5a366', '#4aa3e8'];
+    var r = stage.getBoundingClientRect(), ox = r.left + r.width / 2, oy = r.top + r.height / 2, ps = [];
+    for (var i = 0; i < 150; i++) {
+      var a = Math.random() * Math.PI * 2, sp = 4 + Math.random() * 9;
+      ps.push({ x: ox, y: oy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 6, w: 6 + Math.random() * 6, h: 4 + Math.random() * 5,
+                rot: Math.random() * 6.28, vr: (Math.random() - .5) * .4, c: cols[i % cols.length] });
+    }
+    var t0 = performance.now(), DUR = 2600;
+    (function frame(now) {
+      var t = now - t0, alive = false;
+      ctx.clearRect(0, 0, W, H);
+      ps.forEach(function (p) {
+        p.vy += .28; p.vx *= .992; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+        var life = 1 - t / DUR;
+        if (life <= 0 || p.y > H + 20) return;
+        alive = true;
+        ctx.globalAlpha = Math.max(0, Math.min(1, life * 1.6));
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore();
+      });
+      if (alive && t < DUR) requestAnimationFrame(frame); else cv.remove();
+    })(t0);
   }
 
   function run() {
@@ -225,6 +426,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
         var sm = document.createElement('small'); sm.textContent = '共 ' + s.list.length + ' 人參加';
         stage.appendChild(sm);
         render(winners);
+        confetti();
         lastWinners = winners; busy = false;
         againBtn.disabled = false; copyBtn.disabled = false; refresh();
       }
@@ -243,6 +445,9 @@ button:disabled { opacity: .5; cursor: not-allowed; }
     } else { fallbackCopy(text); done(); }
   });
 
+  $('clear').addEventListener('click', function () {
+    names.value = ''; $('sampleNote').hidden = true; refresh(); names.focus();
+  });
   names.addEventListener('input', function () { $('sampleNote').hidden = true; refresh(); });
   numEl.addEventListener('input', refresh);
   dedupe.addEventListener('change', refresh);
