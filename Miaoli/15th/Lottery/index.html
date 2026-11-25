@@ -218,18 +218,39 @@ dialog.result::backdrop { background: transparent; }
 .rbox.rolling .rstage { color: #cdd6f6; }
 .rbox.done .rstage { min-height: 0; padding: 14px 18px; font-size: clamp(1.8rem, 4.6vw, 2.8rem); }
 .rstage small { display: block; margin-top: .25em; font-size: 1rem; font-weight: 500; color: #dcb481; letter-spacing: .04em; }
+.rstage small:empty { display: none; }
+.rstage .who { display: block; max-width: 100%; }
+/* 一次抽一位：揭曉的名字彈出來 */
+.rbox.reveal .rstage .who { color: #ffe29a; animation: pop .55s cubic-bezier(.2, 1.3, .3, 1) both; }
+@keyframes pop { from { opacity: 0; transform: scale(.72); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .rbox.reveal .rstage .who { animation: none; } }
+.rtitles { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; min-width: 0; }
+.rprog { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22); border-radius: 999px; padding: 2px 12px; font-size: .9rem; font-weight: 700; color: #dfe5ff; font-variant-numeric: tabular-nums; }
+.rprog:empty { display: none; }
+/* 已抽出的得主（抽的過程中累積） */
+.drawn { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.drawn:empty { display: none; }
+.drawn li { display: flex; gap: 8px; align-items: baseline; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.2); border-radius: 999px; padding: 3px 14px 3px 10px; font-weight: 700; }
+.drawn .cn { color: #f6c453; font-variant-numeric: tabular-nums; }
+.rbox.reveal .drawn li:last-child { border-color: #f6c453; background: rgba(246, 196, 83, .16); }
+/* 抽的過程顯示 .drawn，全部抽完才顯示登機證名單 */
+.rbox:not(.done) .passes, .rbox.done .drawn { display: none; }
+.rbox.done .only-run, .rbox:not(.done) .only-done, .rbox:not(.done) .ractions .toast { display: none; }
 .ractions { flex: none; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: flex-end; padding: 12px 28px 20px; border-top: 1px solid rgba(255,255,255,.12); }
 .ractions .toast { margin-right: auto; color: #aeb8de; }
 .ractions button { background: transparent; color: #fff; border-color: rgba(255,255,255,.38); }
 .ractions button:hover:not(:disabled) { border-color: #fff; }
 .ractions button.gold { background: #dcb481; color: #1b1508; border-color: #dcb481; font-weight: 900; padding: 10px 34px; }
+.ractions button.primary { background: #cf2233; color: #fff; border-color: #cf2233; font-weight: 900; font-size: 1.15rem; padding: 12px 40px; }
+.ractions button.primary:hover:not(:disabled) { background: #e0293c; border-color: #e0293c; }
+button.link.armed { color: var(--red); font-weight: 700; }
 
 /* 登機證 */
 .passes { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
 .pass {
   position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 64px; min-width: 0; overflow: hidden;
   background: var(--ticket); color: #1c2c60; border-radius: 14px; box-shadow: 0 8px 18px -10px rgba(0, 0, 0, .6);
-  animation: land .55s cubic-bezier(.2, .85, .25, 1) both; animation-delay: calc(var(--i, 0) * 170ms);
+  animation: land .5s cubic-bezier(.2, .85, .25, 1) both; animation-delay: calc(var(--i, 0) * 90ms);
 }
 .pass::before, .pass::after { content: ""; position: absolute; right: 56px; width: 16px; height: 16px; border-radius: 50%; background: var(--notch, #fff); }
 .pass::before { top: -8px; }
@@ -276,6 +297,7 @@ dialog.result::backdrop { background: transparent; }
   .ractions .toast { grid-column: 1 / -1; order: -1; margin: 0; text-align: center; min-height: 1.3em; }
   .ractions button { padding: 12px 10px; }
   .ractions button.gold { grid-column: 1 / -1; padding: 13px 10px; font-size: 1.1rem; }
+  .ractions button.primary { grid-column: 1 / -1; padding: 15px 10px; font-size: 1.25rem; }
 }
 @media (max-width: 560px) {
   .sky { padding-bottom: 28px; }
@@ -342,6 +364,7 @@ dialog.result::backdrop { background: transparent; }
       <p class="help">貼上 10/31 前已繳社費的社友，每行一位。</p>
       <textarea id="names" spellcheck="false" placeholder="每行一個名字，也可以用逗號分隔"></textarea>
       <p class="note sample" id="sampleNote">目前是範例名單，請換成你的名單。</p>
+      <p class="note" id="lockNote" hidden>抽獎進行中，名單已鎖定。要修改請先按「重新開始」。</p>
       <div class="row">
         <label for="num">抽出人數 <input id="num" type="number" min="1" value="10"> 名</label>
         <label for="dedupe"><input id="dedupe" type="checkbox" checked> 自動移除重複姓名</label>
@@ -355,17 +378,18 @@ dialog.result::backdrop { background: transparent; }
         <h2>抽獎舞台</h2>
         <span class="prize" id="prize">3合1好禮包 × 10 名</span>
       </div>
-      <div class="ready" id="ready"><div><strong>準備好了嗎？</strong><small id="readySub">名單 25 人，抽出 10 名</small></div></div>
+      <div class="ready" id="ready"><div><strong id="readyMain">準備好了嗎？</strong><small id="readySub">名單 25 人，一次抽一位，共 10 位</small></div></div>
       <div class="actions">
         <button type="button" class="primary" id="draw">開始抽獎</button>
         <span class="toast" id="toast2" role="status"></span>
       </div>
       <div class="recap" id="recap" hidden>
-        <h3>上次抽出的名單</h3>
+        <h3 id="recapTitle">上次抽出的名單</h3>
         <ol class="chips" id="chips"></ol>
         <div class="actions">
           <button type="button" id="reopen">查看得獎名單</button>
           <button type="button" id="copy2">複製得獎名單</button>
+          <button type="button" class="link" id="restart" hidden>重新開始</button>
         </div>
       </div>
       <p class="note">使用瀏覽器的密碼學亂數（crypto.getRandomValues），每個人中獎機率相同，同一人不會重複中獎。名單只留在這個瀏覽器，不會上傳。</p>
@@ -384,22 +408,27 @@ dialog.result::backdrop { background: transparent; }
 </div>
 
 <dialog class="result" id="result" aria-labelledby="rTitle">
-  <div class="rbox" id="rbox">
+  <div class="rbox rolling" id="rbox">
     <div class="rhead">
-      <span class="rprize" id="rPrize">3合1好禮包 × 10 名</span>
-      <button type="button" class="rx" id="rClose" aria-label="關閉抽獎結果">×</button>
+      <div class="rtitles">
+        <span class="rprize" id="rPrize">3合1好禮包 × 10 名</span>
+        <span class="rprog" id="rProg"></span>
+      </div>
+      <button type="button" class="rx" id="rClose" aria-label="關閉（已抽出的進度會保留）">×</button>
     </div>
-    <h2 class="sr" id="rTitle">抽獎結果</h2>
+    <h2 class="sr" id="rTitle">抽獎</h2>
     <div class="rbody">
-      <div class="rstage" id="stage" aria-hidden="true">準備好了嗎？</div>
+      <div class="rstage" id="stage" aria-hidden="true"><span class="who" id="sMain">準備好了嗎？</span><small id="sSub"></small></div>
       <p class="sr" id="sr" role="status"></p>
-      <ol class="passes" id="winners"></ol>
+      <ol class="drawn" id="drawn" aria-label="已抽出的得主"></ol>
+      <ol class="passes" id="winners" aria-label="全部得獎名單"></ol>
     </div>
     <div class="ractions">
       <span class="toast" id="toast" role="status"></span>
-      <button type="button" id="again" disabled>重新抽一次</button>
-      <button type="button" id="copy" disabled>複製得獎名單</button>
-      <button type="button" class="gold" id="done" disabled>完成</button>
+      <button type="button" class="primary only-run" id="next" disabled>抽第 1 位</button>
+      <button type="button" class="only-done" id="again" disabled>重新抽一次</button>
+      <button type="button" class="only-done" id="copy" disabled>複製得獎名單</button>
+      <button type="button" class="gold only-done" id="done" disabled>完成</button>
     </div>
   </div>
 </dialog>
@@ -412,17 +441,24 @@ dialog.result::backdrop { background: transparent; }
   for (var i = 0; i < 25; i++) SAMPLE.push(surnames[i % 20] + given[i]);
 
   var $ = function (id) { return document.getElementById(id); };
-  var names = $('names'), numEl = $('num'), dedupe = $('dedupe'), warn = $('warn');
+  var names = $('names'), numEl = $('num'), dedupe = $('dedupe'), warn = $('warn'), clearBtn = $('clear');
   var drawBtn = $('draw'), drawBar = $('drawBar'), bar = $('bar');
-  var dlg = $('result'), rbox = $('rbox'), stage = $('stage'), winnersEl = $('winners'), sr = $('sr');
-  var againBtn = $('again'), copyBtn = $('copy'), doneBtn = $('done'), closeBtn = $('rClose'), toast = $('toast');
-  var recap = $('recap'), chips = $('chips'), toast2 = $('toast2');
-  var busy = false, lastWinners = [], lastTotal = 0, drawVisible = false;
+  var dlg = $('result'), rbox = $('rbox'), stage = $('stage'), sMain = $('sMain'), sSub = $('sSub');
+  var drawnEl = $('drawn'), winnersEl = $('winners'), sr = $('sr');
+  var nextBtn = $('next'), againBtn = $('again'), copyBtn = $('copy'), doneBtn = $('done'), closeBtn = $('rClose'), toast = $('toast');
+  var recap = $('recap'), chips = $('chips'), toast2 = $('toast2'), restartBtn = $('restart');
+  var busy = false, drawVisible = false, armTimer = 0;
+  // 目前這一輪：{ pool: 還沒抽的人, winners: 已抽出的人（依序）, total: 名單總人數, k: 要抽幾位 }
+  // 只有第一位揭曉後才會成為 sess；抽滿 k 位就是「已抽完」。
+  var sess = null;
 
   names.value = SAMPLE.join('\n');
 
   function prizeText(k) { return '3合1好禮包' + (k >= 1 ? ' × ' + k + ' 名' : ''); }
   function reduced() { return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); }
+  function active() { return sess && sess.winners.length > 0 && sess.winners.length < sess.k ? sess : null; }   // 抽到一半
+  function finished() { return !!sess && sess.winners.length >= sess.k; }                                          // 已抽完
+  function shown() { return sess ? sess.winners : []; }
 
   function parse() {
     var list = names.value.split(/[\n,，、;；\t]+/).map(function (s) { return s.trim(); }).filter(Boolean);
@@ -439,27 +475,29 @@ dialog.result::backdrop { background: transparent; }
     do { crypto.getRandomValues(buf); } while (buf[0] >= max);
     return buf[0] % n;
   }
-  function pick(list, k) {
-    var a = list.slice();
-    for (var i = 0; i < k; i++) {
-      var j = i + randInt(a.length - i);
-      var t = a[i]; a[i] = a[j]; a[j] = t;
-    }
-    return a.slice(0, k);
-  }
 
+  // 頁面上的文字與按鈕狀態（抽到一半時以進度為準，並鎖住名單）
   function refresh() {
-    var list = parse(), k = parseInt(numEl.value, 10);
-    $('count').textContent = list.length + ' 人';
+    var c = active(), list, k, msg = '';
+    if (c) { list = c.pool; k = c.k; }
+    else {
+      list = parse(); k = parseInt(numEl.value, 10);
+      if (!list.length) msg = '請先輸入名單。';
+      else if (!(k >= 1)) msg = '抽出人數至少是 1。';
+      else if (k > list.length) msg = '抽出人數 (' + k + ') 超過名單人數 (' + list.length + ')。';
+    }
+    var got = c ? c.winners.length : 0, total = c ? c.total : list.length;
+    $('count').textContent = total + ' 人';
     $('prize').textContent = prizeText(k);
-    $('barPrize').textContent = prizeText(k);
-    $('barCount').textContent = '名單 ' + list.length + ' 人';
-    $('readySub').textContent = '名單 ' + list.length + ' 人，抽出 ' + (k >= 1 ? k : 0) + ' 名';
-    var msg = '';
-    if (!list.length) msg = '請先輸入名單。';
-    else if (!(k >= 1)) msg = '抽出人數至少是 1。';
-    else if (k > list.length) msg = '抽出人數 (' + k + ') 超過名單人數 (' + list.length + ')。';
+    $('barPrize').textContent = c ? '已抽出 ' + got + ' / ' + k + ' 位' : prizeText(k);
+    $('barCount').textContent = c ? '名單還剩 ' + list.length + ' 人' : '名單 ' + list.length + ' 人';
+    $('readyMain').textContent = c ? '已抽出 ' + got + ' / ' + k + ' 位' : '準備好了嗎？';
+    $('readySub').textContent = c ? '接下來抽第 ' + (got + 1) + ' 位，名單還剩 ' + list.length + ' 人'
+                                  : '名單 ' + list.length + ' 人，一次抽一位，共 ' + (k >= 1 ? k : 0) + ' 位';
+    drawBtn.textContent = drawBar.textContent = c ? '繼續抽第 ' + (got + 1) + ' 位' : '開始抽獎';
     warn.textContent = msg;
+    names.disabled = numEl.disabled = dedupe.disabled = clearBtn.disabled = !!c || busy;
+    $('lockNote').hidden = !c;
     drawBtn.disabled = drawBar.disabled = busy || !!msg;
     return { list: list, k: k, ok: !msg };
   }
@@ -493,13 +531,20 @@ dialog.result::backdrop { background: transparent; }
   }
 
   // ---------- 畫面內容 ----------
-  function setDoneStage() {
-    stage.innerHTML = '';
-    stage.appendChild(document.createTextNode('恭喜 ' + lastWinners.length + ' 位得主'));
-    var sm = document.createElement('small'); sm.textContent = '共 ' + lastTotal + ' 人參加';
-    stage.appendChild(sm);
+  function setMode(m) { rbox.className = 'rbox ' + m; }   // rolling 抽的中 / reveal 揭曉一位 / done 全部抽完
+  function lockButtons(on) { nextBtn.disabled = againBtn.disabled = copyBtn.disabled = doneBtn.disabled = closeBtn.disabled = on; }
+
+  // 抽的過程中，已抽出的得主排成一排
+  function renderDrawn(list) {
+    drawnEl.innerHTML = '';
+    list.forEach(function (n, i) {
+      var li = document.createElement('li');
+      var c = document.createElement('span'); c.className = 'cn'; c.textContent = i + 1;
+      var t = document.createElement('span'); t.textContent = n;
+      li.appendChild(c); li.appendChild(t); drawnEl.appendChild(li);
+    });
   }
-  // 每位得主一張登機證
+  // 全部抽完：每位得主一張登機證
   function render(winners) {
     winnersEl.innerHTML = '';
     winners.forEach(function (n, i) {
@@ -513,20 +558,33 @@ dialog.result::backdrop { background: transparent; }
       winnersEl.appendChild(li);
     });
   }
-  function updateRecap() {
-    chips.innerHTML = '';
-    lastWinners.forEach(function (n, i) {
-      var li = document.createElement('li');
-      var c = document.createElement('span'); c.className = 'cn'; c.textContent = i + 1;
-      var t = document.createElement('span'); t.textContent = n;
-      li.appendChild(c); li.appendChild(t); chips.appendChild(li);
-    });
-    recap.hidden = !lastWinners.length;
+  function showDone() {
+    var w = shown();
+    $('rPrize').textContent = prizeText(w.length);
+    $('rProg').textContent = '';
+    setMode('done');
+    sMain.textContent = '恭喜 ' + w.length + ' 位得主';
+    sSub.textContent = '共 ' + sess.total + ' 人參加';
+    render(w);
   }
-  function lockButtons(on) { againBtn.disabled = copyBtn.disabled = doneBtn.disabled = closeBtn.disabled = on; }
+  // 頁面上的「已抽出／上次抽出」名單
+  function updateRecap() {
+    var c = active(), w = shown();
+    chips.innerHTML = '';
+    w.forEach(function (n, i) {
+      var li = document.createElement('li');
+      var cn = document.createElement('span'); cn.className = 'cn'; cn.textContent = i + 1;
+      var t = document.createElement('span'); t.textContent = n;
+      li.appendChild(cn); li.appendChild(t); chips.appendChild(li);
+    });
+    recap.hidden = !w.length;
+    $('recapTitle').textContent = c ? '已抽出（' + w.length + ' / ' + c.k + '）' : '上次抽出的名單';
+    $('reopen').hidden = !!c;
+    restartBtn.hidden = !c;
+  }
 
-  // 抽完的彩帶，只放一次；偏好減少動態時不放
-  function confetti() {
+  // 每抽出一位放一小撮彩帶，最後一位放大把；偏好減少動態時不放
+  function confetti(n) {
     if (reduced()) return;
     var cv = document.createElement('canvas'), dpr = Math.min(window.devicePixelRatio || 1, 2);
     var W = window.innerWidth, H = window.innerHeight;
@@ -536,7 +594,7 @@ dialog.result::backdrop { background: transparent; }
     var ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
     var cols = ['#f6b60b', '#cf2233', '#ffffff', '#c5a366', '#4aa3e8', '#ff8aa0'];
     var r = stage.getBoundingClientRect(), ox = r.left + r.width / 2, oy = r.top + r.height / 2, ps = [];
-    for (var i = 0; i < 150; i++) {
+    for (var i = 0; i < n; i++) {
       var a = Math.random() * Math.PI * 2, sp = 4 + Math.random() * 9;
       ps.push({ x: ox, y: oy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 6, w: 6 + Math.random() * 6, h: 4 + Math.random() * 5,
                 rot: Math.random() * 6.28, vr: (Math.random() - .5) * .4, c: cols[i % cols.length] });
@@ -557,70 +615,117 @@ dialog.result::backdrop { background: transparent; }
     })(t0);
   }
 
-  function run() {
-    var s = refresh();
-    if (!s.ok || busy) return;
-    busy = true; drawBtn.disabled = drawBar.disabled = true; lockButtons(true);
+  // ---------- 一次抽一位 ----------
+  // 頁面「開始抽獎／繼續抽第 N 位」與視窗裡的「抽第 N 位」都走這裡：開視窗 → 名字跳動 → 揭曉一位。
+  function drawNext() {
+    if (busy) return;
+    var c = active();
+    if (!c) {
+      var s = refresh();
+      if (!s.ok) { if (dlg.open) toast.textContent = warn.textContent; return; }
+      c = { pool: s.list.slice(), winners: [], total: s.list.length, k: s.k };
+    }
+    var no = c.winners.length + 1, last = no >= c.k;
+    busy = true; lockButtons(true); disarm(); refresh();
     toast.textContent = ''; toast2.textContent = ''; sr.textContent = '';
-    $('rPrize').textContent = prizeText(s.k);
-    var winners = pick(s.list, s.k);
-    winnersEl.innerHTML = '';
-    rbox.classList.remove('done'); rbox.classList.add('rolling');
-    stage.textContent = '抽獎中';
+    $('rPrize').textContent = prizeText(c.k);
+    $('rProg').textContent = '第 ' + no + ' / ' + c.k + ' 位';
+    setMode('rolling');
+    sMain.textContent = '抽獎中'; sSub.textContent = '第 ' + no + ' 位';
+    renderDrawn(c.winners);
     openDlg();
-    var ticks = reduced() ? 1 : 30, t = 0;
+
+    var ticks = reduced() ? 1 : 22, t = 0;
     (function spin() {
       if (t < ticks) {
-        stage.textContent = s.list[randInt(s.list.length)];
+        sMain.textContent = c.pool[randInt(c.pool.length)];
         t++;
         setTimeout(spin, 40 + t * 5);
-      } else {
-        lastWinners = winners; lastTotal = s.list.length;
-        rbox.classList.remove('rolling'); rbox.classList.add('done');
-        setDoneStage();
-        render(winners);
-        if (dlg.open) confetti();
-        busy = false; lockButtons(false); refresh(); updateRecap();
-        sr.textContent = '抽出 ' + winners.length + ' 位：' + winners.join('、');
-      }
+      } else reveal();
     })();
+
+    function reveal() {
+      var w = c.pool.splice(randInt(c.pool.length), 1)[0];
+      c.winners.push(w); sess = c;
+      $('rProg').textContent = '已抽出 ' + no + ' / ' + c.k;
+      setMode('reveal');
+      sMain.textContent = w; sSub.textContent = '第 ' + no + ' 位得主';
+      renderDrawn(c.winners);
+      sr.textContent = '第 ' + no + ' 位：' + w;
+      if (dlg.open) confetti(last ? 160 : 60);
+      updateRecap();
+      if (last) {
+        // 最後一位先停留一下，再換成全部得主的名單
+        nextBtn.textContent = '整理全部得主…';
+        refresh();
+        setTimeout(finish, reduced() ? 500 : 2600);
+      } else {
+        busy = false; lockButtons(false);
+        nextBtn.textContent = '抽第 ' + (no + 1) + ' 位';
+        refresh();
+        if (dlg.open) nextBtn.focus();
+      }
+    }
+  }
+  function finish() {
+    showDone();
+    busy = false; lockButtons(false); refresh(); updateRecap();
+    sr.textContent = '全部抽完，共 ' + sess.winners.length + ' 位：' + sess.winners.join('、');
+    if (dlg.open) doneBtn.focus();
   }
 
+  // 從頁面重看已抽完的名單
   function showResult() {
-    if (busy || !lastWinners.length) return;
-    $('rPrize').textContent = prizeText(lastWinners.length);
-    rbox.classList.remove('rolling'); rbox.classList.add('done');
-    setDoneStage(); render(lastWinners); lockButtons(false); toast.textContent = '';
+    if (busy || !finished()) return;
+    toast.textContent = '';
+    showDone(); lockButtons(false);
     openDlg();
   }
+
+  // 重新開始：要按兩次，避免誤觸把已抽出的人清掉
+  function disarm() { clearTimeout(armTimer); restartBtn.classList.remove('armed'); restartBtn.textContent = '重新開始'; }
+  restartBtn.addEventListener('click', function () {
+    var c = active();
+    if (busy || !c) return;
+    if (!restartBtn.classList.contains('armed')) {
+      restartBtn.classList.add('armed');
+      restartBtn.textContent = '再按一次確認：清除已抽出的 ' + c.winners.length + ' 位';
+      armTimer = setTimeout(disarm, 5000);
+      return;
+    }
+    disarm(); sess = null; refresh(); updateRecap();
+    toast2.textContent = '已重新開始，名單可以修改了。';
+  });
 
   function fallbackCopy(text) {
     var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta);
     ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta);
   }
   function copyWinners(el) {
-    var text = lastWinners.map(function (n, i) { return (i + 1) + '. ' + n; }).join('\n');
+    var text = shown().map(function (n, i) { return (i + 1) + '. ' + n; }).join('\n');
+    if (!text) return;
     var done = function () { el.textContent = '已複製'; };
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
     } else { fallbackCopy(text); done(); }
   }
 
-  $('clear').addEventListener('click', function () {
+  clearBtn.addEventListener('click', function () {
     names.value = ''; $('sampleNote').hidden = true; refresh(); names.focus();
   });
   names.addEventListener('input', function () { $('sampleNote').hidden = true; refresh(); });
   numEl.addEventListener('input', refresh);
   dedupe.addEventListener('change', refresh);
-  drawBtn.addEventListener('click', run);
-  drawBar.addEventListener('click', run);
-  againBtn.addEventListener('click', run);
+  drawBtn.addEventListener('click', drawNext);
+  drawBar.addEventListener('click', drawNext);
+  nextBtn.addEventListener('click', drawNext);
+  againBtn.addEventListener('click', drawNext);   // 已抽完後「重新抽一次」＝開新的一輪，馬上抽第 1 位
   doneBtn.addEventListener('click', closeDlg);
   closeBtn.addEventListener('click', closeDlg);
   $('reopen').addEventListener('click', showResult);
   copyBtn.addEventListener('click', function () { copyWinners(toast); });
   $('copy2').addEventListener('click', function () { copyWinners(toast2); });
-  refresh();
+  refresh(); updateRecap();
 })();
 </script>
 
