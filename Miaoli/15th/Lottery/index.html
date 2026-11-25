@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>苗栗IMC 15屆 抽獎</title>
+<meta name="description" content="苗栗IMC 第15屆活動抽獎頁：貼上名單，一鍵抽出得獎者。">
+<link rel="icon" type="image/png" href="assets/imc-logo.png">
+<style>
+/* Layout: two columns (name list | draw stage) on desktop, stacked on phone */
+:root {
+  --bg: #efefef;
+  --surface: #f9f8f6;
+  --fg: #535353;
+  --muted: #7a7a7a;
+  --line: #d9d4ca;
+  --accent: #b08d4f;
+  --accent-fg: #ffffff;
+  --gold: #a6823f;
+  --gold-bg: #f8eed7;
+  --imc-blue: #1c2c60;
+  --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --font-display: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #16171b; --surface: #1f2026; --fg: #e6e3dc; --muted: #a09c93; --line: #34343b;
+    --accent: #dcb481; --accent-fg: #1b1508; --gold: #dcb481; --gold-bg: #2c2412; --imc-blue: #9fb0e8;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #16171b; --surface: #1f2026; --fg: #e6e3dc; --muted: #a09c93; --line: #34343b;
+  --accent: #dcb481; --accent-fg: #1b1508; --gold: #dcb481; --gold-bg: #2c2412; --imc-blue: #9fb0e8;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-block: 24px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+.wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 20px; }
+h1 { font-family: var(--font-display); font-size: 1.7rem; margin: 0; text-wrap: balance; }
+.brand { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+.brand .org { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand .org img { height: 64px; width: auto; }
+.brand .theme { line-height: 0; }
+.brand .theme img { height: 124px; width: auto; }
+.brand .orgname { color: var(--imc-blue); font-weight: 700; line-height: 1.3; }
+.brand .orgname small { display: block; font-weight: 400; font-size: .7rem; letter-spacing: .04em; }
+.sub { color: var(--muted); margin: 4px 0 0; }
+.grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px; align-items: start; }
+@media (max-width: 760px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
+label.h { font-weight: 700; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.count { color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+textarea {
+  width: 100%; min-height: 280px; resize: vertical; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--bg); color: var(--fg); font: inherit; line-height: 1.6;
+}
+textarea:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.row label { display: flex; align-items: center; gap: 6px; }
+input[type=number] { width: 80px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); font: inherit; font-variant-numeric: tabular-nums; }
+.note { color: var(--muted); font-size: .85rem; margin: 0; }
+.warn { color: #c0392b; font-size: .9rem; min-height: 1.3em; margin: 0; }
+button { font: inherit; cursor: pointer; border-radius: 8px; padding: 9px 16px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); }
+button:hover { border-color: var(--muted); }
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 700; font-size: 1.1rem; padding: 12px 28px; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.stage {
+  min-height: 120px; display: grid; place-items: center; text-align: center; border-radius: 8px;
+  background: var(--bg); border: 1px dashed var(--line); padding: 18px; font-family: var(--font-display);
+  font-size: clamp(1.8rem, 6vw, 3rem); font-weight: 700; overflow-wrap: anywhere;
+}
+.stage.rolling { color: var(--muted); }
+.stage small { display: block; font-size: .9rem; font-weight: 400; color: var(--muted); }
+.winners { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+.winners li { display: flex; gap: 10px; align-items: baseline; background: var(--gold-bg); border: 1px solid var(--gold); border-radius: 8px; padding: 8px 12px; min-width: 0; animation: pop .35s ease-out both; }
+.winners .no { color: var(--gold); font-weight: 700; font-variant-numeric: tabular-nums; }
+.winners .nm { font-weight: 700; overflow-wrap: anywhere; min-width: 0; }
+.empty { color: var(--muted); margin: 0; }
+@keyframes pop { from { transform: scale(.85); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .winners li { animation: none; } }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.toast { color: var(--muted); font-size: .9rem; }
+@media (max-width: 520px) {
+  .brand .org img { height: 52px; }
+  .brand .theme img { height: 100px; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="org" id="orgLogo">
+        <img src="assets/imc-logo.png" width="256" height="256" alt="苗栗IMC 社徽">
+        <div class="orgname">社團法人苗栗縣國際工商經營研究社<small>INTERNATIONAL MANAGEMENT COUNCIL of Miaoli</small></div>
+      </div>
+      <div class="theme" id="themeLogo">
+        <img src="assets/15th-logo.png" width="560" height="492" alt="第15屆 藝術共感・行動共創 ART &amp; ACTION">
+      </div>
+    </div>
+    <h1>苗栗IMC 15屆 抽獎</h1>
+    <p class="sub">貼上名單，每行一位，按下按鈕抽出得獎者。</p>
+  </header>
+
+  <div class="grid">
+    <section class="panel" aria-label="名單">
+      <label class="h" for="names">參加名單 <span class="count" id="count">0 人</span></label>
+      <textarea id="names" spellcheck="false" placeholder="每行一個名字，也可以用逗號分隔"></textarea>
+      <p class="note" id="sampleNote">目前是範例名單，請換成你的名單。</p>
+      <div class="row">
+        <label for="num">抽出人數 <input id="num" type="number" min="1" value="10"></label>
+        <label for="dedupe"><input id="dedupe" type="checkbox" checked> 自動移除重複姓名</label>
+      </div>
+      <p class="warn" id="warn" role="alert"></p>
+    </section>
+
+    <section class="panel" aria-label="抽獎">
+      <div class="stage" id="stage">準備好了嗎？</div>
+      <div class="actions">
+        <button class="primary" id="draw">開始抽獎</button>
+        <button id="again" disabled>重新抽一次</button>
+        <button id="copy" disabled>複製得獎名單</button>
+        <span class="toast" id="toast" role="status"></span>
+      </div>
+      <p class="note">使用瀏覽器的密碼學亂數（crypto.getRandomValues），每個人中獎機率相同，同一人不會重複中獎。</p>
+      <ol class="winners" id="winners"></ol>
+      <p class="empty" id="empty">得獎名單會顯示在這裡。</p>
+    </section>
+  </div>
+</div>
+
+<script>
+(function () {
+  var SAMPLE = [];
+  var surnames = ['陳','林','黃','張','李','王','吳','劉','蔡','楊','許','鄭','謝','郭','洪','曾','邱','廖','賴','徐'];
+  var given = ['小明','美玲','志豪','雅婷','建宏','怡君','家豪','佩珊','宗翰','欣怡','冠宇','淑芬','承恩','詩涵','俊傑','盈盈','柏翰','心怡','宇軒','靜怡','彥廷','惠雯','哲瑋','筱涵','信宏'];
+  for (var i = 0; i < 25; i++) SAMPLE.push(surnames[i % 20] + given[i]);
+
+  var $ = function (id) { return document.getElementById(id); };
+  var names = $('names'), numEl = $('num'), dedupe = $('dedupe'), warn = $('warn');
+  var stage = $('stage'), winnersEl = $('winners'), empty = $('empty');
+  var drawBtn = $('draw'), againBtn = $('again'), copyBtn = $('copy'), toast = $('toast');
+  var busy = false, lastWinners = [];
+
+  names.value = SAMPLE.join('\n');
+
+  function parse() {
+    var list = names.value.split(/[\n,，、;；\t]+/).map(function (s) { return s.trim(); }).filter(Boolean);
+    if (dedupe.checked) {
+      var seen = new Set();
+      list = list.filter(function (n) { if (seen.has(n)) return false; seen.add(n); return true; });
+    }
+    return list;
+  }
+
+  // unbiased random integer in [0, n)
+  function randInt(n) {
+    var max = Math.floor(0x100000000 / n) * n, buf = new Uint32Array(1);
+    do { crypto.getRandomValues(buf); } while (buf[0] >= max);
+    return buf[0] % n;
+  }
+  function pick(list, k) {
+    var a = list.slice();
+    for (var i = 0; i < k; i++) {
+      var j = i + randInt(a.length - i);
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a.slice(0, k);
+  }
+
+  function refresh() {
+    var list = parse(), k = parseInt(numEl.value, 10);
+    $('count').textContent = list.length + ' 人';
+    var msg = '';
+    if (!list.length) msg = '請先輸入名單。';
+    else if (!(k >= 1)) msg = '抽出人數至少是 1。';
+    else if (k > list.length) msg = '抽出人數 (' + k + ') 超過名單人數 (' + list.length + ')。';
+    warn.textContent = msg;
+    drawBtn.disabled = busy || !!msg;
+    return { list: list, k: k, ok: !msg };
+  }
+
+  function render(winners) {
+    winnersEl.innerHTML = '';
+    winners.forEach(function (n, i) {
+      var li = document.createElement('li');
+      li.style.animationDelay = (i * 60) + 'ms';
+      var no = document.createElement('span'); no.className = 'no'; no.textContent = (i + 1);
+      var nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = n;
+      li.appendChild(no); li.appendChild(nm); winnersEl.appendChild(li);
+    });
+    empty.hidden = winners.length > 0;
+  }
+
+  function run() {
+    var s = refresh();
+    if (!s.ok || busy) return;
+    busy = true; drawBtn.disabled = true; againBtn.disabled = true; copyBtn.disabled = true;
+    toast.textContent = '';
+    var winners = pick(s.list, s.k);
+    winnersEl.innerHTML = ''; empty.hidden = true;
+    stage.classList.add('rolling');
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var ticks = reduce ? 1 : 30, t = 0;
+    (function spin() {
+      if (t < ticks) {
+        stage.textContent = s.list[randInt(s.list.length)];
+        t++;
+        setTimeout(spin, 40 + t * 5);
+      } else {
+        stage.classList.remove('rolling');
+        stage.innerHTML = '';
+        stage.appendChild(document.createTextNode('抽出 ' + winners.length + ' 位'));
+        var sm = document.createElement('small'); sm.textContent = '共 ' + s.list.length + ' 人參加';
+        stage.appendChild(sm);
+        render(winners);
+        lastWinners = winners; busy = false;
+        againBtn.disabled = false; copyBtn.disabled = false; refresh();
+      }
+    })();
+  }
+
+  function fallbackCopy(text) {
+    var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta);
+    ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta);
+  }
+  copyBtn.addEventListener('click', function () {
+    var text = lastWinners.map(function (n, i) { return (i + 1) + '. ' + n; }).join('\n');
+    var done = function () { toast.textContent = '已複製'; };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  });
+
+  names.addEventListener('input', function () { $('sampleNote').hidden = true; refresh(); });
+  numEl.addEventListener('input', refresh);
+  dedupe.addEventListener('change', refresh);
+  drawBtn.addEventListener('click', run);
+  againBtn.addEventListener('click', run);
+  refresh();
+})();
+</script>
+
+</body>
+</html>
